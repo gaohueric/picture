@@ -1,0 +1,284 @@
+<head><meta charset="utf-8"><meta name="Keywords" content="极客时间,极客邦,极客邦科技,极客邦控股,极客时间App,专栏订阅,极客新闻,二叉树,极客Live,QCon,左耳听风,AI技术内参,大航海时代,陈皓,徐飞,洪亮劼,霍泰稳,池建强,Selina,Gary,InfoQ,极客搜索"><meta name="description" content="极客时间是极客邦科技出品的一款 IT 内容知识服务 App，内容包含专栏订阅、极客新闻、热点专题、直播、视频和音频等多形式的知识内容，并设有陈皓专栏、徐飞专栏、洪亮劼专栏等专栏供订阅。"><link rel="apple-touch-icon" sizes="180x180" href="//static001.geekbang.org/static/icon/time/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="//static001.geekbang.org/static/icon/time/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="//static001.geekbang.org/static/icon/time/favicon-16x16.png"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="format-detection" content="telephone=no"><meta name="apple-itunes-app" content="app-id=1238203070, app-argument=zeus://columns"><title>极客时间 | Java核心技术36讲</title><script async="" src="https://www.google-analytics.com/analytics.js"></script><script type="text/javascript">if(!('flex' in document.documentElement.style) && !navigator.userAgent.match(/spider|googlebot|bingbot|geekbang|yahoo! Slurp/i)){
+        window.location.href = 'https://static001.geekbang.org/static/common/browser_update/index.html'
+      }</script><script type="text/javascript">;(function(root) {
+        root._tt_config = true;
+        var ta = document.createElement('script'); ta.type = 'text/javascript'; ta.async = true;
+        ta.src = document.location.protocol + '//' + 's1.pstatp.com/bytecom/resource/track_log/src/toutiao-track-log.js';
+        ta.onerror = function () {
+            var request = new XMLHttpRequest();
+            var web_url = window.encodeURIComponent(window.location.href);
+            var js_url  = ta.src;
+            var url = '//ad.toutiao.com/link_monitor/cdn_failed?web_url=' + web_url + '&js_url=' + js_url + '&convert_id=1606932352132152';
+            request.open('GET', url, true);
+            request.send(null);
+        }
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ta, s);
+      })(window);</script><link href="https://static001.geekbang.org/static/time/css/app.289a66fcd4280dc25050023ff5caff6e.css" rel="stylesheet"><style type="text/css">.comment-item{list-style-position:inside;width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;margin-bottom:1rem}.comment-item a{border-bottom:none}.comment-item .avatar{width:2.625rem;height:2.625rem;-ms-flex-negative:0;flex-shrink:0;border-radius:50%}.comment-item .info{margin-left:.5rem;-webkit-box-flex:1;-ms-flex-positive:1;flex-grow:1}.comment-item .info .hd{width:100%;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;-webkit-box-align:center;-ms-flex-align:center;align-items:center}.comment-item .info .hd .username{color:#888;font-size:15.25px;font-weight:400;line-height:1.2}.comment-item .info .hd .control{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;-webkit-box-align:center;-ms-flex-align:center;align-items:center}.comment-item .info .hd .control .btn-share{color:#888;font-size:.75rem;margin-right:1rem}.comment-item .info .hd .control .btn-praise{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:horizontal;-webkit-box-direction:normal;-ms-flex-direction:row;flex-direction:row;-webkit-box-align:center;-ms-flex-align:center;align-items:center;font-size:15.25px;text-decoration:none}.comment-item .info .hd .control .btn-praise i{color:#888;display:inline-block;font-size:.75rem;margin-right:.3rem;margin-top:-.01rem}.comment-item .info .hd .control .btn-praise i.on{color:#ff5a05}.comment-item .info .hd .control .btn-praise span{color:#888}.comment-item .info .bd{color:#353535;font-size:15.25px;font-weight:400;white-space:normal;word-break:break-all;line-height:1.6}.comment-item .info .time{color:#888;font-size:9px;line-height:1}.comment-item .info .reply .reply-hd{font-size:15.25px}.comment-item .info .reply .reply-hd span{margin-left:-12px;color:#888;font-weight:400}.comment-item .info .reply .reply-hd i{color:#ff5a05;font-size:15.25px}.comment-item .info .reply .reply-content{color:#353535;font-size:15.25px;font-weight:400;white-space:normal;word-break:break-all}.comment-item .info .reply .reply-time{color:#888;font-size:9px}</style><style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 5px 0px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; -khtml-border-radius: 5px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 1px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: .7em}
+.MathJax_MenuRadioCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuLabel {padding: 1px 2em 3px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #DDDDDD; margin: 4px 3px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: #606872; color: white}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head><body><div id="MathJax_Message" style="display: none;"></div><div id="app"><div data-v-87ffcada="" class="article"><!----> <div data-v-87ffcada="" class="main main-app" style="margin-top: 0px;"><h1 data-v-87ffcada="" class="article-title">
+      第34讲 | 有人说“Lambda能让Java程序慢30倍”，你怎么看？
+    </h1> <div data-v-87ffcada="" class="article-info"><span data-v-87ffcada="">2018-07-24</span> <span data-v-87ffcada="">杨晓峰</span></div> <div data-v-87ffcada="" class="article-content typo common-content"><img data-v-87ffcada="" src="https://static001.geekbang.org/resource/image/89/9d/899e3cc2d28775e2b0411661d9c6eb9d.jpg"> <!----> <div data-v-87ffcada="" class="mini-audio-player"><a href="javascript:;" class="btn-play"></a> <div class="audio-info"><h3>第34讲 | 有人说“Lambda能让Java程序慢30倍”，你怎么看？</h3> <p><span>朗读人：黄洲君&nbsp;&nbsp;&nbsp;</span> <span>11′19′′ | 5.19M</span></p></div> <!----> <audio title="第34讲 | 有人说“Lambda能让Java程序慢30倍”，你怎么看？" src="https://res001.geekbang.org/resource/audio/2a/3b/2a43ff7d3bad7e7bbe91e6e6df965d3b.mp3" controls="controls"></audio></div> <div data-v-87ffcada="" id="article-content" class=""><div class="text"><p>在上一讲中，我介绍了 Java 性能问题分析的一些基本思路。但在实际工作中，我们不能仅仅等待性能出现问题再去试图解决，而是需要定量的、可对比的方法，去评估 Java 应用性能，来判断其是否能够符合业务支撑目标。今天这一讲，我会介绍从 Java 开发者角度，如何从代码级别判断应用的性能表现，重点理解最广泛使用的基准测试（Benchmark）。</p>
+<p>今天我要问你的问题是，<span class="orange">有人说“Lambda 能让 Java 程序慢 30 倍”，你怎么看？</span></p>
+<p>为了让你清楚地了解这个背景，请参考下面的代码片段。在实际运行中，基于 Lambda/Stream 的版本（lambdaMaxInteger），比传统的 for-each 版本（forEachLoopMaxInteger）慢很多。</p>
+<pre><code>// 一个大的 ArrayList，内部是随机的整形数据
+volatile List&lt;Integer&gt; integers = …
+ 
+// 基准测试 1
+public int forEachLoopMaxInteger() {
+   int max = Integer.MIN_VALUE;
+   for (Integer n : integers) {
+  	max = Integer.max(max, n);
+   }
+   return max;
+}
+ 
+// 基准测试 2
+public int lambdaMaxInteger() {
+   return integers.stream().reduce(Integer.MIN_VALUE, (a, b) -&gt; Integer.max(a, b));
+}
+</code></pre><!-- [[[read_end]]] -->
+<h2>典型回答</h2>
+<p>我认为，“Lambda 能让 Java 程序慢 30 倍”这个争论实际反映了几个方面：</p>
+<p>第一，基准测试是一个非常有效的通用手段，让我们以直观、量化的方式，判断程序在特定条件下的性能表现。</p>
+<p>第二，基准测试必须明确定义自身的范围和目标，否则很有可能产生误导的结果。前面代码片段本身的逻辑就有瑕疵，更多的开销是源于自动装箱、拆箱（auto-boxing/unboxing），而不是源自 Lambda 和 Stream，所以得出的初始结论是没有说服力的。</p>
+<p>第三，虽然 Lambda/Stream 为 Java 提供了强大的函数式编程能力，但是也需要正视其局限性：</p>
+<ul>
+<li>
+<p>一般来说，我们可以认为 Lambda/Stream 提供了与传统方式接近对等的性能，但是如果对于性能非常敏感，就不能完全忽视它在特定场景的性能差异了，例如：<strong>初始化的开销</strong>。 Lambda 并不算是语法糖，而是一种新的工作机制，在首次调用时，JVM 需要为其构建<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/invoke/CallSite.html">CallSite</a>实例。这意味着，如果 Java 应用启动过程引入了很多 Lambda 语句，会导致启动过程变慢。其实现特点决定了 JVM 对它的优化可能与传统方式存在差异。</p>
+</li>
+<li>
+<p>增加了程序诊断等方面的复杂性，程序栈要复杂很多，Fluent 风格本身也不算是对于调试非常友好的结构，并且在可检查异常的处理方面也存在着局限性等。</p>
+</li>
+</ul>
+<h2>考点分析</h2>
+<p>今天的题目是源自于一篇有争议的<a href="https://blog.takipi.com/benchmark-how-java-8-lambdas-and-streams-can-make-your-code-5-times-slower/">文章</a>，原文后来更正为“如果 Stream 使用不当，会让你的代码慢 5 倍”。针对这个问题我给出的回答，并没有纠结于所谓的“快”与“慢”，而是从工程实践的角度指出了基准测试本身存在的问题，以及 Lambda 自身的局限性。</p>
+<p>从知识点的角度，这个问题考察了我在<a href="http://time.geekbang.org/column/article/7514">专栏第 7 讲</a>中介绍过的自动装箱 / 拆箱机制对性能的影响，并且考察了 Java 8 中引入的 Lambda 特性的相关知识。除了这些知识点，面试官还可能更加深入探讨如何用基准测试之类的方法，将含糊的观点变成可验证的结论。</p>
+<p>对于 Java 语言的很多特性，经常有很多似是而非的 “秘籍”，我们有必要去伪存真，以定量、定性的方式探究真相，探讨更加易于推广的实践。找到结论的能力，比结论本身更重要，因此在今天这一讲中，我们来探讨一下：</p>
+<ul>
+<li>
+<p>基准测试的基础要素，以及如何利用主流框架构建简单的基准测试。</p>
+</li>
+<li>
+<p>进一步分析，针对保证基准测试的有效性，如何避免偏离测试目的，如何保证基准测试的正确性。</p>
+</li>
+</ul>
+<h2>知识扩展</h2>
+<p>首先，我们先来整体了解一下基准测试的主要目的和特征，专栏里我就不重复那些<a href="https://baike.baidu.com/item/%E5%9F%BA%E5%87%86%E6%B5%8B%E8%AF%95">书面的定义</a>了。</p>
+<p>性能往往是特定情景下的评价，泛泛地说性能“好”或者“快”，往往是具有误导性的。通过引入基准测试，我们可以定义性能对比的明确条件、具体的指标，进而保证得到<strong>定量的、可重复的</strong>对比数据，这是工程中的实际需要。</p>
+<p>不同的基准测试其具体内容和范围也存在很大的不同。如果是专业的性能工程师，更加熟悉的可能是类似<a href="https://www.spec.org/">SPEC</a>提供的工业标准的系统级测试；而对于大多数 Java 开发者，更熟悉的则是范围相对较小、关注点更加细节的微基准测试（Micro-Benchmark）。我在文章开头提的问题，就是典型的微基准测试，也是我今天的侧重点。</p>
+<p><strong>什么时候需要开发微基准测试呢？</strong></p>
+<p>我认为，当需要对一个大型软件的某小部分的性能进行评估时，就可以考虑微基准测试。换句话说，微基准测试大多是 API 级别的验证，或者与其他简单用例场景的对比，例如：</p>
+<ul>
+<li>
+<p>你在开发共享类库，为其他模块提供某种服务的 API 等。</p>
+</li>
+<li>
+<p>你的 API 对于性能，如延迟、吞吐量有着严格的要求，例如，实现了定制的 HTTP 客户端 API，需要明确它对 HTTP 服务器进行大量 GET 请求时的吞吐能力，或者需要对比其他 API，保证至少对等甚至更高的性能标准。</p>
+</li>
+</ul>
+<p>所以微基准测试更是偏基础、底层平台开发者的需求，当然，也是那些追求极致性能的前沿工程师的最爱。</p>
+<p><strong>如何构建自己的微基准测试，选择什么样的框架比较好？</strong></p>
+<p>目前应用最为广泛的框架之一就是<a href="http://openjdk.java.net/projects/code-tools/jmh/">JMH</a>，OpenJDK 自身也大量地使用 JMH 进行性能对比，如果你是做 Java API 级别的性能对比，JMH 往往是你的首选。</p>
+<p>JMH 是由 Hotspot JVM 团队专家开发的，除了支持完整的基准测试过程，包括预热、运行、统计和报告等，还支持 Java 和其他 JVM 语言。更重要的是，它针对 Hotspot JVM 提供了各种特性，以保证基准测试的正确性，整体准确性大大优于其他框架，并且，JMH 还提供了用近乎白盒的方式进行 Profiling 等工作的能力。</p>
+<p>使用 JMH 也非常简单，你可以直接将其依赖加入 Maven 工程，如下图：<br>
+<img src="https://static001.geekbang.org/resource/image/0d/68/0dd290f8842959cb02d6c3a434a58e68.png" alt=""></p>
+<p>也可以，利用类似下面的命令，直接生成一个 Maven 项目。</p>
+<pre><code>$ mvn archetype:generate \
+      	-DinteractiveMode=false \
+      	-DarchetypeGroupId=org.openjdk.jmh \
+          -DarchetypeArtifactId=jmh-java-benchmark-archetype \
+      	-DgroupId=org.sample \
+      	-DartifactId=test \
+      	-Dversion=1.0
+</code></pre>
+<p>JMH 利用注解（Annotation），定义具体的测试方法，以及基准测试的详细配置。例如，至少要加上“@Benchmark”以标识它是个基准测试方法，而 BenchmarkMode 则指定了基准测试模式，例如下面例子指定了吞吐量（Throughput）模式，还可以根据需要指定平均时间（AverageTime）等其他模式。</p>
+<pre><code>@Benchmark
+@BenchmarkMode(Mode.Throughput)
+public void testMethod() {
+   // Put your benchmark code here.
+}
+</code></pre>
+<p>当我们实现了具体的测试后，就可以利用下面的 Maven 命令构建。</p>
+<pre><code>mvn clean install
+</code></pre>
+<p>运行基准测试则与运行不同的 Java 应用没有明显区别。</p>
+<pre><code>java -jar target/benchmarks.jar
+</code></pre>
+<p>更加具体的上手步骤，请参考相关<a href="http://www.baeldung.com/java-microbenchmark-harness">指南</a>。JMH 处处透着浓浓的工程师味道，并没有纠结于完善的文档，而是提供了非常棒的<a href="http://hg.openjdk.java.net/code-tools/jmh/file/3769055ad883/jmh-samples/src/main/java/org/openjdk/jmh/samples">样例代码</a>，所以你需要习惯于直接从代码中学习。</p>
+<p><strong>如何保证微基准测试的正确性，有哪些坑需要规避？</strong></p>
+<p>首先，构建微基准测试，需要从白盒层面理解代码，尤其是具体的性能开销，不管是 CPU 还是内存分配。这有两个方面的考虑，第一，需要保证我们写出的基准测试符合测试目的，确实验证的是我们要覆盖的功能点，这一讲的问题就是个典型例子；第二，通常对于微基准测试，我们通常希望代码片段确实是有限的，例如，执行时间如果需要很多毫秒（ms），甚至是秒级，那么这个有效性就要存疑了，也不便于诊断问题所在。</p>
+<p>更加重要的是，由于微基准测试基本上都是体量较小的 API 层面测试，最大的威胁来自于过度“聪明”的 JVM！Brain Goetz 曾经很早就指出了微基准测试中的<a href="https://www.ibm.com/developerworks/java/library/j-jtp02225/">典型问题</a>。</p>
+<p>由于我们执行的是非常有限的代码片段，必须要保证 JVM 优化过程不影响原始测试目的，下面几个方面需要重点关注：</p>
+<ul>
+<li>保证代码经过了足够并且合适的预热。我在<a href="http://time.geekbang.org/column/article/6845">专栏第 1 讲</a>中提到过，默认情况，在 server 模式下，JIT 会在一段代码执行 10000 次后，将其编译为本地代码，client 模式则是 1500 次以后。我们需要排除代码执行初期的噪音，保证真正采样到的统计数据符合其稳定运行状态。<br>
+通常建议使用下面的参数来判断预热工作到底是经过了多久。</li>
+</ul>
+<pre><code>-XX:+PrintCompilation
+</code></pre>
+<p>我这里建议考虑另外加上一个参数，否则 JVM 将默认开启后台编译，也就是在其他线程进行，可能导致输出的信息有些混淆。</p>
+<pre><code>-Xbatch
+</code></pre>
+<p>与此同时，也要保证预热阶段的代码路径和采集阶段的代码路径是一致的，并且可以观察 PrintCompilation 输出是否在后期运行中仍然有零星的编译语句出现。</p>
+<ul>
+<li>防止 JVM 进行无效代码消除（Dead Code Elimination），例如下面的代码片段中，由于我们并没有使用计算结果 mul，那么 JVM 就可能直接判断无效代码，根本就不执行它。</li>
+</ul>
+<pre><code>public void testMethod() {
+   int left = 10;
+   int right = 100;
+   int mul = left * right;
+}
+</code></pre>
+<p>如果你发现代码统计数据发生了数量级程度上的提高，需要警惕是否出现了无效代码消除的问题。</p>
+<p>解决办法也很直接，尽量保证方法有返回值，而不是 void 方法，或者使用 JMH 提供的<a href="http://hg.openjdk.java.net/code-tools/jmh/file/3769055ad883/jmh-core/src/main/java/org/openjdk/jmh/infra/Blackhole.java">BlackHole</a>设施，在方法中添加下面语句。</p>
+<pre><code>public void testMethod(Blackhole blackhole) {
+   // …
+   blackhole.consume(mul);
+}
+</code></pre>
+<ul>
+<li>防止发生常量折叠（Constant Folding）。JVM 如果发现计算过程是依赖于常量或者事实上的常量，就可能会直接计算其结果，所以基准测试并不能真实反映代码执行的性能。JMH 提供了 State 机制来解决这个问题，将本地变量修改为 State 对象信息，请参考下面示例。</li>
+</ul>
+<pre><code>@State(Scope.Thread)
+public static class MyState {
+   public int left = 10;
+   public int right = 100;
+}
+
+public void testMethod(MyState state, Blackhole blackhole) {
+   int left = state.left;
+   int right = state.right;
+   int mul = left * right;
+   blackhole.consume(mul);
+}
+</code></pre>
+<ul>
+<li>
+<p>另外 JMH 还会对 State 对象进行额外的处理，以尽量消除伪共享（<a href="https://blogs.oracle.com/dave/java-contended-annotation-to-help-reduce-false-sharing">False Sharing</a>）的影响，标记 @State，JMH 会自动进行补齐。</p>
+</li>
+<li>
+<p>如果你希望确定方法内联（Inlining）对性能的影响，可以考虑打开下面的选项。</p>
+</li>
+</ul>
+<pre><code>-XX:+PrintInlining
+</code></pre>
+<p>从上面的总结，可以看出来微基准测试是一个需要高度了解 Java、JVM 底层机制的技术，是个非常好的深入理解程序背后效果的工具，但是也反映了我们需要审慎对待微基准测试，不被可能的假象蒙蔽。</p>
+<p>我今天介绍的内容是相对常见并易于把握的，对于微基准测试，GC 等基层机制同样会影响其统计数据。我在前面提到，微基准测试通常希望执行时间和内存分配速率都控制在有限范围内，而在这个过程中发生 GC，很可能导致数据出现偏差，所以 Serial GC 是个值得考虑的选项。另外，JDK 11 引入了<a href="http://openjdk.java.net/jeps/318">Epsilon GC</a>，可以考虑使用这种什么也不做的 GC 方式，从最大可能性去排除相关影响。</p>
+<p>今天我从一个争议性的程序开始，探讨了如何从开发者角度而不是性能工程师角度，利用（微）基准测试验证你在性能上的判断，并且介绍了其基础构建方式和需要重点规避的风险点。</p>
+<h2>一课一练</h2>
+<p>关于今天我们讨论的题目你做到心中有数了吗？我们在项目中需要评估系统的容量，以计划和保证其业务支撑能力，谈谈你的思路是怎么样的？常用手段有哪些？</p>
+<p>请你在留言区写写你对这个问题的思考，我会选出经过认真思考的留言，送给你一份学习奖励礼券，欢迎你与我一起讨论。</p>
+<p>你的朋友是不是也在准备面试呢？你可以“请朋友读”，把今天的题目分享给好友，或许你能帮到他。</p>
+<p><img src="https://static001.geekbang.org/resource/image/25/46/256537f3a62681bd19ebf75f9cf79146.jpg" alt=""></p>
+</div></div> <p data-v-87ffcada="" style="color: rgb(153, 153, 153);">
+        版权归极客邦科技所有，未经许可不得转载
+      </p></div> <div data-v-87ffcada="" class="article-comments"><h2 data-v-87ffcada=""><span data-v-87ffcada="">精选留言</span></h2> <ul data-v-87ffcada=""><li data-v-87ffcada="" class="comment-item"><img src="https://static001.geekbang.org/account/avatar/00/11/ad/4d/e24fc9e4.jpg" class="avatar"> <div class="info"><div class="hd"><span class="username">明翼</span> <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span>6</span></a></div></div> <div class="bd">杨老师，我今天去面试的时候，java基础知识答的还可以，就是面试官扩展着问，问到spring和springcloud框架时就有些懵了，请问我现在应该如何学习，spring一直都是懂得不是很多，仅限于会用，杨老师能推荐一些相关的学习资料吗</div> <span class="time">2018-07-24</span> <div class="reply"><div class="reply-hd"><i class="iconfont"></i> <span>作者回复</span></div> <p class="reply-content">我后面会有篇Spring相关，但毕竟能覆盖很有限，我自己的理解角度和业务开发可能也不太一样；<br>如果是需要整体上的对比和介绍，类似知乎、博客之类有整理完善的，请查找一下；<br>但是，真正的深入还是需要系统性学习，相关书籍，阅读源码，上手实践</p> <p class="reply-time">2018-07-25</p></div></div></li><li data-v-87ffcada="" class="comment-item"><img src="https://static001.geekbang.org/static/time/img/defaultAvatar.e4ab9fe.jpg" class="avatar"> <div class="info"><div class="hd"><span class="username">Geek_7120fb</span> <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span>0</span></a></div></div> <div class="bd">专栏写的好，像流水和故事。大概技术像作者的开发人员可以毕业了</div> <span class="time">2018-07-25</span> <!----></div></li><li data-v-87ffcada="" class="comment-item"><img src="https://static001.geekbang.org/account/avatar/00/10/e8/90/d63f8347.jpg" class="avatar"> <div class="info"><div class="hd"><span class="username">yushing</span> <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span>0</span></a></div></div> <div class="bd">请问杨老师，无效代码消除后，mul的计算不执行了，那left和right也就没有使用了，是不是left和right的赋值语句也会被判断为无效代码不执行了呢？</div> <span class="time">2018-07-24</span> <!----></div></li></ul></div></div> <!----> <!----></div></div><link rel="dns-prefetch" href="//cdn.mathjax.org"><script type="text/x-mathjax-config;executed=true">MathJax.Hub.Config({
+        showProcessingMessages: false,
+        messageStyle: "none",
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a']
+        }
+      });
+      MathJax.Hub.Register.MessageHook("End Process", function (message) {
+        var eve = new Event('mathjaxfini')
+        window.dispatchEvent(eve)
+      })</script><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-103082599-6', 'auto');
+      ga('send', 'pageview');</script></body><iframe id="__ToutiaoJSBridgeIframe_SetResult" style="display: none;"></iframe><iframe id="__ToutiaoJSBridgeIframe" style="display: none;"></iframe>
