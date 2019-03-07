@@ -1,0 +1,268 @@
+<html><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover"><meta name="google-site-verification" content="cCHsgG9ktuCTgWgYfqCJql8AeR4gAne4DTZqztPoirE"><meta name="apple-itunes-app" content="app-id=987739104"><meta name="baidu-site-verification" content="qiK2a1kcFc"><meta name="360-site-verification" content="4c3c7d57d59f0e1a308462fbc7fd7e51"><meta name="sogou_site_verification" content="c49WUDZczQ"><style>body {
+        font-size: 16px;
+        line-height: 2;
+      }
+      a, button, input {
+        margin: 1rem 1.5rem;
+      }
+      img {
+        width: 0;
+        height: 0;
+      }
+      #juejin {
+        overflow-x: hidden;
+      }</style><title data-vue-meta="true">MySQL 是怎样运行的：从根儿上理解 MySQL - 小孩子4919 - 掘金小册</title><link rel="apple-touch-icon" sizes="180x180" href="https://b-gold-cdn.xitu.io/favicons/v2/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon-16x16.png"><link rel="manifest" href="https://b-gold-cdn.xitu.io/favicons/v2/manifest.json"><link rel="mask-icon" href="https://b-gold-cdn.xitu.io/favicons/v2/safari-pinned-tab.svg" color="#5bbad5"><link rel="shortcut icon" href="https://b-gold-cdn.xitu.io/favicons/v2/favicon.ico"><meta name="msapplication-config" content="https://b-gold-cdn.xitu.io/favicons/v2/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="search" title="掘金" href="https://b-gold-cdn.xitu.io/conf/search.xml" type="application/opensearchdescription+xml"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/ionicons/2.0.1/css/ionicons.min.css"><link rel="stylesheet" href="https://b-gold-cdn.xitu.io/asset/fw-icon/1.0.9/iconfont.css"><link href="https://b-gold-cdn.xitu.io/v3/static/css/0.19bd1434c5591f1fe1c9.css" rel="stylesheet"><style id="nightModeStyle">
+html.cye-enabled.cye-nm:not(*:-webkit-full-screen) body,
+ html.cye-enabled.cye-nm:not(*:-webkit-full-screen) #cye-workaround-body {-webkit-filter:contrast(91%) brightness(84%) invert(1);}</style><style id="cyebody">html.cye-enabled.cye-lm body{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}</style><style id="cyediv">html.cye-enabled.cye-lm div{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}</style><style id="cyetable">html.cye-enabled.cye-lm th{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}html.cye-enabled.cye-lm td{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}</style><style id="cyetextInput">html.cye-enabled.cye-lm input[type=text]{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}html.cye-enabled.cye-lm textarea{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}</style><style id="cyeselect">html.cye-enabled.cye-lm select{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}</style><style id="cyeul">html.cye-enabled.cye-lm ul{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}</style><style id="cyeChangeByClick">html.cye-enabled.cye-lm .cye-lm-tag,html.cye-enabled.cye-lm.cye-lm-tag{background-color:#cce8cf !important;border-color:rgb(51, 58, 51) !important;background-image:none !important;color:#000000  !important}</style><style type="text/css" abt="234"></style><script async="" src="https://hm.baidu.com/hm.js?93bbd335a208870aa1f296bcd6842e5e"></script><script async="" src="//www.google-analytics.com/analytics.js"></script><script type="text/javascript" async="" src="https://assets.growingio.com/vds.js"></script><script charset="utf-8" src="https://b-gold-cdn.xitu.io/v3/static/js/3.2862370ece24d2f65f22.js"></script><meta data-vmid="keywords" name="keywords" content="掘金,稀土,Vue.js,微信小程序,Kotlin,RxJava,React Native,Wireshark,敏捷开发,Bootstrap,OKHttp,正则表达式,WebGL,Webpack,Docker,MVVM" data-vue-meta="true"><meta data-vmid="description" name="description" content="掘金是一个帮助开发者成长的社区，是给开发者用的 Hacker News，给设计师用的 Designer News，和给产品经理用的 Medium。掘金的技术文章由稀土上聚集的技术大牛和极客共同编辑为你筛选出最优质的干货，其中包括：Android、iOS、前端、后端等方面的内容。用户每天都可以在这里找到技术世界的头条内容。与此同时，掘金内还有沸点、掘金翻译计划、线下活动、专栏文章等内容。即使你是 GitHub、StackOverflow、开源中国的用户，我们相信你也可以在这里有所收获。" data-vue-meta="true"><script>//remove 17173 video ad
+doAdblock();
+function doAdblock(){
+    (function() {
+        function A() {}
+        A.prototype = {
+            rules: {
+                '17173_in':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFile(Customer)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_in_20150522.swf"
+                },
+                '17173_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/PreloaderFileFirstpage\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_out_20150522.swf"
+                },
+                '17173_live':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream(_firstpage)?\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173_stream_20150522.swf"
+                },
+                '17173_live_out':{
+                    'find':/http:\/\/f\.v\.17173cdn\.com\/(\d+\/)?flash\/Player_stream_(custom)?Out\.swf/,
+                    'replace':"http://swf.adtchrome.com/17173.out.Live.swf"
+                }
+            },
+            _done: null,
+            get done() {
+                if(!this._done) {
+                    this._done = new Array();
+                }
+                return this._done;
+            },
+            addAnimations: function() {
+                var style = document.createElement('style');
+                style.type = 'text/css';
+                style.innerHTML = 'object,embed{\
+                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;\
+                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;\
+                -o-animation-duration:.001s;-o-animation-name:playerInserted;\
+                animation-duration:.001s;animation-name:playerInserted;}\
+                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}\
+                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}';
+                document.getElementsByTagName('head')[0].appendChild(style);
+            },
+            animationsHandler: function(e) {
+                if(e.animationName === 'playerInserted') {
+                    this.replace(e.target);
+                }
+            },
+            replace: function(elem) {
+                if(this.done.indexOf(elem) != -1) return;
+                this.done.push(elem);
+                var player = elem.data || elem.src;
+                if(!player) return;
+                var i, find, replace = false;
+                for(i in this.rules) {
+                    find = this.rules[i]['find'];
+                    if(find.test(player)) {
+                        replace = this.rules[i]['replace'];
+                        if('function' === typeof this.rules[i]['preHandle']) {
+                            this.rules[i]['preHandle'].bind(this, elem, find, replace, player)();
+                        }else{
+                            this.reallyReplace.bind(this, elem, find, replace)();
+                        }
+                        break;
+                    }
+                }
+            },
+            reallyReplace: function(elem, find, replace) {
+                elem.data && (elem.data = elem.data.replace(find, replace)) || elem.src && ((elem.src = elem.src.replace(find, replace)) && (elem.style.display = 'block'));
+                var b = elem.querySelector("param[name='movie']");
+                this.reloadPlugin(elem);
+            },
+            reloadPlugin: function(elem) {
+                var nextSibling = elem.nextSibling;
+                var parentNode = elem.parentNode;
+                parentNode.removeChild(elem);
+                var newElem = elem.cloneNode(true);
+                this.done.push(newElem);
+                if(nextSibling) {
+                    parentNode.insertBefore(newElem, nextSibling);
+                } else {
+                    parentNode.appendChild(newElem);
+                }
+            },
+            init: function() {
+                var handler = this.animationsHandler.bind(this);
+                document.body.addEventListener('webkitAnimationStart', handler, false);
+                document.body.addEventListener('msAnimationStart', handler, false);
+                document.body.addEventListener('oAnimationStart', handler, false);
+                document.body.addEventListener('animationstart', handler, false);
+                this.addAnimations();
+            }
+        };
+        new A().init();
+    })();
+}
+//remove baidu search ad
+if(document.URL.indexOf('www.baidu.com') >= 0){
+    if(document && document.getElementsByTagName && document.getElementById && document.body){
+        var aa = function(){
+            var all = document.body.querySelectorAll("#content_left div,#content_left table");
+            for(var i = 0; i < all.length; i++){
+                if(/display:\s?(table|block)\s!important/.test(all[i].getAttribute("style"))){all[i].style.display= "none";all[i].style.visibility='hidden';}
+            }
+            all = document.body.querySelectorAll('.result.c-container[id="1"]');
+            //if(all.length == 1) return;
+            for(var i = 0; i < all.length; i++){
+                if(all[i].innerHTML && all[i].innerHTML.indexOf('广告')>-1){
+                    all[i].style.display= "none";all[i].style.visibility='hidden';
+                }
+            }
+        }
+        aa();
+        document.getElementById('wrapper_wrapper').addEventListener('DOMSubtreeModified',aa)
+    };
+}
+//remove sohu video ad
+if (document.URL.indexOf("tv.sohu.com") >= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+//remove 56.com video ad
+if (document.URL.indexOf("56.com") >= 0){
+    if (document.cookie.indexOf("fee_status=true")==-1){document.cookie='fee_status=true'};
+}
+//fore iqiyi enable html5 player function
+if (document.URL.indexOf("iqiyi.com") >= 0){
+    if (document.cookie.indexOf("player_forcedType=h5_VOD")==-1){
+        document.cookie='player_forcedType=h5_VOD'
+        if(localStorage.reloadTime && Date.now() - parseInt(localStorage.reloadTime)<60000){
+            console.log('no reload')
+        }else{
+            location.reload()
+            localStorage.reloadTime = Date.now();
+        }
+    }
+}
+</script><style type="text/css">object,embed{                -webkit-animation-duration:.001s;-webkit-animation-name:playerInserted;                -ms-animation-duration:.001s;-ms-animation-name:playerInserted;                -o-animation-duration:.001s;-o-animation-name:playerInserted;                animation-duration:.001s;animation-name:playerInserted;}                @-webkit-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-ms-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @-o-keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}                @keyframes playerInserted{from{opacity:0.99;}to{opacity:1;}}</style><script charset="utf-8" src="https://b-gold-cdn.xitu.io/v3/static/js/13.46a6fc9d409a46c2798c.js"></script></head><body><div data-v-e8667cb8="" data-v-4c458d44="" class="section-content"><div data-v-e8667cb8="" class="section-page book-section-view"><div data-v-e8667cb8="" class="entry-content article-content"><h2 class="heading" data-id="heading-0">感谢</h2>
+<p>我不生产知识，只是知识的搬运工。写作本小册的时间主要用在了两个方面：</p>
+<ul>
+<li>
+<p>搞清楚事情的本质是什么。</p>
+<p>这个过程就是研究源码、书籍和资料。</p>
+</li>
+<li>
+<p>如何把我已经知道的知识表达出来。</p>
+<p>这个过程就是我不停的在地上走过来走过去，梳理知识结构，斟酌用词用句，不停的将已经写好的文章推倒重来，只是想给大家一个不错的用户体验。</p>
+</li>
+</ul>
+<p>这两个方面用的时间基本上是一半一半吧，在搞清楚事情的本质是什么阶段，除了直接阅读<code>MySQL</code>的源码之外，查看参考资料也是一种比较偷懒的学习方式。本书只是<code>MySQL</code>进阶的一个入门，想了解更多关于<code>MySQL</code>的知识，大家可以从下边这些资料里找点灵感。</p>
+<h3 class="heading" data-id="heading-1">一些链接</h3>
+<ul>
+<li>
+<p>MySQL官方文档：https://dev.mysql.com/doc/refman/5.7/en/</p>
+<p><code>MySQL</code>官方文档是写作本书时参考最多的一个资料。说实话，文档写的非常通俗易懂，唯一的缺点就是太长了，导致大家看的时候无从下手。</p>
+</li>
+<li>
+<p>MySQL Internals Manual：https://dev.mysql.com/doc/internals/en/</p>
+<p>介绍MySQL如何实现各种功能的文档，写的比较好，但是太少了，有很多章节直接跳过了。</p>
+</li>
+<li>
+<p>何登成的github：https://github.com/hedengcheng/tech</p>
+<p>登博的博客非常好，对事务、优化这讨论的细节也非常多，不过由于大多是PPT结构，字太少，对上下文不清楚的同学可能会一脸懵逼。</p>
+</li>
+<li>
+<p>orczhou的博客：http://www.orczhou.com/</p>
+</li>
+<li>
+<p>Jeremy Cole的博客：https://blog.jcole.us/innodb/</p>
+<p>Jeremy Cole大神不仅写作了<code>innodb_ruby</code>这个非常棒的解析<code>InnoDB</code>存储结构的工具，还对这些存储结构写了一系列的博客，在我几乎要放弃深入研究表空间结构的时候，是他老人家的博客把我又从深渊里拉了回来。</p>
+</li>
+<li>
+<p>那海蓝蓝（李海翔）的博客：https://blog.csdn.net/fly2nn</p>
+</li>
+<li>
+<p>taobao月报：http://mysql.taobao.org/monthly/</p>
+<p>因为MySQL的源码非常多，经常让大家无从下手，而taobao月报就是一个非常好的源码阅读指南。</p>
+<blockquote class="warning"><p>吐槽一下，这个taobao月报也只能当作源码阅读指南看，如果真的不看源码光看月报，那只能当作天书看，十有八九被绕进去出不来了。
+</p></blockquote></li>
+<li>
+<p>MySQL Server Blog：http://mysqlserverteam.com/</p>
+<p>MySQL team的博客，一手资料，在我不知道看什么的时候给了很多启示。</p>
+</li>
+<li>
+<p>mysql_lover的博客：https://blog.csdn.net/mysql_lover/</p>
+</li>
+<li>
+<p>Jørgen's point of view：https://jorgenloland.blogspot.com/</p>
+</li>
+<li>
+<p>mariadb的关于查询优化的文档：https://mariadb.com/kb/en/library/query-optimizations/</p>
+<p>不得不说mariadb的文档相比MySQL的来说就非常有艺术性了（里边儿有很多漂亮的插图），我很怀疑MySQL文档是程序员直接写的，mariadb的文档是产品经理写的。当我们想研究某个功能的原理，在MySQL文档干巴巴的说明中找不到头脑时，可以参考一下mariadb娓娓道来的风格。</p>
+</li>
+<li>
+<p>Reconstructing Data Manipulation Queries from Redo Logs：https://www.sba-research.org/wp-content/uploads/publications/WSDF2012_InnoDB.pdf</p>
+</li>
+<li>
+<p>关于InnoDB事务的一个PPT：https://mariadb.org/wp-content/uploads/2018/02/Deep-Dive_-InnoDB-Transactions-and-Write-Paths.pdf</p>
+</li>
+<li>
+<p>非官方优化文档：http://www.unofficialmysqlguide.com/optimizer-trace.html</p>
+<p>这个文档非常好，非常非常好～</p>
+</li>
+<li>
+<p>MySQL8.0的源码文档：https://dev.mysql.com/doc/dev/mysql-server</p>
+</li>
+</ul>
+<h3 class="heading" data-id="heading-2">一些书籍</h3>
+<ul>
+<li>
+<p>《数据库查询优化器的艺术》李海翔著</p>
+<p>大家可以把这本书当作源码观看指南来看，不过讲的是5.6的源码，5.7里重构了一些，不过大体的思路还是可以参考的。</p>
+</li>
+<li>
+<p>《MySQL运维内参》周彦伟、王竹峰、强昌金著</p>
+<p>内参里有许多代码细节，是一个阅读源码的比较好的指南。</p>
+</li>
+<li>
+<p>《Effectiv MySQL：Optimizing SQL Statements》Ronald Bradford著</p>
+<p>小册子，可以一口气看完，对了解MySQL查询优化的大概内容还是有些好处滴。</p>
+</li>
+<li>
+<p>《高性能MySQL》瓦茨 (Baron Schwartz) / 扎伊采夫 (Peter Zaitsev) / 特卡琴科 (Vadim Tkachenko) 著</p>
+<p>经典，对于第三版的内容来说，如果把第2章和第3章的内容放到最后就更好了。不过作者更愿意把MySQL当作一个黑盒去讲述，主要是说明了如何更好的使用MySQL这个软件，这一点从第二版向第三版的转变上就可以看出来，第二版中涉及的许多的底层细节都在第三版中移除了。总而言之它是MySQL进阶的一个非常好的入门读物。</p>
+</li>
+<li>
+<p>《数据库事务处理的艺术》李海翔著</p>
+<p>同《数据库查询优化器的艺术》。</p>
+</li>
+<li>
+<p>《MySQL技术内幕 : InnoDB存储引擎 第2版》姜承尧著</p>
+<p>学习MySQL内核进阶阅读的第一本书。</p>
+</li>
+<li>
+<p>《MySQL技术内幕 第5版》 Paul DuBois 著</p>
+<p>这本书是对于MySQL使用层面的一个非常详细的介绍，也就是说它并不涉及MySQL的任何内核原理，甚至连索引结构都懒得讲。像是一个老妈子在给你不停的唠叨吃饭怎么吃，喝水怎么喝，怎么上厕所的各种絮叨。整体风格比较像MySQL的官方文档，如果有想从使用层面从头了解MySQL的同学可以尝试的看看。</p>
+</li>
+<li>
+<p>《数据库系统概念》（美）Abraham Silberschatz / （美）Henry F.Korth / （美）S.Sudarshan 著</p>
+<p>这本书对于入门数据库原理来说非常好，不过看起来学术气味比较大一些，毕竟是一本正经的教科书，里边有不少的公式啥的。</p>
+</li>
+<li>
+<p>《事务处理 概念与技术》Jim Gray / Andreas Reuter 著</p>
+<p>这本书只是象征性的看了1～5章，说实话看不太懂，总是get不到作者要表达的点。不过听说业界非常推崇这本书，而恰巧我也看过一点，就写上了，有兴趣的同学可以去看看。</p>
+</li>
+</ul>
+<h3 class="heading" data-id="heading-3">说点不好的</h3>
+<p>上边尽说这些参考资料如何如何好了，主要是因为在我写作过程中的确参考到了，没有这些资料可能三五年都无法把小册写完。但是除了MySQL的文档以及《高性能MySQL》、《Effectiv MySQL：Optimizing SQL Statements》这两本书之外，其余的资料在大部分时间都是看的我头晕眼花，四肢乏力，不看个十遍八遍基本无法理清楚作者想要表达的点，这也是我写本小册的初衷---<span style="color:red">让天下没有难学的知识</span>。</p>
+<h3 class="heading" data-id="heading-4">结语</h3>
+<p>希望这是各位2019年最爽的一次知识付费，如果觉得有点儿物超所值？给个打赏呗～</p>
+<p></p><figure><img class="lazyload inited" data-src="https://user-gold-cdn.xitu.io/2019/3/4/1694882249cbc9e2?imageView2/0/w/1280/h/960/format/webp/ignore-error/1" data-width="430" data-height="430" src="https://user-gold-cdn.xitu.io/2019/3/4/1694882249cbc9e2?imageView2/0/w/1280/h/960/format/webp/ignore-error/1"><figcaption></figcaption></figure><p></p>
+</div><section data-v-e8667cb8="" class="book-comments"><div data-v-e8667cb8="" class="box-title">留言</div><div data-v-e8667cb8="" class="comment-box"><div data-v-6f521132="" data-v-e8667cb8="" class="comment-form comment-form" id="comment"><div data-v-f776695a="" data-v-372ac4e7="" data-v-6f521132="" data-src="https://user-gold-cdn.xitu.io/2018/1/25/1612b70dec969456?imageView2/1/w/100/h/100/q/85/format/webp/interlace/1" class="lazy avatar avatar loaded" style="background-image: url(&quot;https://user-gold-cdn.xitu.io/2018/1/25/1612b70dec969456?imageView2/1/w/100/h/100/q/85/format/webp/interlace/1&quot;);"></div><textarea data-v-6f521132="" placeholder="评论将在后台进行审核，审核通过后对所有人可见" class="content-input" style="overflow: hidden; overflow-wrap: break-word; height: 62px;"></textarea><div data-v-6f521132="" class="action-box" style="display: none;"><div data-v-48edc02e="" data-v-6f521132="" class="image-uploader image-uploader" style="display: none;"><input data-v-48edc02e="" type="file" class="input"><button data-v-48edc02e="" class="upload-btn"><i data-v-48edc02e="" class="icon ion-image"></i><span data-v-48edc02e="">上传图片</span></button></div><div data-v-6f521132="" class="submit-box"><span data-v-6f521132="" class="submit-text">Ctrl or ⌘ + Enter</span><button data-v-6f521132="" class="submit-btn">评论</button></div></div><!----></div></div><ul data-v-3a5f57c8="" data-v-e8667cb8="" st:block="commentList" class="comment-list comment-list"><!----></ul></section></div></div><!----><!----></body></html>
