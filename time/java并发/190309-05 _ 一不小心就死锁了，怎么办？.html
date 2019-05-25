@@ -1,0 +1,2637 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="Keywords" content="极客时间,极客邦,极客邦科技,极客邦控股,极客时间App,专栏订阅,极客新闻,二叉树,极客Live,QCon,左耳听风,AI技术内参,大航海时代,陈皓,徐飞,洪亮劼,霍泰稳,池建强,Selina,Gary,InfoQ,极客搜索">
+    <meta name="description" content="极客时间是极客邦科技出品的一款 IT 内容知识服务 App，内容包含专栏订阅、极客新闻、热点专题、直播、视频和音频等多形式的知识内容，并设有陈皓专栏、徐飞专栏、洪亮劼专栏等专栏供订阅。">
+    <link rel="apple-touch-icon" sizes="180x180" href="//static001.geekbang.org/static/icon/time/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="//static001.geekbang.org/static/icon/time/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="//static001.geekbang.org/static/icon/time/favicon-16x16.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>05 | 一不小心就死锁了，怎么办？</title>
+
+    <link href="https://static001.geekbang.org/static/time/css/app.3e04e644962ca8c2f97ec7731bb7710c.css" rel="stylesheet">
+    <style type="text/css">.hljs-ln {
+        border-collapse: collapse
+    }
+
+    .hljs-ln td {
+        padding: 0
+    }
+
+    .hljs-ln-n:before {
+        content: attr(data-line-number)
+    }</style>
+    <style type="text/css">#iv-container {
+        position: fixed;
+        background: #0d0d0d;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        display: none;
+        z-index: 1000
+    }
+
+    .iv-container {
+        overflow: hidden
+    }
+
+    .iv-close {
+        width: 26px;
+        height: 26px;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        cursor: pointer;
+        text-align: center;
+        overflow: hidden;
+        text-shadow: 0 0 3px #6d6d6d;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all ease .2s;
+        -o-transition: all ease .2s;
+        transition: all .2s ease
+    }
+
+    .iv-close:after, .iv-close:before {
+        content: "";
+        height: 2px;
+        width: 26px;
+        background: #fff;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        margin-top: -2px;
+        border-radius: 2px
+    }
+
+    .iv-close:before {
+        -webkit-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        transform: rotate(45deg)
+    }
+
+    .iv-close:after {
+        -webkit-transform: rotate(-45deg);
+        -moz-transform: rotate(-45deg);
+        -ms-transform: rotate(-45deg);
+        -o-transform: rotate(-45deg);
+        transform: rotate(-45deg)
+    }
+
+    .iv-close:hover {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .iv-image-view {
+        position: absolute;
+        height: 100%;
+        width: 100%
+    }
+
+    .iv-image-wrap {
+        display: inline-block
+    }
+
+    .iv-image-wrap:active {
+        cursor: move
+    }
+
+    .iv-large-image {
+        cursor: move;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: #ececec;
+        -moz-transform: translateZ(0);
+        -o-transform: translateZ(0)
+    }
+
+    .iv-large-image, .iv-loader {
+        position: absolute;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0)
+    }
+
+    .iv-loader {
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        z-index: 100;
+        margin-top: -16px;
+        margin-left: -16px;
+        font-size: 5px;
+        text-indent: -9999em;
+        border-top: 1em solid hsla(0, 0%, 100%, .2);
+        border-right: 1em solid hsla(0, 0%, 100%, .2);
+        border-bottom: 1em solid hsla(0, 0%, 100%, .2);
+        border-left: 1em solid #fff;
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear
+    }
+
+    .iv-loader:after {
+        width: 10em;
+        height: 10em;
+        border-radius: 50%
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }</style>
+    <style type="text/css">.vue-pull-to-wrapper[data-v-12abd9fb] {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .scroll-container[data-v-12abd9fb] {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .vue-pull-to-wrapper .action-block[data-v-12abd9fb] {
+        position: relative;
+        width: 100%
+    }
+
+    .default-text[data-v-12abd9fb] {
+        height: 100%;
+        line-height: 50px;
+        text-align: center
+    }</style>
+    <style type="text/css">.button-cancel[data-v-87ffcada] {
+        color: #888;
+        border: 1px solid #888;
+        border-radius: 3px;
+        margin-right: 12px
+    }
+
+    .button-cancel[data-v-87ffcada], .button-primary[data-v-87ffcada] {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        height: 35px;
+        display: inline-block;
+        font-size: 15px;
+        text-align: center;
+        line-height: 36px
+    }
+
+    .button-primary[data-v-87ffcada] {
+        color: #fff;
+        background-color: #ff5a05;
+        border-radius: 3px
+    }
+
+    .pd[data-v-87ffcada] {
+        padding-left: 1.375rem;
+        padding-right: 1.375rem
+    }
+
+    .article[data-v-87ffcada] {
+        max-width: 46.25rem;
+        margin: 0 auto
+    }
+
+    .article .article-unavailable[data-v-87ffcada] {
+        color: #fa8919;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 24px;
+        border-radius: 5px;
+        padding: 12px;
+        background-color: #f6f7fb;
+        margin-top: 20px
+    }
+
+    .article .article-unavailable .iconfont[data-v-87ffcada] {
+        font-size: 12px
+    }
+
+    .article .main[data-v-87ffcada] {
+        padding: 1.25rem 0;
+        margin-bottom: 52px
+    }
+
+    .article-title[data-v-87ffcada] {
+        color: #353535;
+        font-weight: 400;
+        line-height: 1.65rem;
+        font-size: 1.34375rem
+    }
+
+    .article-info[data-v-87ffcada] {
+        color: #888;
+        font-size: .9375rem;
+        margin-top: 1.0625rem
+    }
+
+    .article-content[data-v-87ffcada] {
+        margin-top: 1.0625rem
+    }
+
+    .article-content.android video[data-v-87ffcada]::-webkit-media-controls-fullscreen-button {
+        display: none
+    }
+
+    .copyright[data-v-87ffcada] {
+        color: #b2b2b2;
+        padding-bottom: 20px;
+        margin-top: 20px;
+        font-size: 13px
+    }
+
+    .audio-player[data-v-87ffcada] {
+        width: 100%;
+        margin: 20px 0
+    }
+
+    .to-comment[data-v-87ffcada] {
+        overflow: hidden;
+        padding-top: 10px;
+        margin-bottom: -30px
+    }
+
+    .to-comment a.button-primary[data-v-87ffcada] {
+        float: right;
+        height: 20px;
+        font-size: 12px;
+        line-height: 20px;
+        padding: 4px 8px;
+        cursor: pointer
+    }
+
+    .article-comments[data-v-87ffcada] {
+        margin-top: 2rem
+    }
+
+    .article-comments h2[data-v-87ffcada] {
+        text-align: center;
+        color: #888;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1rem
+    }
+
+    .article-comments h2[data-v-87ffcada]:before {
+        border-top: 1px dotted #888;
+        content: "";
+        position: absolute;
+        top: 56%;
+        left: 0;
+        width: 100%;
+        z-index: -1
+    }
+
+    .article-comments h2 span[data-v-87ffcada] {
+        font-size: 15.25px;
+        font-weight: 400;
+        padding: 0 1rem;
+        background: #fff;
+        display: inline-block
+    }
+
+    .article-sub-bottom[data-v-87ffcada] {
+        z-index: 10;
+        cursor: pointer
+    }
+
+    .switch-btns[data-v-87ffcada] {
+        height: 76px;
+        cursor: pointer;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        border-bottom: 10px solid #f6f7fb;
+        position: relative
+    }
+
+    .switch-btns[data-v-87ffcada]:before {
+        content: " ";
+        height: 1px;
+        background: #e8e8e8;
+        position: absolute;
+        top: 0;
+        left: 0;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        left: 1.375rem;
+        right: 1.375rem
+    }
+
+    .switch-btns .btn[data-v-87ffcada] {
+        height: 38px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .switch-btns .btn .tag[data-v-87ffcada] {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 62px;
+        flex: 0 0 62px;
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        border-radius: 10px;
+        height: 22px;
+        line-height: 22px;
+        background: #f6f7fb;
+        font-weight: 400
+    }
+
+    .switch-btns .btn .txt[data-v-87ffcada] {
+        margin-left: 10px;
+        -webkit-box-flex: 1;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        color: #888;
+        font-size: 15px;
+        height: 22px;
+        line-height: 22px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 400
+    }
+
+    @media (max-width: 769px) {
+        .article .breadcrumb[data-v-87ffcada] {
+            padding-top: 10px;
+            padding-bottom: 10px
+        }
+    }</style>
+    <style type="text/css">.empty {
+        height: 51px
+    }
+
+    .mobile-tips {
+        width: 100%;
+        height: 51px;
+        background: rgba(0, 0, 0, .8);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 0 12px;
+        -webkit-transition: opacity .35s;
+        transition: opacity .35s;
+        opacity: 0;
+        pointer-events: none
+    }
+
+    .mobile-tips.istop {
+        opacity: 1;
+        pointer-events: auto
+    }
+
+    .mobile-tips .mobile-tips-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: start;
+        -ms-flex-pack: start;
+        justify-content: flex-start
+    }
+
+    .mobile-tips .mobile-tips-info i {
+        width: 36px;
+        height: 36px;
+        background-image: url(data:image/png;base64,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);
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        background-size: contain;
+        border-radius: 7px
+    }
+
+    .mobile-tips .mobile-tips-info h2 {
+        font-size: 15px;
+        color: #fff;
+        font-weight: 400;
+        margin-left: 6px
+    }
+
+    .mobile-tips .mobile-tips-info h2 span {
+        font-size: 11px
+    }
+
+    .mobile-tips a {
+        width: 72px;
+        height: 31px;
+        text-align: center;
+        border: 1px solid #fa8919;
+        border-radius: 3px;
+        font-size: 13px;
+        color: #fa8919;
+        line-height: 31px
+    }</style>
+    <style type="text/css">.share-poster-wrapper {
+        position: fixed;
+        background-color: #fff;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -moz-user-select: -moz-none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .share-poster-wrapper .poster-bottom, .share-poster-wrapper .poster-middle, .share-poster-wrapper .poster-top {
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle {
+        padding: 16px 32px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-bottom: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo .poster-avatar {
+        min-width: 45px;
+        min-height: 45px;
+        width: 7vw;
+        height: 7vw;
+        border-radius: 50%;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle .nickname {
+        font-size: 5vw;
+        font-weight: 400;
+        margin-left: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .time {
+        font-size: 3.2vw
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content {
+        font-size: 4vw;
+        font-weight: 400;
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+        letter-spacing: 1px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content {
+        font-size: 3.7vw;
+        padding: 32px 0
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info {
+        border-left: 1px solid #000;
+        padding-left: 10px;
+        margin-top: 38px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info p {
+        font-size: 3.2vw;
+        line-height: 1.5
+    }
+
+    .share-poster-wrapper.theme0 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/top.png") no-repeat 15px 1px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle {
+        width: 100%;
+        padding-left: 56px;
+        padding-right: 56px;
+        background-image: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/middle.png");
+        background-repeat: repeat-y;
+        background-position: 15px 0
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .time {
+        margin-bottom: 45px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .quote-content {
+        border-top: 1px solid #e3e1dc;
+        margin-top: 30px
+    }
+
+    .share-poster-wrapper.theme0 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/bottom.png") no-repeat 15px -10px
+    }
+
+    .share-poster-wrapper.theme1 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/top.png") no-repeat 38px 1px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle {
+        width: 100%;
+        padding: 0 42px 10px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/middle.png") repeat-y 38px 0
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo {
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo .poster-avatar {
+        margin-left: 38px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-wrapper {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        min-height: 260px;
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time {
+        max-width: 65px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        text-align: center;
+        vertical-align: middle;
+        border-right: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time span {
+        white-space: nowrap;
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-content {
+        padding: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-content {
+        font-size: 3.7vw;
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-info {
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .footer {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-right: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/bottom.png") no-repeat 38px -10px
+    }
+
+    .share-poster-wrapper .share-poster {
+        background: #fefdf8;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #9b8d73;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        overflow: auto;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .share-poster-wrapper .share-poster.color0 {
+        background-color: #fefdf8
+    }
+
+    .share-poster-wrapper .share-poster.color1 {
+        background-color: #4d4d4d
+    }
+
+    .share-poster-wrapper .share-poster .footer {
+        margin-top: 2rem;
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: end;
+        -ms-flex-pack: end;
+        justify-content: flex-end;
+        -webkit-box-align: end;
+        -ms-flex-align: end;
+        align-items: flex-end
+    }
+
+    .share-poster-wrapper .share-poster .footer p {
+        margin: 0;
+        line-height: 1.4;
+        margin-left: 20px;
+        text-align: right;
+        padding-right: 20px
+    }
+
+    .share-poster-wrapper .controls {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        width: 100%;
+        padding-top: 5px;
+        -webkit-box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        z-index: 1;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .controls > div {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding: 10px 0
+    }
+
+    .share-poster-wrapper .controls > div span {
+        font-size: .85rem
+    }
+
+    .share-poster-wrapper .controls > div button {
+        width: 100px;
+        height: 24px;
+        background: #eee;
+        margin: 0 10px;
+        border-radius: 5px;
+        border: 2px solid #b2b2b2;
+        outline: none
+    }
+
+    .share-poster-wrapper .controls > div button.on {
+        border: 2px solid #ff5a05
+    }
+
+    .share-poster-wrapper .controls .controls-themes button {
+        color: #b2b2b2;
+        font-size: 12px;
+        background: #fff;
+        text-align: center
+    }
+
+    .share-poster-wrapper .controls .controls-themes button.on {
+        color: #ff5a05
+    }
+
+    .share-poster-wrapper .buttons {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .buttons a {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        text-align: center;
+        color: #000;
+        font-weight: 400;
+        height: 3rem;
+        line-height: 3rem
+    }
+
+    .share-poster-wrapper .buttons a .icon-share-money {
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px
+    }
+
+    .share-poster-wrapper .buttons a:last-child {
+        border-left: 1px solid #f5f5f5
+    }
+
+    .share-poster-wrapper img {
+        max-width: 100%
+    }
+
+    .share-poster-wrapper.android .poster-middle .nickname {
+        font-size: 10vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .time {
+        font-size: 6.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .poster-middle-content {
+        font-size: 8vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-content {
+        font-size: 7.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-info p {
+        font-size: 6.4vw
+    }</style>
+    <style type="text/css">.mini-audio-player {
+        width: 100%;
+        height: 5.25rem;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 1rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        margin: 1rem 0
+    }
+
+    .mini-audio-player > a {
+        border: none;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .mini-audio-player .btn-play {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .btn-pause, .mini-audio-player .btn-play {
+        width: 2.6875rem;
+        height: 2.6875rem;
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none
+    }
+
+    .mini-audio-player .btn-pause {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .audio-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        margin-left: .6875rem;
+        min-width: 0
+    }
+
+    .mini-audio-player .audio-info h3 {
+        color: #353535;
+        font-size: 15.25px;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .mini-audio-player .audio-info p {
+        margin: 0;
+        margin-top: .125rem;
+        font-size: 11px;
+        line-height: 1rem
+    }
+
+    .mini-audio-player .audio-info p span {
+        color: #888
+    }
+
+    .mini-audio-player .btn-download {
+        width: 1.25rem;
+        height: 1.25rem;
+        position: relative;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAA+CAYAAACbQR1vAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAA4hJREFUaIHtm8lOFFEUhr9qCWGHGxcaY1joK2h0YRzAtYmsWbAGGidEXOACbAYRxfgAPoEPoInGxJgg86gsJTHMw86EhS7O7TDk3uqq6qo6HahvQ7pOce7//1U0feve9vr6+lAiD3QC/4AC8FZDRJXGoMB14PWB1yPANPA1bSG5tAc0XLEcu5y6CvQCOGU5pnI3agVQMWQBaAvQJgtAW4A2WQDaArTJAtAWoE0WgLYAbbIAtAVokwWgLUCbLABtAdpkAfjU6oC7wKV0pCTCRcRDnesEVwDNwC/gg/nZHbeyFOgGltj30Gw7yRZALfAOqDavPeA50BO7xOToQTR75nU14qn26Im2AM4DNZbjz4DeePQlSi+i9Sg1iLdD2AJYApYdzbuo7BBeIBptLCPeDmELYA9oBHYdjbqQpaxKowA8ddR2gXuIt0O43gRHgTu4Q+ikskIoIJps7AINwA9b0e/fYJAQ1FZWD9CP2/wOUI/DPJT+IDRqGrhCeGIEaNEPdDhqO8iVH/NrEOST4BgSwo6j3gEMBOgTNwP4m6+nhHkI/lG4VAiPgcGAveJg0IxpYxvROh6kUZi5wLhpvO2oPyKdEF6asWyEMg/hJ0PjyN+VXwhDIXuGYQh46KhtIeYnwjSMMhss3glbjvoDkglhyPS2Eck8RJ8OTyB3gl8IryL2tjGM2/wmYn4ySuNyngdMmIE3HfX7iHDPUQ+CZ3q0O+qbyIWIZB7KfyAyaQS4QmhH7oQoIZQyv0EZV75IHE+EJvG/E9oJfyd4yC6yvKO+gQQ/FaKnlbgeiU0hIWw46nnEUJAQiubbHPV1M1bZ5iHeZ4KlQmgD3uAfgofsGfQz34DsKYyFuLemTSMhfATOWOqtiMk/llrRfIuj9zpwG5gtX+Y+SezNK4bwCXsILdgDaAXOOnomYh6Seyw+gwhed9TPWY75mb9FAuYh2XWBWUS4K4QgrAE3gblYFFlIemFkDjEQJYQ1JMD5WBUdIY2VoXkkhLUQv7NqfidR85De0liYEFaRK7+QqCJDmmuDC0gIqz7nrJhzUjEP6S+O+oWwglz5xTQFaawOLwI3gO8Hjo2ZY6maB72vzPwErgEXkO8MuVaiEkcrgCK/lcfPNkhkAWgL0KYKmZiMIG9Ktn0Bx5G/wDcgXwW8R6avJ41G4HQOufInlas5ZO5+UpnJAU3AFyy7J44xe8BnoOk/JruwYo92bigAAAAASUVORK5CYII=);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none;
+        padding-right: .25rem
+    }
+
+    .mini-audio-player .btn-download .icon-download-done {
+        width: .45rem;
+        height: .45rem;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        display: inline-block;
+        background-image: url(data:image/png;base64,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);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain
+    }</style>
+    <style type="text/css">.MathJax_Display {
+        overflow: auto
+    }
+
+    .poster {
+        position: fixed;
+        left: -10000px;
+        top: -10000px;
+        overflow: hidden;
+        padding: 1rem;
+        background: #ececec
+    }
+
+    .richcontent-pre-copy {
+        font-size: 13px;
+        color: #888;
+        position: absolute;
+        right: 1em;
+        top: .2em;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .richcontent-pre-copy .iconfont {
+        font-size: 12px;
+        margin-right: .2em
+    }</style>
+    <style type="text/css">.breadcrumb {
+        padding: 30px 0;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        background: #fff
+    }
+
+    .breadcrumb a.title {
+        color: #e57c39;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb span.title {
+        color: #888;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb .split {
+        color: #ccc;
+        font-size: 10px;
+        margin-right: 5px
+    }</style>
+    <style type="text/css">.comment-item {
+        list-style-position: inside;
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-bottom: 1rem
+    }
+
+    .comment-item a {
+        border-bottom: none
+    }
+
+    .comment-item .avatar {
+        width: 2.625rem;
+        height: 2.625rem;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+        border-radius: 50%
+    }
+
+    .comment-item .info {
+        margin-left: .5rem;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1
+    }
+
+    .comment-item .info .hd {
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .username {
+        color: #888;
+        font-size: 15.25px;
+        font-weight: 400;
+        line-height: 1.2
+    }
+
+    .comment-item .info .hd .control {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .control .btn-share {
+        color: #888;
+        font-size: .75rem;
+        margin-right: 1rem
+    }
+
+    .comment-item .info .hd .control .btn-praise {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        font-size: 15.25px;
+        text-decoration: none
+    }
+
+    .comment-item .info .hd .control .btn-praise i {
+        color: #888;
+        display: inline-block;
+        font-size: .75rem;
+        margin-right: .3rem;
+        margin-top: -.01rem
+    }
+
+    .comment-item .info .hd .control .btn-praise i.on, .comment-item .info .hd .control .btn-praise span {
+        color: #fa8919
+    }
+
+    .comment-item .info .bd {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.6
+    }
+
+    .comment-item .info .time {
+        color: #888;
+        font-size: 9px;
+        line-height: 1
+    }
+
+    .comment-item .info .reply .reply-hd {
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-hd span {
+        margin-left: -12px;
+        color: #888;
+        font-weight: 400
+    }
+
+    .comment-item .info .reply .reply-hd i {
+        color: #fa8919;
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-content {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all
+    }
+
+    .comment-item .info .reply .reply-time {
+        color: #888;
+        font-size: 9px
+    }
+
+    .comment-template {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div data-v-87ffcada="" class="article"><!---->
+        <div data-v-87ffcada="" class="main main-app">
+            <h1 data-v-87ffcada="" class="article-title pd">
+                05 | 一不小心就死锁了，怎么办？
+            </h1>
+            <div data-v-87ffcada="" class="article-info pd"><span data-v-87ffcada="">2019-03-09</span> <span data-v-87ffcada="">王宝令</span></div>
+            <div data-v-87ffcada="" class="article-content typo common-content pd">
+                <img data-v-87ffcada="" src="https://static001.geekbang.org/resource/image/db/12/db1e9a02a6f3a46138d3615ab1e96712.jpg">
+                <!---->
+                <div data-v-87ffcada="" class="mini-audio-player">
+                    <div class="audio-info">
+                        <p><span>朗读人：王宝令&nbsp;&nbsp;&nbsp;</span>
+                        </p></div> <!---->
+                    <audio title="" src="https://static001.geekbang.org/resource/audio/82/16/8288a6fae8f67799fe9e032e9a423f16.mp3" controls="controls"></audio>
+                </div>
+                <div data-v-87ffcada="" id="article-content" class="">
+                    <div class="text"><p>在上一篇文章中，我们用Account.class作为互斥锁，来解决银行业务里面的转账问题，虽然这个方案不存在并发问题，但是所有账户的转账操作都是串行的，例如账户A 转账户B、账户C 转账户D这两个转账操作现实世界里是可以并行的，但是在这个方案里却被串行化了，这样的话，性能太差。</p><p>试想互联网支付盛行的当下，8亿网民每人每天一笔交易，每天就是8亿笔交易；每笔交易都对应着一次转账操作，8亿笔交易就是8亿次转账操作，也就是说平均到每秒就是近1万次转账操作，若所有的转账操作都串行，性能完全不能接受。</p><p>那下面我们就尝试着把性能提升一下。</p><h2>向现实世界要答案</h2><p>现实世界里，账户转账操作是支持并发的，而且绝对是真正的并行，银行所有的窗口都可以做转账操作。只要我们能仿照现实世界做转账操作，串行的问题就解决了。</p><p>我们试想在古代，没有信息化，账户的存在形式真的就是一个账本，而且每个账户都有一个账本，这些账本都统一存放在文件架上。银行柜员在给我们做转账时，要去文件架上把转出账本和转入账本都拿到手，然后做转账。这个柜员在拿账本的时候可能遇到以下三种情况：</p><ol>
+<li>文件架上恰好有转出账本和转入账本，那就同时拿走；</li>
+<li>如果文件架上只有转出账本和转入账本之一，那这个柜员就先把文件架上有的账本拿到手，同时等着其他柜员把另外一个账本送回来；</li>
+<li>转出账本和转入账本都没有，那这个柜员就等着两个账本都被送回来。</li>
+</ol><!-- [[[read_end]]] --><p>上面这个过程在编程的世界里怎么实现呢？其实用两把锁就实现了，转出账本一把，转入账本另一把。在transfer()方法内部，我们首先尝试锁定转出账户this（先把转出账本拿到手），然后尝试锁定转入账户target（再把转入账本拿到手），只有当两者都成功时，才执行转账操作。这个逻辑可以图形化为下图这个样子。</p><p><img src="https://static001.geekbang.org/resource/image/cb/55/cb18e672732ab76fc61d60bdf66bf855.png" alt=""></p><center><span class="reference">两个转账操作并行示意图</span></center><p>而至于详细的代码实现，如下所示。经过这样的优化后，账户A 转账户B和账户C 转账户D这两个转账操作就可以并行了。</p><pre><code>class Account {
+  private int balance;
+  // 转账
+  void transfer(Account target, int amt){
+    // 锁定转出账户
+    synchronized(this) {              
+      // 锁定转入账户
+      synchronized(target) {           
+        if (this.balance &gt; amt) {
+          this.balance -= amt;
+          target.balance += amt;
+        }
+      }
+    }
+  } 
+}
+</code></pre><h2>没有免费的午餐</h2><p>上面的实现看上去很完美，并且也算是将锁用得出神入化了。相对于用Account.class作为互斥锁，锁定的范围太大，而我们锁定两个账户范围就小多了，这样的锁，上一章我们介绍过，叫<strong>细粒度锁</strong>。<strong>使用细粒度锁可以提高并行度，是性能优化的一个重要手段</strong>。</p><p>这个时候可能你已经开始警觉了，使用细粒度锁这么简单，有这样的好事，是不是也要付出点什么代价啊？编写并发程序就需要这样时时刻刻保持谨慎。</p><p><strong>的确，使用细粒度锁是有代价的，这个代价就是可能会导致死锁。</strong></p><p>在详细介绍死锁之前，我们先看看现实世界里的一种特殊场景。如果有客户找柜员张三做个转账业务：账户A 转账户B 100元，此时另一个客户找柜员李四也做个转账业务：账户B 转账户A 100 元，于是张三和李四同时都去文件架上拿账本，这时候有可能凑巧张三拿到了账本A，李四拿到了账本B。张三拿到账本A后就等着账本B（账本B已经被李四拿走），而李四拿到账本B后就等着账本A（账本A已经被张三拿走），他们要等多久呢？他们会永远等待下去…因为张三不会把账本A送回去，李四也不会把账本B送回去。我们姑且称为死等吧。</p><p><img src="https://static001.geekbang.org/resource/image/f2/88/f293dc0d92b7c8255bd0bc790fc2a088.png" alt=""></p><center><span class="reference">转账业务中的“死等”</span></center><p>现实世界里的死等，就是编程领域的死锁了。<strong>死锁</strong>的一个比较专业的定义是：<strong>一组互相竞争资源的线程因互相等待，导致“永久”阻塞的现象</strong>。</p><p>上面转账的代码是怎么发生死锁的呢？我们假设线程T1执行账户A转账户B的操作，账户A.transfer(账户B)；同时线程T2执行账户B转账户A的操作，账户B.transfer(账户A)。当T1和T2同时执行完①处的代码时，T1获得了账户A的锁（对于T1，this是账户A），而T2获得了账户B的锁（对于T2，this是账户B）。之后T1和T2在执行②处的代码时，T1试图获取账户B的锁时，发现账户B已经被锁定（被T2锁定），所以T1开始等待；T2则试图获取账户A的锁时，发现账户A已经被锁定（被T1锁定），所以T2也开始等待。于是T1和T2会无期限地等待下去，也就是我们所说的死锁了。</p><pre><code>class Account {
+  private int balance;
+  // 转账
+  void transfer(Account target, int amt){
+    // 锁定转出账户
+    synchronized(this){     ①
+      // 锁定转入账户
+      synchronized(target){ ②
+        if (this.balance &gt; amt) {
+          this.balance -= amt;
+          target.balance += amt;
+        }
+      }
+    }
+  } 
+}
+</code></pre><p>关于这种现象，我们还可以借助资源分配图来可视化锁的占用情况（资源分配图是个有向图，它可以描述资源和线程的状态）。其中，资源用方形节点表示，线程用圆形节点表示；资源中的点指向线程的边表示线程已经获得该资源，线程指向资源的边则表示线程请求资源，但尚未得到。转账发生死锁时的资源分配图就如下图所示，一个“各据山头死等”的尴尬局面。</p><p><img src="https://static001.geekbang.org/resource/image/82/1c/829d69c7d32c3ad1b89d89fc56017d1c.png" alt=""></p><center><span class="reference">转账发生死锁时的资源分配图</span></center><h2>如何预防死锁</h2><p>并发程序一旦死锁，一般没有特别好的方法，很多时候我们只能重启应用。因此，解决死锁问题最好的办法还是规避死锁。</p><p>那如何避免死锁呢？要避免死锁就需要分析死锁发生的条件，有个叫Coffman的牛人早就总结过了，只有以下这四个条件都发生时才会出现死锁：</p><blockquote></blockquote><ol>
+<li>互斥，共享资源X和Y只能被一个线程占用；</li>
+<li>占有且等待，线程T1已经取得共享资源X，在等待共享资源Y的时候，不释放共享资源X；</li>
+<li>不可抢占，其他线程不能强行抢占线程T1占有的资源；</li>
+<li>循环等待，线程T1等待线程T2占有的资源，线程T2等待线程T1占有的资源，就是循环等待。</li>
+</ol><p>反过来分析，<strong>也就是说只要我们破坏其中一个，就可以成功避免死锁的发生</strong>。</p><p>其中，互斥这个条件我们没有办法破坏，因为我们用锁为的就是互斥。不过其他三个条件都是有办法破坏掉的，到底如何做呢？</p><ol>
+<li>对于“占用且等待”这个条件，我们可以一次性申请所有的资源，这样就不存在等待了。</li>
+<li>对于“不可抢占”这个条件，占用部分资源的线程进一步申请其他资源时，如果申请不到，可以主动释放它占有的资源，这样不可抢占这个条件就破坏掉了。</li>
+<li>对于“循环等待”这个条件，可以靠按序申请资源来预防。所谓按序申请，是指资源是有线性顺序的，申请的时候可以先申请资源序号小的，再申请资源序号大的，这样线性化后自然就不存在循环了。</li>
+</ol><p>我们已经从理论上解决了如何预防死锁，那具体如何体现在代码上呢？下面我们就来尝试用代码实践一下这些理论。</p><h3>1. 破坏占用且等待条件</h3><p>从理论上讲，要破坏这个条件，可以一次性申请所有资源。在现实世界里，就拿前面我们提到的转账操作来讲，它需要的资源有两个，一个是转出账户，另一个是转入账户，当这两个账户同时被申请时，我们该怎么解决这个问题呢？</p><p>可以增加一个账本管理员，然后只允许账本管理员从文件架上拿账本，也就是说柜员不能直接在文件架上拿账本，必须通过账本管理员才能拿到想要的账本。例如，张三同时申请账本A和B，账本管理员如果发现文件架上只有账本A，这个时候账本管理员是不会把账本A拿下来给张三的，只有账本A和B都在的时候才会给张三。这样就保证了“一次性申请所有资源”。</p><p><img src="https://static001.geekbang.org/resource/image/27/db/273af8c2ee60bd659f18673d2af005db.png" alt=""></p><center><span class="reference">通过账本管理员拿账本</span></center><p>对应到编程领域，“同时申请”这个操作是一个临界区，我们也需要一个角色（Java里面的类）来管理这个临界区，我们就把这个角色定为Allocator。它有两个重要功能，分别是：同时申请资源apply()和同时释放资源free()。账户Account 类里面持有一个Allocator的单例（必须是单例，只能由一个人来分配资源）。当账户Account在执行转账操作的时候，首先向Allocator同时申请转出账户和转入账户这两个资源，成功后再锁定这两个资源；当转账操作执行完，释放锁之后，我们需通知Allocator同时释放转出账户和转入账户这两个资源。具体的代码实现如下。</p><pre><code>class Allocator {
+  private List&lt;Object&gt; als =
+    new ArrayList&lt;&gt;();
+  // 一次性申请所有资源
+  synchronized boolean apply(
+    Object from, Object to){
+    if(als.contains(from) ||
+         als.contains(to)){
+      return false;  
+    } else {
+      als.add(from);
+      als.add(to);  
+    }
+    return true;
+  }
+  // 归还资源
+  synchronized void free(
+    Object from, Object to){
+    als.remove(from);
+    als.remove(to);
+  }
+}
+
+class Account {
+  // actr应该为单例
+  private Allocator actr;
+  private int balance;
+  // 转账
+  void transfer(Account target, int amt){
+    // 一次性申请转出账户和转入账户，直到成功
+    while(!actr.apply(this, target))
+      ；
+    try{
+      // 锁定转出账户
+      synchronized(this){              
+        // 锁定转入账户
+        synchronized(target){           
+          if (this.balance &gt; amt){
+            this.balance -= amt;
+            target.balance += amt;
+          }
+        }
+      }
+    } finally {
+      actr.free(this, target)
+    }
+  } 
+}
+</code></pre><h3>2. 破坏不可抢占条件</h3><p>破坏不可抢占条件看上去很简单，核心是要能够主动释放它占有的资源，这一点synchronized是做不到的。原因是synchronized申请资源的时候，如果申请不到，线程直接进入阻塞状态了，而线程进入阻塞状态，啥都干不了，也释放不了线程已经占有的资源。</p><p>你可能会质疑，“Java作为排行榜第一的语言，这都解决不了？”你的怀疑很有道理，Java在语言层次确实没有解决这个问题，不过在SDK层面还是解决了的，java.util.concurrent这个包下面提供的Lock是可以轻松解决这个问题的。关于这个话题，咱们后面会详细讲。</p><h3>3. 破坏循环等待条件</h3><p>破坏这个条件，需要对资源进行排序，然后按序申请资源。这个实现非常简单，我们假设每个账户都有不同的属性 id，这个 id 可以作为排序字段，申请的时候，我们可以按照从小到大的顺序来申请。比如下面代码中，①~⑥处的代码对转出账户（this）和转入账户（target）排序，然后按照序号从小到大的顺序锁定账户。这样就不存在“循环”等待了。</p><pre><code>class Account {
+  private int id;
+  private int balance;
+  // 转账
+  void transfer(Account target, int amt){
+    Account left = this        ①
+    Account right = target;    ②
+    if (this.id &gt; target.id) { ③
+      left = target;           ④
+      right = this;            ⑤
+    }                          ⑥
+    // 锁定序号小的账户
+    synchronized(left){
+      // 锁定序号大的账户
+      synchronized(right){ 
+        if (this.balance &gt; amt){
+          this.balance -= amt;
+          target.balance += amt;
+        }
+      }
+    }
+  } 
+}
+</code></pre><h2>总结</h2><p>当我们在编程世界里遇到问题时，应不局限于当下，可以换个思路，向现实世界要答案，<strong>利用现实世界的模型来构思解决方案</strong>，这样往往能够让我们的方案更容易理解，也更能够看清楚问题的本质。</p><p>但是现实世界的模型有些细节往往会被我们忽视。因为在现实世界里，人太智能了，以致有些细节实在是显得太不重要了。在转账的模型中，我们为什么会忽视死锁问题呢？原因主要是在现实世界，我们会交流，并且会很智能地交流。而编程世界里，两个线程是不会智能地交流的。所以在利用现实模型建模的时候，我们还要仔细对比现实世界和编程世界里的各角色之间的差异。</p><p>我们今天这一篇文章主要讲了<strong>用细粒度锁来锁定多个资源时，要注意死锁的问题</strong>。这个就需要你能把它强化为一个思维定势，遇到这种场景，马上想到可能存在死锁问题。当你知道风险之后，才有机会谈如何预防和避免，因此，<strong>识别出风险很重要</strong>。</p><p>预防死锁主要是破坏三个条件中的一个，有了这个思路后，实现就简单了。但仍需注意的是，有时候预防死锁成本也是很高的。例如上面转账那个例子，我们破坏占用且等待条件的成本就比破坏循环等待条件的成本高，破坏占用且等待条件，我们也是锁了所有的账户，而且还是用了死循环 <code>while(!actr.apply(this, target));</code>方法，不过好在apply()这个方法基本不耗时。 在转账这个例子中，破坏循环等待条件就是成本最低的一个方案。</p><p>所以我们在选择具体方案的时候，还需要<strong>评估一下操作成本，从中选择一个成本最低的方案</strong>。</p><h2>课后思考</h2><p>我们上面提到：破坏占用且等待条件，我们也是锁了所有的账户，而且还是用了死循环 <code>while(!actr.apply(this, target));</code>这个方法，那它比synchronized(Account.class)有没有性能优势呢？</p><p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p><p><img src="https://static001.geekbang.org/resource/image/cf/aa/cf393cd748a4f0e6451807c4b61843aa.jpg" alt=""></p></div>
+                </div> <!---->
+                <div data-v-87ffcada="" class="copyright">
+                    ©版权归极客邦科技所有，未经许可不得转载
+                </div>
+            </div>
+            <div data-v-87ffcada="" class="article-comments pd"><h2 data-v-87ffcada=""><span data-v-87ffcada="">精选留言</span></h2>
+                <ul data-v-87ffcada="">
+
+                    <li data-v-87ffcada="" class="comment-item comment-template">
+                        <img src="${user_header}" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">${user_name}</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">${like_count}</span></a></div>
+                            </div>
+                            <div class="bd comment-content">${comment_content}
+                            </div>
+                            <span class="time">${comment_ctime}</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">${user_name}</span></div>
+                                <p class="reply-content">${content}</p>
+                                <p class="reply-time">${ctime}</p></div>
+                        </div>
+                    </li>
+                <li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/96/63/fdbf75eb.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">捞鱼的搬砖奇</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">25</span></a></div>
+                            </div>
+                            <div class="bd comment-content">synchronized(Account.class) 锁了Account类相关的所有操作。相当于文中说的包场了，只要与Account有关联，通通需要等待当前线程操作完成。while死循环的方式只锁定了当前操作的两个相关的对象。两种影响到的范围不同。</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">还真是这样啊！<br></p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/48/bd/6c7d4230.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Tony Du</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">21</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while循环是不是应该有个timeout，避免一直阻塞下去？</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你考虑的很周到！👍<br>加超时在实际项目中非常重要！</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/10/bb/9a389192.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">DemonLee</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">15</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while(actr.apply(this, target)); --&gt; while(!actr.apply(this, target));<br>我感觉应该是这样，老师，我理解错了？</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你发现了个大bug!感谢感谢！！！我这就修改一下啊<br></p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/3d/51/9723276c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">邋遢的流浪剑客</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">11</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题的话希望老师能够过后给出一个比较标准的答案，毕竟大家的留言中说法各不相同很难去判断答案的对错</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这一部分的最后一章，要不就给答案吧<br></p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/fb/87/9c2dc94f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">几字凉了秋丶</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">8</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，请问一下，在实际的开发中，account对象应该是从数据库中查询出来的吧，假如A转B，C转B一起执行，那B的account对象如何保证是同一个对象，不太理解。。。</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">实际开发中都是用数据库事务+乐观锁的方式解决的。这个就是个例子，为了说明死锁是怎么回事，以及死锁问题怎么解决。</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/f7/0a/067537fc.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">别皱眉</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">7</span></a></div>
+                            </div>
+                            <div class="bd comment-content">@阿官 我来回答下你的问题<br><br>以下是阿官的问题<br>-------------------------------------------------------<br>老师，在破坏占用且等待的案例中，为何申请完两个账户的资源后还需要再分别锁定this和target账户呢？<br>-------------------------------------------------------<br>因为还存在其他业务啊 比如客户取款<br>这个时候也是对全局变量balance做操作<br>如果不加锁 并发情况下会出问题<br><br>老师你看我说的对吗😄😄</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你说到我心里了😃😃😃<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/34/cd/4e2cd598.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Howie</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">7</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while 循环就是一个自旋锁机制吧，自旋锁的话要关注它的循环时间，不能一直循环下去，不然会浪费 cpu 资源。</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">自旋锁在JVM里是一种特殊的锁机制，自诩不会阻塞线程的。咱们这个其实还是会阻塞线程的。不过原理都一样，你这样理解也没问题。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/cb/61/b62d8a3b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">张立华</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">6</span></a></div>
+                            </div>
+                            <div class="bd comment-content">之前遇到死锁，我就是用资源id的从小到大的顺序去申请锁解决的</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个方案最简单<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/18/f6/2ff7bc7a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">轻歌赋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">6</span></a></div>
+                            </div>
+                            <div class="bd comment-content">存在性能差距，虽然申请的时候加锁导致单线程访问，但是hash判断和赋值时间复杂度低，而在锁中执行业务代码时间长很多。<br>申请的时候单线程，但是执行的时候就可以多线程了，这里性能提升比较明显<br><br>想问问老师，如何判断多线程的阻塞导致的问题呢？有什么工具吗</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以用top命令查看Java线程的cpu利用率，用jstack来dump线程。开发环境可以用 java visualvm查看线程执行情况</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/ajNVdqHZLLBywibUar2Q8TmCy6ZrNQk9qia7sQgosBYInmygZI118vzrWu4CfUQnbOefvP82c8Inhb6xVqymhvYw/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">winter</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">4</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我的想法是，如果Account对象中只有转账业务的话，while(actr.apply(this, target)和对象锁synchronized(Account.class)的性能优势几乎看不出来，synchronized(Account.class)的性能甚至更差；但是如果Account对象中如果还有其它业务，比如查看余额等功能也加了synchronized(Account.class)修饰，那么把单独的转账业务剥离出来，性能的提升可能就比较明显了。<br></div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，有时候性能更差，毕竟要synchronized三次。但是有些场景会更好，例如转账操作很慢，而apply很快，这个时候允许a-&gt;b,c-&gt;d并行就有优势了。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e4/e9/0dd3829f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">aguan(^･ｪ･^)</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，在破坏占用且等待的案例中，为何申请完两个账户的资源后还需要再分别锁定this和target账户呢？</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">为了保险而已，单纯这个例子是不需要的，如果还有取款操作就需要了<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/4e/60/be4992fd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">gogo</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看了老师的讲解学到了很多，联想了下实际转账业务，应该是数据库来实现的，假如有账户表account，利用mysql的悲观锁select ...for update对a，b两条数据锁定，这时也有可能发生死锁，按照您讲到的第三种破坏循环等待的方式，按照id的大小顺序依次锁定。我这样理解的对吗？</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，就是id的次序。</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fb/f5/6521cb02.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李可威</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师为什么按序申请资源就可以破坏循环等待条件呢？这点没有看懂求解答</div>
+                            <span class="time">2019-03-17</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">循环等待，一定是A-&gt;B-&gt;C-&gt;...-&gt;N-&gt;A形成环状。<br>如果按需申请，是不允许N-&gt;A出现的，只能N-&gt;P。没有环状，也就不会死锁了。</p>
+                                <p class="reply-time">2019-03-17</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKtS26SJpSF7JLu9pusGsy1Qln0NdQg1eV2YKOJxpX2QXaBuuyXMqZY3fm0rhzKwsqN5aa6CVNOQQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈华</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对于第三点，按资源顺序来锁就能打破循环等待有疑问。<br>例如：账户 1 向 账户 3 转账<br>  同时 账户 3 向 账户 5 转账<br>即使按资源顺序来锁，也是起不了啥作用吧！？，</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">能起作用，这俩操作不会死锁<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/c8/cc/d52d3317.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">GP</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">问下，上节最后说到，不能用可变对象做锁，这里为何又synchronized（left）？</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">保护的是对象里面的成员，这俩对象变也只能是里面成员变，相对于里面的成员来说，这俩对象是永远不会变的。你可以这样理解。不是绝对不能用于可变对象，只是一条最佳实践。</p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fe/f0/135c2cd9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">λ</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">单例导致操作也是串行的吧</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是串行，但是允许A转B，C转D</p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/7b/57/a9b04544.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">QQ怪</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">死循环只是锁的是两个对象，而Account锁的是所有，串行化了</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">死循环里其实也还锁了一个全局对象</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/78/c7/083a3a0b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">新世界</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">没有性能优势，alloctor的操作也是获取alloctor对象的锁，和获取account的对象锁本质没有区别</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">锁的范围变了，所以场景不同性能也会有差异，并发量小的话，性能还会变差<br></p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/48/ee/872ad07e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">西西弗与卡夫卡</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">性能优势还是有的，毕竟后者是对这个类的所有访问都有锁的动作</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，锁的范围是个大问题。允许A-&gt;B 和 C-&gt;D可以并行还是很重要的</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://wx.qlogo.cn/mmopen/vi_32/DYAIOgq83eploDz1Dtss0rP0TWRQoV6NLyxZSoHASYYScEH1dZuHwYA5gskTW0MKCIzeRCVxC6eU1uicV7gjIcg/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">嘟嘟科技研发部</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">class Allocator {<br>  private List&lt;Object&gt; als =<br>    new ArrayList&lt;&gt;();<br>  // 一次性申请所有资源<br>  synchronized boolean apply(<br>    Object from, Object to){<br>    if(als.contains(from) ||<br>         als.contains(to)){<br>      return false;  <br>    } else {<br>      als.add(from);<br>      als.add(to);  <br>    }<br>    return true;<br>  }<br>  // 归还资源<br>  synchronized void free(<br>    Object from, Object to){<br>    als.remove(from);<br>    als.remove(to);<br>  }<br>}<br><br>class Account {<br>  // actr 应该为单例<br>  private Allocator actr;<br>  private int balance;<br>  // 转账<br>  void transfer(Account target, int amt){<br>    // 一次性申请转出账户和转入账户，直到成功<br>    while(!actr.apply(this, target))<br>      ；<br>    try{<br>      // 锁定转出账户<br>      synchronized(this){              <br>        // 锁定转入账户<br>        synchronized(target){           <br>          if (this.balance &gt; amt){<br>            this.balance -= amt;<br>            target.balance += amt;<br>          }<br>        }<br>      }<br>    } finally {<br>      actr.free(this, target)<br>    }<br>  } <br>}<br>这段代码还是会发生死锁的；场景如下：线程1 A转账给B，线程2 B转账给A：线程1执行完while(!actr.apply(this, target))；这段代码之后，释放2个资源，然后交出CPU;此时线程2也执行while(!actr.apply(this, target))；这段代码，接着线程2 获得B资源，交出CPU，等待；此时线程1获得A资源，这样下去，两个线程还是会死锁的； ---- while(!actr.apply(this, target))这段代码和之后的代码没有关联在一起，是独立的，不是原子性的；</div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">释放2个资源是在转账完成之后，而不是while执行完。线程2获得资源一定是线程1 执行完转账了<br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/01/e7/091804b7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">长眉_张永</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">关键是如何找到最合适的锁的力度。</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是啊，所以知识只是知识，不是能力</p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/f7/38/1b74f53d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Nero.t.Kang</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">虽然看起来 while(!actr.apply(this, target));只是锁住了两个对象，但是因为actr是一个单例的对象，这个方法在执行的时候也需要锁住actr，在多线程状态下也相当于是串行化了，那么这和加上一个Account.class的类锁的串行化有什么区别吗?请老师赐教，谢谢。</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有区别，如果转账操作很耗时，那么a-b,c-d能并行还是有价值的<br></p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/56/90/ec028bbc.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Asanz</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Coffman的四条原则有没有一个命名？或者一个比较正式的学术话的名称？</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我没查到，要不你给赐个大名？</p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/f8/ba/14e05601.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">约书亚</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">考虑现实场景，做出如下假设：转账操作会相对apply方法耗时。<br>那在高并发下synchronized(Account.class)会使得所有转账串行化，使用apply方法能提高转账的吞吐量。<br>但apply方法也有问题，在同一个账户转账操作并发量高的场景下，apply方法频繁失败，转账的线程会不断的阻塞唤醒阻塞唤醒，开销大。<br>也许应该改进一下由Allocator负责在有资源的情况下唤醒调用apply的线程？<br></div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">下一章讲优化</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/57/45/6d140868.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">微光</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问下，既然Account类中，持有的Allocator实例时单实例的。那么在Account中调用Allocator.apply或者Allocator.free方法时，还是同一个对象锁。跟直接锁Account.class有是没区别？</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">锁的范围变了，如果转账这个操作很耗时，而apply很快，那就有优势了。这个要看具体场景。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/64/86/6b593cb9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zach_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">synchronized(Account.class) 导致其他线程来抢占资源时，进入阻塞状态，阻塞线程的唤醒是要比下面这种更消耗资源的吧，这种阻塞后的抢占，可以是公平或者非公平的竞争，……<br><br>Allocator采用while(apply(…))的形式等待资源的释放，并不会进入阻塞状态，但是线程一直处于活跃状态，很多线程下会对cpu使用率增加吧，这种的竞争应该是 看哪个线程先得到返回true吧？ 这种算公平竞争还是非公平竞争呢？<br><br>有点想不明白，想请老师大概提醒一下~</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">apply里面也有一个锁，所以并不公平。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/4e/3a/2aa0f5cf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">linqw</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Allocator的apply方法无需一进来就加锁，只需在要将其锁加进队列里，然后再判断一次，还有Account里也无需在加锁，因为有统一的锁分配，无需在transfer里面再加锁，直接转账就ok<br>class Allocator {<br>  private List&lt;Object&gt; als =<br>    new ArrayList&lt;&gt;();<br>  // 一次性申请所有资源<br> boolean apply(<br>    Object from, Object to){<br>    if(als.contains(from) ||<br>         als.contains(to)){<br>      return false;  <br>    } else {<br>	synchronized(this) {<br>		if(als.contains(from) ||<br>        			 als.contains(to)){<br>      			 return false;  <br>    			}<br>		als.add(from);<br>      		als.add(to); <br>	}<br>    }<br>    return true;<br>  }<br>  // 归还资源<br>  synchronized void free(<br>    Object from, Object to){<br>    als.remove(from);<br>    als.remove(to);<br>  }<br>}<br><br>class Account {<br>  // actr 应该为单例<br>  private Allocator actr;<br>  private int balance;<br>  // 转账<br>  void transfer(Account target, int amt){<br>    // 一次性申请转出账户和转入账户，直到成功<br>    while(!actr.apply(this, target))<br>      ；<br>    try{<br>       if (this.balance &gt; amt){<br>            this.balance -= amt;<br>            target.balance += amt;<br>          }<br>    } finally {<br>      actr.free(this, target)<br>    }<br>  } <br>}<br></div>
+                            <span class="time">2019-05-18</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/e6/02/65a764fe.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Michael</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师下面的写法结果还是不正确，正确结果应该都是200，实际情况是随机的100，200，300请老师指正<br>public class Test {<br><br>  public static void main(String[] args) throws InterruptedException {<br>    Account a = new Account();<br>    Account b = new Account();<br>    Account c = new Account();<br><br>    Thread s1 = new Thread(()-&gt;{<br>      for (int i = 0; i &lt; 1000; i++) {<br>        Thread t1 = new Thread(() -&gt;<br>            a.transfer(b, 100)<br>        );<br>        Thread t2 = new Thread(() -&gt;<br>            b.transfer(c, 100)<br>        );<br><br>        Thread t3 = new Thread(() -&gt;<br>            c.transfer(a, 100)<br>        );<br>        t1.start();<br>        t2.start();<br>        t3.start();<br>        try {<br>          t1.join();<br>          t2.join();<br>          t3.join();<br>        } catch (InterruptedException e) {<br>          e.printStackTrace();<br>        }<br>      }<br>    });<br><br>    Thread s2 = new Thread(()-&gt;{<br>      for (int i = 0; i &lt; 2000; i++) {<br>        Thread t1 = new Thread(() -&gt;<br>            a.transfer(b, 100)<br>        );<br>        Thread t2 = new Thread(() -&gt;<br>            b.transfer(c, 100)<br>        );<br>        Thread t3 = new Thread(() -&gt;<br>            c.transfer(a, 100)<br>        );<br>        t1.start();<br>        t2.start();<br>        t3.start();<br>        try {<br>          t1.join();<br>          t2.join();<br>          t3.join();<br>        } catch (InterruptedException e) {<br>          e.printStackTrace();<br>        }<br>      }<br>    });<br><br>    s1.start();<br>    s2.start();<br>    s1.join();<br>    s2.join();<br><br>    System.out.println(a.getBalance());<br>    System.out.println(b.getBalance());<br>    System.out.println(c.getBalance());<br>  }<br>}<br><br>class Account {<br><br>  private volatile int balance = 200;<br><br>  void transfer(Account target, int amount) {<br>    synchronized (this) {<br>      synchronized (target) {<br>        if (this.balance &gt; amount) {<br>          this.balance -= amount;<br>          target.balance += amount;<br>        }<br>      }<br>    }<br>  }<br><br>  public int getBalance() {<br>    return balance;<br>  }<br>}<br></div>
+                            <span class="time">2019-05-16</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/e6/02/65a764fe.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Michael</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，我运行下面的代码为什么结果是随机的，正确情况应该都是200。请老师指正<br>public class Test {<br><br>  public static void main(String[] args) throws InterruptedException {<br>    Account a = new Account();<br>    Account b = new Account();<br>    Account c = new Account();<br><br>    for (int i = 0; i &lt; 3000; i++) {<br>      Thread t1 = new Thread(()-&gt;{<br>        a.transfer(b, 100);<br>      });<br>      Thread t2 = new Thread(()-&gt;{<br>        b.transfer(c, 100);<br>      });<br><br>      Thread t3 = new Thread(()-&gt;{<br>        c.transfer(a, 100);<br>      });<br><br>      t1.start();<br>      t2.start();<br>      t3.start();<br>    }<br><br>    System.out.println(a.getBalance());<br>    System.out.println(b.getBalance());<br>    System.out.println(c.getBalance());<br>  }<br>}<br><br>class Account {<br>  private int balance = 200;<br><br>  void transfer(Account target, int amount) {<br>    synchronized (this) {<br>      synchronized (target) {<br>        if (this.balance &gt; amount) {<br>          this.balance -= amount;<br>          target.balance += amount;<br>        }<br>      }<br>    }<br>  }<br><br>  public int getBalance() {<br>    return balance;<br>  }<br>}<br></div>
+                            <span class="time">2019-05-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">打印的时候，那三个线程还没执行完，打印前需要join一下那三个线程</p>
+                                <p class="reply-time">2019-05-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/41/f4/5df17eff.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">新的起点，新的开始^_^</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在最后那个破坏循环等待条件的案例中，通过给A和B两个账户中的id排序的方式来加同步，如果有两个线程，那这两个线程中的A和B是同一个A和B吗，这两个账户不是new出来的吗，如果是new出来的，那两个线程中的A账户就不是同一个对象了，即使按序加锁，也不生效呀</div>
+                            <span class="time">2019-05-15</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/dd/98/883c42b4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">刘浒</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while(!actr.apply(this, target)); <br>这种写法应该杜绝吧~</div>
+                            <span class="time">2019-05-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">应该，能不用就不用</p>
+                                <p class="reply-time">2019-05-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/14/be/488b85a0.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zl</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">class Allocator {<br>  private List&lt;Object&gt; als =<br>    new ArrayList&lt;&gt;();<br>  // 一次性申请所有资源<br>  synchronized boolean apply(<br>    Object from, Object to){<br>    if(als.contains(from) ||<br>         als.contains(to)){<br>      return false;  <br>    } else {<br>      als.add(from);<br>      als.add(to);  <br>    }<br>    return true;<br>  }<br>  // 归还资源<br>  synchronized void free(<br>    Object from, Object to){<br>    als.remove(from);<br>    als.remove(to);<br>  }<br>}<br><br>class Account {<br>  // actr 应该为单例<br>  private Allocator actr;<br>  private int balance;<br>  // 转账<br>  void transfer(Account target, int amt){<br>    // 一次性申请转出账户和转入账户，直到成功<br>    while(!actr.apply(this, target))<br>      ；<br>    try{<br>      // 锁定转出账户<br>      synchronized(this){              <br>        // 锁定转入账户<br>        synchronized(target){           <br>          if (this.balance &gt; amt){<br>            this.balance -= amt;<br>            target.balance += amt;<br>          }<br>        }<br>      }<br>    } finally {<br>      actr.free(this, target)<br>    }<br>  } <br>}<br>这段代码是有线程安全问题的啊</div>
+                            <span class="time">2019-05-06</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/5f/60/7ea2d646.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">活好</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">// 一次性申请转出账户和转入账户，直到成功<br>while(!actr.apply(this, target))<br>     ;<br>这里已经一次性申请了所有资源，为什么还要锁 转出和转入 对象</div>
+                            <span class="time">2019-04-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ycfHH</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">账户 1 向 账户 3 转账 同时 账户 3 向 账户 5 转账<br>给资源排序后确实能解决死锁问题，但是并发问题依然没有解决。即账户1给账户3转账，资源1锁上后。执行账户3向5转账，此时账户3资源未加锁，所以账户3成功转账到5。再执行1转到3的操作，此时3的金额是不正确的。但是确实没有死锁问题了。</div>
+                            <span class="time">2019-04-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_bbbda3</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">class Account {<br>  // actr 应该为单例<br>  private Allocator actr;<br>  private int balance;<br>  // 转账<br>  void transfer(Account target, int amt){<br>    // 一次性申请转出账户和转入账户，直到成功<br>    while(!actr.apply(this, target))；<br>    try{<br>      // 锁定转出账户<br>      //synchronized(this){              <br>        // 锁定转入账户<br>        //synchronized(target){           <br>          if (this.balance &gt; amt){<br>            this.balance -= amt;<br>            target.balance += amt;<br>          }<br>        //}<br>      //}<br>    } finally {<br>      actr.free(this, target)<br>    }<br>  } <br>}<br>hi，while 通过后，是否可以把synchronized代码注释掉？</div>
+                            <span class="time">2019-04-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果仅仅是这个题目，可以去掉，如果还有存款业务，就不能去了<br></p>
+                                <p class="reply-time">2019-04-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/5d/60/38ea52c5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Bright丶</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，感觉下面的代码也能避免死锁，并且能实现功能：<br>void transfer(Account target, int amt){<br>    boolean isTransfer  = false;<br>// 锁定转出账户<br>    synchronized(this){<br>          if (this.balance &gt; amt) {<br>          this.balance -= amt;<br>          isTransfer = true;<br>    }   <br>    if (!isTransfer) {<br>         return;<br>    }<br>      // 锁定转入账户<br>      synchronized(target){ <br>          target.balance += amt;<br>      }<br>  }<br><br>反映到现实中的场景：服务员A拿到账本1先判断余额够不够，够的话先扣款，再等待其他人操作完账本2，才增加它的额度。<br><br>但是这样转账和到账就存在一个时差，现实生活中也是这样，转账不会立马到账，短信提醒24小时内到账，所谓的最终一致性。 <br><br>老师帮忙看看这样实现会不会有啥其他问题？</div>
+                            <span class="time">2019-04-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">实际工作中也有这么做的，只不过是把转入操作放到mq里面，mq消费失败会重试，所以能保证最终一致性。</p>
+                                <p class="reply-time">2019-04-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83eotuhVFN9phZnUxxXueAm8rDDibjIkj0L8W7VojYRpSeXwHtDSgLW3SdrNjMQy0AcOUuMmTAQSyO3g/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_e6f3ec</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">        ArrayList&lt;Object&gt; list = new ArrayList&lt;&gt;();<br>        SafeCacl a = new SafeCacl();<br>        SafeCacl b = new SafeCacl();<br>        list.add(a);<br>//        list.add(b);<br><br>        if (list.contains(a)|| list.contains(b)){<br>            System.out.println("进来了");<br>        }<br><br><br>我在测试获取转账代码的时候，感觉这里有点问题，两个对象只要获取一个就返回false?</div>
+                            <span class="time">2019-04-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">vision</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对于第三点，按资源顺序来锁就能打破循环等待有疑问。<br>例如：账户 1 向 账户 3 转账<br>         账户 3 向 账户 5 转账<br>         账户 5 向 账户 1 转账 <br>3个线程同时做3个转账操作，假设t1 执行账户1转账户3，锁1等待锁3；t2 执行账户3转账户5，锁3等待锁5；t3执行账户5转账户1， 等待锁1，这是不是就死锁了？ </div>
+                            <span class="time">2019-04-22</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">5向1转，加锁顺序是1，5，这才叫顺序<br></p>
+                                <p class="reply-time">2019-04-22</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELZPnUAiajaR5C25EDLWeJURggyiaOP5GGPe2qlwpQcm5e3ybib8OsP4tvddFDLVRSNNGL5I3SFPJHsA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">null</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师您好，Allocator 只允许单例，那代码改写成 synchronized(Allocator.class)/ synchronize static apply(...) 是不是等价的，这样还能防止出现 Allocator 对象不一致的情况。<br>谢谢老师</div>
+                            <span class="time">2019-04-18</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">逻辑上等价<br></p>
+                                <p class="reply-time">2019-04-19</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELZPnUAiajaR5C25EDLWeJURggyiaOP5GGPe2qlwpQcm5e3ybib8OsP4tvddFDLVRSNNGL5I3SFPJHsA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">null</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">课后思考：<br>synchronized(Account.class) 是所有转账操作都串行化了，影响到了无关的账户。<br>而 while-apply 的方式只是阻塞当前的这次转账。性能是 while-apply 要好。不过如果其他线程忘了释放锁资源，刚就是死循环了。</div>
+                            <span class="time">2019-04-18</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/af/d8/0f85fc8f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">肖邦的学徒</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">actr.apply(this, target)已经同时拿到两把锁了，感觉不需要在锁住this和target了 </div>
+                            <span class="time">2019-04-11</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/4e/3a/2aa0f5cf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">linqw</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">转账使用细粒度锁，比较好奇一点是，那些账户对象是一样，比如线程1账户A转账给账户B，线程2账户B转账给账户C,那两个线程拿到账户B是一样对象的，那账户预先存到缓存中，感觉这样又不合理，老师，在银行业务方面真正的做法是如何保证多个线程拿到的账户对象是同一个，不然对象不一样拿到的锁就不一样，帮忙解答下哦</div>
+                            <span class="time">2019-04-06</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">实际工作中基本都是靠数据库解决的，这个只是个例子，说明并发编程的一些基本概念而已。</p>
+                                <p class="reply-time">2019-04-06</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/f6/cc/0394b0ff.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">龙腾</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师好，我在用这个Account类的时候怎么控制不同线程访问账户a，a的this都为同一个对象？如果放到集合类里的话没办法满足分布式，放redis存储好像就不是同一个对象了</div>
+                            <span class="time">2019-04-04</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">分布式有分布式的解法😂</p>
+                                <p class="reply-time">2019-04-04</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/52/37/13b4c8aa.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Vincent</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题: 同步类class实例的同步范围太大，只要涉及该类的操作，都会被同步，性能太差; 破坏占用且等待条件 将同步范围缩小为操作涉及的两个账户。提高了并发性能。另外while循环可以替换为基于AQS实现的同步队列，减少CPU消耗。</div>
+                            <span class="time">2019-04-03</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/00/b6/c19640cf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Sun、</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对于第3点，破坏循环等待条件，<br>老师，针对这有个问题，A-&gt;B和B-&gt;C同时执行，id依次增加，是否存在这种可能，在A-&gt;B中，排序，A上锁，对B上锁的时候，B-&gt;C获取到B，对B上锁，出现死锁，老师请明确一下</div>
+                            <span class="time">2019-04-02</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不会死锁，b_c会成功，最终释放锁，然后a_b成功<br></p>
+                                <p class="reply-time">2019-04-03</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/a3/8b/080d337e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">燕青兄弟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">它比 synchronized(Account.class)这个方法，还是有性能优势的。apply方法，只锁定了2个实例，转出和转入这2个实例，而synchronized(Account.class)这个方法，锁的是所有的Account实例。我声明啊，我没看别人的。<br><br><br></div>
+                            <span class="time">2019-04-01</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我信😄<br></p>
+                                <p class="reply-time">2019-04-01</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/d1/ad/1aed3dec.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小飞侠</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有性能优势，锁Account.class会把所有用户的转账操作都变成串行，while的这种方式只限制有关联关系的账户，比如账户c也要转账，如果c和a或b之间发生转账就会进入while等待，但如果c要转账到d就不受a和b的影响</div>
+                            <span class="time">2019-03-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/f6/cc/0394b0ff.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">龙腾</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师好，不同线程访问进来用this和target对象来作为锁是怎么判断是不是同一个账户的对象？<br><br>我理解里面的this对象永远为一个对象不会针对不同账户进行加锁和解锁，如果不是同一个那应该是每个线程都有各自的对象，即使不同线程有可能会有相同的账户但他们的对象不是同一个对象也不会形成互斥吧？target对象由于是从外部传进来的所以我认为传入的对象为每个线程的对象即使为相同账户但对象内存地址不同也不会形成互斥。<br><br>看了好几遍就是想不通，望老师解惑。</div>
+                            <span class="time">2019-03-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我很努力看你的问题了但是没看懂，不同线程访问账户a,a的this都是一个，不知道你的问题是什么<br></p>
+                                <p class="reply-time">2019-03-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/1c/82/74ab79df.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">胡桥</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">第一条，破坏占用且等待条件，感觉while(!actr.apply(this, target))没有意义啊？两个线程完全有可能同时从while出来到达下面的try语句吧。没看懂，麻烦老师指点下。</div>
+                            <span class="time">2019-03-27</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">两个线程都执行a转b,你看看能不能同时到达下面<br></p>
+                                <p class="reply-time">2019-03-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/66/d9/8953d6c6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">秋天来了</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">你用ArrayList在并发下有线程安全问题吗？</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有</p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/4e/3a/2aa0f5cf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">linqw</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1、感觉破坏占用且等待的实现，使用单例分配器，用list要是转账用户数太多，导致在一次性获取锁的时候，需要先判断锁是否有在list里面，感觉这里也会影响到性能，并且list太大占用jvm内存，在一次性获取到锁的时候，感觉内部是不需要在对转出账户和转入账户进行加锁，虽然加锁，jvm会优化成无锁，感觉在安全方面也会有问题，有可能一个线程加的锁，被另一个线程释放掉，比如先调分配器的free在调apply，老师问下，这个避免死锁的使用方法应该使用的比较少吧，感觉使用顺序避免死锁较常用。<br>2、锁或者volatile，在锁中的操作，都会强制刷入内存么？volatile的操作之前的操作也是会强制刷内存么？<br>3、构造函数是不能保证原子的么？如果想在并发的条件下，在一个方法中构造一个对象，在另一个对象能看到构造完的对象，里面的属性都是需要使用final并且对象没有溢出么？</div>
+                            <span class="time">2019-03-23</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">1.只是讲解理论<br>2.用内存模型去理解，不要试图推测jvm怎么实现的<br>3.不能</p>
+                                <p class="reply-time">2019-03-24</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/15/69/fc60d1f4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈华应</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1、多线程间获取共享变量资源的冲突概率非常高，使用synchronized会好一些<br>2、概率低，则使用while好一些，类似于乐观锁的应用场景</div>
+                            <span class="time">2019-03-19</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/52/3c/0c71ad7e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">张三</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，我想知道单例的allocator 什么时候 new , 什么时候set 到 account 对象里边？</div>
+                            <span class="time">2019-03-19</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">参考网络上单例的实现，有很多方式<br></p>
+                                <p class="reply-time">2019-03-19</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/nSsRjJXH3msYEZUazkB7hXHWZpXUZH1ZFDhht8KDFO26Jfpqibjm6OdzEDwqplSz5Y5NGkSicl6MzEicZicStNy5AA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">RedStar</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，下面死锁的测试代码能不能贴出来呢？想做测试不知道怎么模拟...<br>public class Account {<br>	private int balance = 200;<br>	public void transfer(Account target, int amt) {<br>		synchronized (this) {<br>			synchronized (target) {<br>				if(this.balance &gt; amt) {<br>					this.balance -= amt;<br>					target.balance += amt;<br>				}<br>			}<br>		}<br>	}<br><br>	public int getBalance() {<br>		return balance;<br>	}<br>}</div>
+                            <span class="time">2019-03-19</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">        final Account a = new Account(200);<br>        final Account b = new Account(200);<br><br>        Thread th1 = new Thread(()-&gt;{<br>            while (true)<br>                a.transfer(b, 100);<br>        }, "T1");<br>        Thread th2 = new Thread(()-&gt;{<br>            while (true)<br>                b.transfer(a, 100);<br>        }, "T2");<br><br>        th1.start();<br>        th2.start();<br>        th1.join();<br>        th2.join();</p>
+                                <p class="reply-time">2019-03-20</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/8d/a6/a28e6110.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">楊_宵夜</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">言简意赅, 真是太有趣了; 老师对并发的讲解深入浅出! 赞赞赞!!</div>
+                            <span class="time">2019-03-19</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">感谢你把有趣读出来了😄<br></p>
+                                <p class="reply-time">2019-03-19</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/1d/b5/971261fd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">alias cd=rm -rf</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">因为actr.apply(this, target)只会阻塞调用this.transfer的线程。而synchronized锁了Account.class相关的操作都会变成串行。</div>
+                            <span class="time">2019-03-17</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/07/c8/14945a9e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Enterprise</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我试了一下直接给this加锁，跑了很多遍始终是100 200 300。是不是写的有点儿问题，始终没有出现bug的情况，求答疑<br>         public static void main(String[] args) throws InterruptedException {<br>		AccountStupidLock accountStupidLock = new AccountStupidLock();<br>		AccountStupidLock accountStupidLock1 = new AccountStupidLock();<br>		AccountStupidLock accountStupidLock2 =new AccountStupidLock();<br>		Thread thread1 = new Thread(() -&gt; {<br>			accountStupidLock.transfer(accountStupidLock1,100);<br>		});<br>		Thread thread2=new Thread(()-&gt;{<br>			accountStupidLock1.transfer(accountStupidLock2,100);<br>		});<br>		thread2.start();<br>		thread1.start();<br>		thread1.join();<br>		thread2.join();<br>		System.out.println(accountStupidLock.getBalance());<br>		System.out.println(accountStupidLock1.getBalance());<br>		System.out.println(accountStupidLock2.getBalance());<br>	}<br>class AccountStupidLock {<br><br>	private int balance=200;<br><br>	public int getBalance(){<br>		return balance;<br>	}<br><br>	// 转账<br>	synchronized void transfer(AccountStupidLock target, int amt) {<br>		if (this.balance &gt; amt) {<br>			this.balance -= amt;<br>			target.balance += amt;<br>		}<br>	}<br></div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">在if下面sleep一段时间看看<br><br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLYBHUSKR9LTS7iaLbbO0pzbmR997SHfSZf7qbuEUhyM9hlvjh5QwnRFlww296XkqVZLdibWcvDEM3A/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">HeroKojima</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在破坏占用且等待条件中，保证Allocator为单例与上一节中传入同一个对象作为锁是不是一样的？是不是也会遇到不同工程下有多个Allocator的情况？</div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">会的<br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/30/bf/c635b6b1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">kaizhi</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">感觉嘟嘟科技研发部所说的死锁其实不会发生，因为actr.apply执行完成后并不会释放两个资源，两个资源的释放是在actr.free中通过remove完成的，而不是synctorized执行完就释放这两个资源了。</div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍</p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/bf/55/198c6104.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小伟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">手写了转账的代码，发现死循环的确性能成问题，10个线程并发同样两个账户间转账，且转账逻辑不耗时，就会有30w次左右的锁尝试。必须加interval和timeout限制锁尝试的次数和获取锁的最大时长，来提高cpu和资源利用率。<br><br>total lock failed time is 252153<br>pool-1-thread-10 failed 117866 times!<br>pool-1-thread-2 failed 14645 times!<br>pool-1-thread-3 failed 3661 times!<br>pool-1-thread-4 failed 6163 times!<br>pool-1-thread-5 failed 9908 times!<br>pool-1-thread-6 failed 32832 times!<br>pool-1-thread-7 failed 19087 times!<br>pool-1-thread-8 failed 1334 times!<br>pool-1-thread-9 failed 46648 times!</div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍👍<br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/bf/55/198c6104.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小伟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">关于课后问题就不在各位大神的回复之后赘述了。<br>我想到一种可能，如果apply（a，b）成功之后的转账操作需要10分钟，而下个请求是apply（b，c），那么apply（b，c）在这10分钟一定会失败且不断尝试。如果这时一个apply（d，e）过来了，但由于运气不好apply（b，c）在出临界区后总能再次得到allocator的锁，一直占据allocator的锁，那么apply（d，e）岂不是也会因为一直拿不到allocator的锁一直失败并尝试？即使看上去apply（a，b）和apply（d，e）可以并行。</div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">理论上，如果两个线程优先级相同，操作系统能保证他们机会均等</p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/6e/bd/b83ad32d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">shangyu</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">同样，现实世界里的问题 ，也可以参考软件世界里的解决思路</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你厉害👍<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/db/26/54f2c164.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">靠人品去赢</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我觉得while(!actr.apply(this, target));和synchronized(Account.class)也使用中，Account只有一个转账操作其实两者差不多。但是如果Account中还有修改密码，查询余额等也需要加锁的操作，那就不一样了。加锁Account看似简单易懂也能保证安全，但是效率不敢恭维你来个相关操作我就全给你锁上，而前者转账对应转账的操作，修改密码对应修改密码的操作，看余额对应余额操作彼此独立，不用出现A操作等待B操作完场的这种状况。</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，要看具体场景</p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/6e/04/94677062.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">嘎子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">想问一下老师，用的是什么做图神器？又好看又清晰！</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">极客时间的同学用ppt画的<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/94/47/75875257.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">虎虎❤️</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在并行执行 A-&gt;B B-&gt;C 的转账过程中，A-&gt;B的转账过程，会在while(!actr.apply(this, target)); 这个循环中，阻塞B-&gt;C的转账线程。<br>然而在并行执行 A-&gt;B C-&gt;D的转账过程中，是不会相互阻塞的。所谓的锁了所有账户的说法，我不是很理解。<br><br>反观 synchronized(Account.class)， 不仅在 A-&gt;B C-&gt;D的转账过程中不能并行。甚至会串行其他需要获得Account.class这个锁的所有操作。例如查看余额。</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">其他同学说的是apply里也有一把锁，那把锁所有转账都要去竞争<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/57/50/82097d59.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">鱼客</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看了下一章 对这一章的synchronize不能主动释放资源表示不解 难道wait不是主动释放资源吗？</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">一旦进步等待队列，还有机会执行wait吗？</p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/3c/02/d9a8c8ce.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">k2b_dll</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">破坏循环条件那个解决方案里， account里的id,有什么作用呢？ 按顺序加锁 跟原来的锁两次有什么区别呢？  </div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">再想想为什么会死锁吧，就是文中的例子，读懂为什么会死锁就知道答案了<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/mFkjLNhwXxEpxnt1w7qRic5NGP0WjOWZSUgGXnyaZWicq8Z8jztP7M9NGZ42F27XqabrVuYZwkHrAh6VfrnYCT0Q/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">walkingonair</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">学习了下一章以后又回来学习了一遍，有个疑问:死循环使用apply方法判断后，那么线程会被阻塞在这个方法这里，那么下面的锁转账对象的同步代码块还有必要吗？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果仅仅是示例代码就没必要，如果账户还有其他操作，例如取款，就有必要了<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/dc/9d/e20b37d7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">马晓光</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我按照你写的代码while(actr.apply(this, target));<br>编译器报错</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/dc/9d/e20b37d7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">马晓光</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">学习中</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/50/99/44378317.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李皮皮皮皮皮</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Coffman总结的很到位😄</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这才是科学家</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/2b/45/e8f64725.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Smile</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">之前没有想到通过次序来重新调整获取锁的次序，从而解决循坏等待问题，学到了</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/2b/c8/61eeae65.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Sunny_Lu</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师你好，我有个疑惑，Account实例难道永远是单例的么？现实中往往针对转账操作会new 一个线程私有的Account对象吧？那这样锁是无效的，还是说老师您说的场景就是要确保项目一启动，每一个Account都只能是单例的，可能理解有误，请老师指证！</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不是单例，但是同一个账户只有一个实例<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/2c/62/b5fcbf2b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Mark</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">应该不能，有一行没看明白<br>Account类中字段Allocator actr在哪里实例化的，这应该关系到申请资源是否安全吧。<br><br>/ 转账<br>  void transfer(Account target, int amt){<br>    // 一次性申请转出账户和转入账户，直到成功<br>    while(!actr.apply(this, target))<br>      ；<br>  ？？？？？？  关键这里我没看明白 Allocator actr 在哪里实例化的，线程T1和T2，持有的是同一个Allocator实例嘛？？<br>    try{<br>      // 锁定转出账户<br>      synchronized(this){              <br>        // 锁定转入账户</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">持有的是同一个，代码注释里提了，actr是单例，创建单例的代码还是不写的好，和这节的内容没关系</p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/2c/62/b5fcbf2b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Mark</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">代码31-35步不是原子的啊，31步之后，获取到两个资源的als集合可被其它线程操作啊。<br>最开始的T1和T2线程分别AB对象死锁没有解决，只是降低了可性。</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">申请完ab，还能申请ba吗？<br></p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/d0/03/2e632d36.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_c42505</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Account.class 锁住的是Account下的所有操作，虽然while里面看是只锁了两个对象，但是apply方法还有一把锁，所有转账操作都要调用该方法，所以所有转账操作都要等这把锁，性能也不是很好，对吗？望老师，指正</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个要看场景，如果转账操作耗时长，允许A转B，C转D并行就是有意义的。</p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/0b/a3/bf1f0f9f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">球场诗人</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">实际应用中，我们是数据库用的多一些，还是用这个类多一些</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">数据库，而且只能是数据库<br></p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/2c/62/b5fcbf2b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Mark</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">破坏占用且等待示例代码我觉得有点儿问题，Allocator和account里都是对象级别锁，accocator在return之后释放了allocator对象锁，别的线程可以继续获取资源。account依然会有死锁可能。</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">举个例子？</p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/f3/69/7039d03f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">书策稠浊</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题，.class的方式性能更差，把所有不相关的操作也锁住了。</div>
+                            <span class="time">2019-03-11</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIS0nk3C1ibMgufXryCzYkrL5bpO25fXPqbSqodGibZqOvbY8m5HEZ8LG4gTDmPKsIj3uK9Z3ibiceF1g/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Php test</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">循环获取锁，如果线程少则响应快，如果线程多则大量线程消耗性能。</div>
+                            <span class="time">2019-03-10</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/f0/27/8b72141c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">天涯煮酒</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">案例中为啥不把als和apply(),free()都设为static呢？感觉作用是一样的，代码简洁些</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有道理！！！！</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/9f/41/82306dfe.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">包子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，课后题，这种方式避免了线程反复切换，有效减少内存切换的开销。就像cas一样。<br>是这样吗</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">和cas还不一样，apply里面还是有synchronized的。也就是说apply还是会阻塞的。</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/36/95/a5358127.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">罗</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在第一种方式中：<br>class Account {<br>    ... ... <br>    while(!actr.apply(this, target))<br>      ；<br>    try{<br>      // 锁定转出账户<br>      synchronized(this){              <br>        // 锁定转入账户<br>        synchronized(target){    <br>		<br>｝<br><br>我们使用while循环获取锁，后面的 synchronized(this)与synchronized(target)是不是就可以去掉了呢? </div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个例子里可以，因为除此之外没有其他路径能够访问到this。如果还有别的方法，例如取款操作，那就不可以了。</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/15/01/927d96e5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">随风而逝</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，现在的嵌套锁方案，对于A转B，C转A的情况是不是也可能被锁住了？</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这种情况下，A转B能成功，所以最终会释放A锁，之后C转A就能成功了。所以不会死锁。</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/30/c1/2dde6700.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">密码123456</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">优势是有的，直接锁class文件，会阻塞所有的同步方法。使用一个新对象来实现同步，仅仅锁住的账户转账。</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">范围不同，不过性能是否有优势，要看场景。</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/a2/f3/aa504fa6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">波波</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师提供的思路不错，但是贴出来的代码，不够严谨，首先单例初始化没体现出来，然后循环判断错误。建议老师以后贴出来的代码，可以先执行，确保没问题后再贴出来。</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">基本都会用伪码，原因是字数更少。手机屏幕太小，换行后很难看清楚。至于其他的我尽力吧。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/7d/5b/beeeb675.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">叶色</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">如果锁的竞争不激烈，用循环就很容易获取到锁，性能也会更好。<br>如果锁竞争激烈，这时候就需要循环很久才能拿到锁，性能就不是太好了，也会浪费很多资源在循环上，这时候用synchronize会好一点，在等待锁的时候，其他线程会休眠，减少资源消耗。</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，循环很消耗CPU。下一期会优化这个问题。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fc/90/c9df0459.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ack</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">这个方法还是比 synchronized(Account.class) 有性能优势的，多个账户进行转账工作这个性能会更明显，一个串行等待，一个可并发操作。</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，要看场景。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e1/df/6e6a4c6b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">kevin</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while(actr.apply(this, target))<br><br>这里是等待守护条件成立，不成立循环尝试，apply成功后应该是退出，执行后续操作<br>所以是不是应该改成<br><br>while( !actr.apply(this, target) )</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你也发现了一个大bug，感谢感谢，已经修复了。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/f3/de/c6509355.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">花蛋壳</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">如果alloctor单例对象只用在转账业务中，那么锁的范围肯定没有锁住account.class范围大！我这里有一个业务上的疑问，如果想让同一个用户的账户操作上锁，不同用户之间转账业务不用互斥，这该如何操作？假设每次操作请求都是一个新的account对象，如何确保两个不同线程对用户a账户的操作是互斥的，是不是只能限制同一个用户账户操作是同一个account对象？不知道我这个问题有没有表达清楚</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我已经很努力看了，还是没看懂，最好是代码化一下</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/b6/c7/db31ecba.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小彗星</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有点像自旋+cas</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是有点像，不过还不是cas</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/04/ef/fea0fdbd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小黄</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我分析循环不一定有优势，看应用场景了。虽然apply, free并不耗时，但仍是同步方法。<br>如果一个线程正在请求，势必其他线程会进入阻塞状态，而该线程不会因为循环会继续请求，所以不公平<br></div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，我也觉得要看应用场景。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/d7/df/fc0a6709.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WolvesLeader</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我的意思是，我们怎能找到发生死锁的地方，怎么检测有没有死锁</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">java的线程dump能看到是不是死锁了</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/2b/6f/4b307aad.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">正在加载更多......</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">@捞鱼的搬砖奇  while死循环的 actr.apply(this, target) 的这个方法还获取了  Alloctor  对象的锁吧？与获取Account 对象的锁没有什么区别吧</div>
+                            <span class="time">2019-03-09</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/36/d2/c7357723.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">发条橙子 。</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">划重点 ， 解决死锁的三个方向点 ， 又get到了新姿势 😁<br><br>另外，老师后面会不会讲到线程的生命周期和线程间通信的相关知识</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">后面会讲<br></p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/fe/44/3e3040ac.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">程序员人生</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看完要哭了，我干过用1来解决死锁问题，后来改成3就好很多。当然业务场景不是转账。</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">很多人都会想到用1😄</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/d7/df/fc0a6709.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WolvesLeader</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">茫茫的代码海洋，，，怎么找到哪里发生了死锁，，，，，</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">数据库这么牛逼都免不了，linux这么牛，也不能自证没有死锁</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/47/39/cda2f2b3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">木木匠</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">性能优势取决于操作范围，如果account 对象还有其他操作，那么对于while 循环只会锁住转账，而account.class是锁住整个对象，这里会涉及锁的范围不同，如果忽略范围，我觉得在性能优势不大</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">严重同意<br></p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/ee/d2/7024431c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">探索无止境</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有优势，因为用Acount.class锁定的是全部账户资源，而现在这个做法只是锁住了两个当前转账的账户对象，期待老师的解释！期待加快更新！</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">apply里面也有一个锁，所以也不是仅仅锁了当前的两个账户。性能是否有优势，要看具体场景。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/ea/05/c0d8014d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">刘章周</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对于转账操作来说，是没有区别的，因为申请资源是单例对象，所有转账业务都是串行执行的。</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有些场景，也能快。例如转账操作很耗时的时候。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/14/50/c23cf47d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">如果申请耗时比较长，性能就差。如果耗时短，性能就有优势。感觉有点像自旋锁。不晓得得对不对</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有点自旋的意思。但是apply里面有锁，所以还不是自旋。能想到apply的耗时很好，无论什么情况下，同步代码块里的代码都要尽可能快。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li></ul>
+            </div>
+        </div> <!----> <!----></div>
+</div>
+<link rel="dns-prefetch" href="//cdn.mathjax.org">
+<script type="text/x-mathjax-config">MathJax.Hub.Config({
+        showProcessingMessages: false,
+        messageStyle: "none",
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a']
+        }
+      });
+      MathJax.Hub.Register.MessageHook("End Process", function (message) {
+        var eve = new Event('mathjaxfini')
+        window.dispatchEvent(eve)
+      })
+
+
+
+
+</script>
+
+</body>

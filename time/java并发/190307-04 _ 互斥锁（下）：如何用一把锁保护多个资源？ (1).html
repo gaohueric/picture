@@ -1,0 +1,2478 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="Keywords" content="极客时间,极客邦,极客邦科技,极客邦控股,极客时间App,专栏订阅,极客新闻,二叉树,极客Live,QCon,左耳听风,AI技术内参,大航海时代,陈皓,徐飞,洪亮劼,霍泰稳,池建强,Selina,Gary,InfoQ,极客搜索">
+    <meta name="description" content="极客时间是极客邦科技出品的一款 IT 内容知识服务 App，内容包含专栏订阅、极客新闻、热点专题、直播、视频和音频等多形式的知识内容，并设有陈皓专栏、徐飞专栏、洪亮劼专栏等专栏供订阅。">
+    <link rel="apple-touch-icon" sizes="180x180" href="//static001.geekbang.org/static/icon/time/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="//static001.geekbang.org/static/icon/time/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="//static001.geekbang.org/static/icon/time/favicon-16x16.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>04 | 互斥锁（下）：如何用一把锁保护多个资源？</title>
+
+    <link href="https://static001.geekbang.org/static/time/css/app.3e04e644962ca8c2f97ec7731bb7710c.css" rel="stylesheet">
+    <style type="text/css">.hljs-ln {
+        border-collapse: collapse
+    }
+
+    .hljs-ln td {
+        padding: 0
+    }
+
+    .hljs-ln-n:before {
+        content: attr(data-line-number)
+    }</style>
+    <style type="text/css">#iv-container {
+        position: fixed;
+        background: #0d0d0d;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        display: none;
+        z-index: 1000
+    }
+
+    .iv-container {
+        overflow: hidden
+    }
+
+    .iv-close {
+        width: 26px;
+        height: 26px;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        cursor: pointer;
+        text-align: center;
+        overflow: hidden;
+        text-shadow: 0 0 3px #6d6d6d;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all ease .2s;
+        -o-transition: all ease .2s;
+        transition: all .2s ease
+    }
+
+    .iv-close:after, .iv-close:before {
+        content: "";
+        height: 2px;
+        width: 26px;
+        background: #fff;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        margin-top: -2px;
+        border-radius: 2px
+    }
+
+    .iv-close:before {
+        -webkit-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        transform: rotate(45deg)
+    }
+
+    .iv-close:after {
+        -webkit-transform: rotate(-45deg);
+        -moz-transform: rotate(-45deg);
+        -ms-transform: rotate(-45deg);
+        -o-transform: rotate(-45deg);
+        transform: rotate(-45deg)
+    }
+
+    .iv-close:hover {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .iv-image-view {
+        position: absolute;
+        height: 100%;
+        width: 100%
+    }
+
+    .iv-image-wrap {
+        display: inline-block
+    }
+
+    .iv-image-wrap:active {
+        cursor: move
+    }
+
+    .iv-large-image {
+        cursor: move;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: #ececec;
+        -moz-transform: translateZ(0);
+        -o-transform: translateZ(0)
+    }
+
+    .iv-large-image, .iv-loader {
+        position: absolute;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0)
+    }
+
+    .iv-loader {
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        z-index: 100;
+        margin-top: -16px;
+        margin-left: -16px;
+        font-size: 5px;
+        text-indent: -9999em;
+        border-top: 1em solid hsla(0, 0%, 100%, .2);
+        border-right: 1em solid hsla(0, 0%, 100%, .2);
+        border-bottom: 1em solid hsla(0, 0%, 100%, .2);
+        border-left: 1em solid #fff;
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear
+    }
+
+    .iv-loader:after {
+        width: 10em;
+        height: 10em;
+        border-radius: 50%
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }</style>
+    <style type="text/css">.vue-pull-to-wrapper[data-v-12abd9fb] {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .scroll-container[data-v-12abd9fb] {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .vue-pull-to-wrapper .action-block[data-v-12abd9fb] {
+        position: relative;
+        width: 100%
+    }
+
+    .default-text[data-v-12abd9fb] {
+        height: 100%;
+        line-height: 50px;
+        text-align: center
+    }</style>
+    <style type="text/css">.button-cancel[data-v-87ffcada] {
+        color: #888;
+        border: 1px solid #888;
+        border-radius: 3px;
+        margin-right: 12px
+    }
+
+    .button-cancel[data-v-87ffcada], .button-primary[data-v-87ffcada] {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        height: 35px;
+        display: inline-block;
+        font-size: 15px;
+        text-align: center;
+        line-height: 36px
+    }
+
+    .button-primary[data-v-87ffcada] {
+        color: #fff;
+        background-color: #ff5a05;
+        border-radius: 3px
+    }
+
+    .pd[data-v-87ffcada] {
+        padding-left: 1.375rem;
+        padding-right: 1.375rem
+    }
+
+    .article[data-v-87ffcada] {
+        max-width: 46.25rem;
+        margin: 0 auto
+    }
+
+    .article .article-unavailable[data-v-87ffcada] {
+        color: #fa8919;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 24px;
+        border-radius: 5px;
+        padding: 12px;
+        background-color: #f6f7fb;
+        margin-top: 20px
+    }
+
+    .article .article-unavailable .iconfont[data-v-87ffcada] {
+        font-size: 12px
+    }
+
+    .article .main[data-v-87ffcada] {
+        padding: 1.25rem 0;
+        margin-bottom: 52px
+    }
+
+    .article-title[data-v-87ffcada] {
+        color: #353535;
+        font-weight: 400;
+        line-height: 1.65rem;
+        font-size: 1.34375rem
+    }
+
+    .article-info[data-v-87ffcada] {
+        color: #888;
+        font-size: .9375rem;
+        margin-top: 1.0625rem
+    }
+
+    .article-content[data-v-87ffcada] {
+        margin-top: 1.0625rem
+    }
+
+    .article-content.android video[data-v-87ffcada]::-webkit-media-controls-fullscreen-button {
+        display: none
+    }
+
+    .copyright[data-v-87ffcada] {
+        color: #b2b2b2;
+        padding-bottom: 20px;
+        margin-top: 20px;
+        font-size: 13px
+    }
+
+    .audio-player[data-v-87ffcada] {
+        width: 100%;
+        margin: 20px 0
+    }
+
+    .to-comment[data-v-87ffcada] {
+        overflow: hidden;
+        padding-top: 10px;
+        margin-bottom: -30px
+    }
+
+    .to-comment a.button-primary[data-v-87ffcada] {
+        float: right;
+        height: 20px;
+        font-size: 12px;
+        line-height: 20px;
+        padding: 4px 8px;
+        cursor: pointer
+    }
+
+    .article-comments[data-v-87ffcada] {
+        margin-top: 2rem
+    }
+
+    .article-comments h2[data-v-87ffcada] {
+        text-align: center;
+        color: #888;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1rem
+    }
+
+    .article-comments h2[data-v-87ffcada]:before {
+        border-top: 1px dotted #888;
+        content: "";
+        position: absolute;
+        top: 56%;
+        left: 0;
+        width: 100%;
+        z-index: -1
+    }
+
+    .article-comments h2 span[data-v-87ffcada] {
+        font-size: 15.25px;
+        font-weight: 400;
+        padding: 0 1rem;
+        background: #fff;
+        display: inline-block
+    }
+
+    .article-sub-bottom[data-v-87ffcada] {
+        z-index: 10;
+        cursor: pointer
+    }
+
+    .switch-btns[data-v-87ffcada] {
+        height: 76px;
+        cursor: pointer;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        border-bottom: 10px solid #f6f7fb;
+        position: relative
+    }
+
+    .switch-btns[data-v-87ffcada]:before {
+        content: " ";
+        height: 1px;
+        background: #e8e8e8;
+        position: absolute;
+        top: 0;
+        left: 0;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        left: 1.375rem;
+        right: 1.375rem
+    }
+
+    .switch-btns .btn[data-v-87ffcada] {
+        height: 38px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .switch-btns .btn .tag[data-v-87ffcada] {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 62px;
+        flex: 0 0 62px;
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        border-radius: 10px;
+        height: 22px;
+        line-height: 22px;
+        background: #f6f7fb;
+        font-weight: 400
+    }
+
+    .switch-btns .btn .txt[data-v-87ffcada] {
+        margin-left: 10px;
+        -webkit-box-flex: 1;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        color: #888;
+        font-size: 15px;
+        height: 22px;
+        line-height: 22px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 400
+    }
+
+    @media (max-width: 769px) {
+        .article .breadcrumb[data-v-87ffcada] {
+            padding-top: 10px;
+            padding-bottom: 10px
+        }
+    }</style>
+    <style type="text/css">.empty {
+        height: 51px
+    }
+
+    .mobile-tips {
+        width: 100%;
+        height: 51px;
+        background: rgba(0, 0, 0, .8);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 0 12px;
+        -webkit-transition: opacity .35s;
+        transition: opacity .35s;
+        opacity: 0;
+        pointer-events: none
+    }
+
+    .mobile-tips.istop {
+        opacity: 1;
+        pointer-events: auto
+    }
+
+    .mobile-tips .mobile-tips-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: start;
+        -ms-flex-pack: start;
+        justify-content: flex-start
+    }
+
+    .mobile-tips .mobile-tips-info i {
+        width: 36px;
+        height: 36px;
+        background-image: url(data:image/png;base64,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);
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        background-size: contain;
+        border-radius: 7px
+    }
+
+    .mobile-tips .mobile-tips-info h2 {
+        font-size: 15px;
+        color: #fff;
+        font-weight: 400;
+        margin-left: 6px
+    }
+
+    .mobile-tips .mobile-tips-info h2 span {
+        font-size: 11px
+    }
+
+    .mobile-tips a {
+        width: 72px;
+        height: 31px;
+        text-align: center;
+        border: 1px solid #fa8919;
+        border-radius: 3px;
+        font-size: 13px;
+        color: #fa8919;
+        line-height: 31px
+    }</style>
+    <style type="text/css">.share-poster-wrapper {
+        position: fixed;
+        background-color: #fff;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -moz-user-select: -moz-none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .share-poster-wrapper .poster-bottom, .share-poster-wrapper .poster-middle, .share-poster-wrapper .poster-top {
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle {
+        padding: 16px 32px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-bottom: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo .poster-avatar {
+        min-width: 45px;
+        min-height: 45px;
+        width: 7vw;
+        height: 7vw;
+        border-radius: 50%;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle .nickname {
+        font-size: 5vw;
+        font-weight: 400;
+        margin-left: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .time {
+        font-size: 3.2vw
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content {
+        font-size: 4vw;
+        font-weight: 400;
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+        letter-spacing: 1px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content {
+        font-size: 3.7vw;
+        padding: 32px 0
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info {
+        border-left: 1px solid #000;
+        padding-left: 10px;
+        margin-top: 38px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info p {
+        font-size: 3.2vw;
+        line-height: 1.5
+    }
+
+    .share-poster-wrapper.theme0 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/top.png") no-repeat 15px 1px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle {
+        width: 100%;
+        padding-left: 56px;
+        padding-right: 56px;
+        background-image: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/middle.png");
+        background-repeat: repeat-y;
+        background-position: 15px 0
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .time {
+        margin-bottom: 45px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .quote-content {
+        border-top: 1px solid #e3e1dc;
+        margin-top: 30px
+    }
+
+    .share-poster-wrapper.theme0 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/bottom.png") no-repeat 15px -10px
+    }
+
+    .share-poster-wrapper.theme1 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/top.png") no-repeat 38px 1px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle {
+        width: 100%;
+        padding: 0 42px 10px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/middle.png") repeat-y 38px 0
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo {
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo .poster-avatar {
+        margin-left: 38px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-wrapper {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        min-height: 260px;
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time {
+        max-width: 65px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        text-align: center;
+        vertical-align: middle;
+        border-right: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time span {
+        white-space: nowrap;
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-content {
+        padding: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-content {
+        font-size: 3.7vw;
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-info {
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .footer {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-right: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/bottom.png") no-repeat 38px -10px
+    }
+
+    .share-poster-wrapper .share-poster {
+        background: #fefdf8;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #9b8d73;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        overflow: auto;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .share-poster-wrapper .share-poster.color0 {
+        background-color: #fefdf8
+    }
+
+    .share-poster-wrapper .share-poster.color1 {
+        background-color: #4d4d4d
+    }
+
+    .share-poster-wrapper .share-poster .footer {
+        margin-top: 2rem;
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: end;
+        -ms-flex-pack: end;
+        justify-content: flex-end;
+        -webkit-box-align: end;
+        -ms-flex-align: end;
+        align-items: flex-end
+    }
+
+    .share-poster-wrapper .share-poster .footer p {
+        margin: 0;
+        line-height: 1.4;
+        margin-left: 20px;
+        text-align: right;
+        padding-right: 20px
+    }
+
+    .share-poster-wrapper .controls {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        width: 100%;
+        padding-top: 5px;
+        -webkit-box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        z-index: 1;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .controls > div {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding: 10px 0
+    }
+
+    .share-poster-wrapper .controls > div span {
+        font-size: .85rem
+    }
+
+    .share-poster-wrapper .controls > div button {
+        width: 100px;
+        height: 24px;
+        background: #eee;
+        margin: 0 10px;
+        border-radius: 5px;
+        border: 2px solid #b2b2b2;
+        outline: none
+    }
+
+    .share-poster-wrapper .controls > div button.on {
+        border: 2px solid #ff5a05
+    }
+
+    .share-poster-wrapper .controls .controls-themes button {
+        color: #b2b2b2;
+        font-size: 12px;
+        background: #fff;
+        text-align: center
+    }
+
+    .share-poster-wrapper .controls .controls-themes button.on {
+        color: #ff5a05
+    }
+
+    .share-poster-wrapper .buttons {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .buttons a {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        text-align: center;
+        color: #000;
+        font-weight: 400;
+        height: 3rem;
+        line-height: 3rem
+    }
+
+    .share-poster-wrapper .buttons a .icon-share-money {
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px
+    }
+
+    .share-poster-wrapper .buttons a:last-child {
+        border-left: 1px solid #f5f5f5
+    }
+
+    .share-poster-wrapper img {
+        max-width: 100%
+    }
+
+    .share-poster-wrapper.android .poster-middle .nickname {
+        font-size: 10vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .time {
+        font-size: 6.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .poster-middle-content {
+        font-size: 8vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-content {
+        font-size: 7.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-info p {
+        font-size: 6.4vw
+    }</style>
+    <style type="text/css">.mini-audio-player {
+        width: 100%;
+        height: 5.25rem;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 1rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        margin: 1rem 0
+    }
+
+    .mini-audio-player > a {
+        border: none;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .mini-audio-player .btn-play {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .btn-pause, .mini-audio-player .btn-play {
+        width: 2.6875rem;
+        height: 2.6875rem;
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none
+    }
+
+    .mini-audio-player .btn-pause {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .audio-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        margin-left: .6875rem;
+        min-width: 0
+    }
+
+    .mini-audio-player .audio-info h3 {
+        color: #353535;
+        font-size: 15.25px;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .mini-audio-player .audio-info p {
+        margin: 0;
+        margin-top: .125rem;
+        font-size: 11px;
+        line-height: 1rem
+    }
+
+    .mini-audio-player .audio-info p span {
+        color: #888
+    }
+
+    .mini-audio-player .btn-download {
+        width: 1.25rem;
+        height: 1.25rem;
+        position: relative;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAA+CAYAAACbQR1vAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAA4hJREFUaIHtm8lOFFEUhr9qCWGHGxcaY1joK2h0YRzAtYmsWbAGGidEXOACbAYRxfgAPoEPoInGxJgg86gsJTHMw86EhS7O7TDk3uqq6qo6HahvQ7pOce7//1U0feve9vr6+lAiD3QC/4AC8FZDRJXGoMB14PWB1yPANPA1bSG5tAc0XLEcu5y6CvQCOGU5pnI3agVQMWQBaAvQJgtAW4A2WQDaArTJAtAWoE0WgLYAbbIAtAVokwWgLUCbLABtAdpkAfjU6oC7wKV0pCTCRcRDnesEVwDNwC/gg/nZHbeyFOgGltj30Gw7yRZALfAOqDavPeA50BO7xOToQTR75nU14qn26Im2AM4DNZbjz4DeePQlSi+i9Sg1iLdD2AJYApYdzbuo7BBeIBptLCPeDmELYA9oBHYdjbqQpaxKowA8ddR2gXuIt0O43gRHgTu4Q+ikskIoIJps7AINwA9b0e/fYJAQ1FZWD9CP2/wOUI/DPJT+IDRqGrhCeGIEaNEPdDhqO8iVH/NrEOST4BgSwo6j3gEMBOgTNwP4m6+nhHkI/lG4VAiPgcGAveJg0IxpYxvROh6kUZi5wLhpvO2oPyKdEF6asWyEMg/hJ0PjyN+VXwhDIXuGYQh46KhtIeYnwjSMMhss3glbjvoDkglhyPS2Eck8RJ8OTyB3gl8IryL2tjGM2/wmYn4ySuNyngdMmIE3HfX7iHDPUQ+CZ3q0O+qbyIWIZB7KfyAyaQS4QmhH7oQoIZQyv0EZV75IHE+EJvG/E9oJfyd4yC6yvKO+gQQ/FaKnlbgeiU0hIWw46nnEUJAQiubbHPV1M1bZ5iHeZ4KlQmgD3uAfgofsGfQz34DsKYyFuLemTSMhfATOWOqtiMk/llrRfIuj9zpwG5gtX+Y+SezNK4bwCXsILdgDaAXOOnomYh6Seyw+gwhed9TPWY75mb9FAuYh2XWBWUS4K4QgrAE3gblYFFlIemFkDjEQJYQ1JMD5WBUdIY2VoXkkhLUQv7NqfidR85De0liYEFaRK7+QqCJDmmuDC0gIqz7nrJhzUjEP6S+O+oWwglz5xTQFaawOLwI3gO8Hjo2ZY6maB72vzPwErgEXkO8MuVaiEkcrgCK/lcfPNkhkAWgL0KYKmZiMIG9Ktn0Bx5G/wDcgXwW8R6avJ41G4HQOufInlas5ZO5+UpnJAU3AFyy7J44xe8BnoOk/JruwYo92bigAAAAASUVORK5CYII=);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none;
+        padding-right: .25rem
+    }
+
+    .mini-audio-player .btn-download .icon-download-done {
+        width: .45rem;
+        height: .45rem;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        display: inline-block;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAYnUlEQVR4Xu2dCbQcVZnH///qqiDIw6CIAm4ZNAFmEJfEBWUIixwIi4ThkdcdwAUEFXVkEUGWiRtxOYgoggKymuoXw4iy6ogsAQnKMooICSicAQ0jI5LwIEaqur45Vf3yyEveUtW13er++hwO0dz7Lf97f9y63be+S+gnVwWkH5vCwvaw7K1BmQpBH2j1AbJF+8/SB4n+dx+IPgABBEMghyDB8L8xBOEQrGAIQfR3q0H/Cbp4JNfg1TioGqRTQI6Bg9V4HWr2NAQyDWT7Hwn/jGkAt07nYYLeIi8AfASQ5QCWR/8Wazme9x7ktViTm98eMqyAdDDY0rD3hmA3AHuADP9t4EeeBPAgBEsB3IFN/Dt5GdYaGKjRISkgkwyPfBAvwQv2eyGYDWI2BLNATjF6VMcMTjwA90bAWHI7XmjdziVYXb08io1YARlDb9kPm2Bq7QCQDQBzAL6k2GEpwJuIgHwACJYiwO1wWrfwSjxVgOdKuVBAhodL+lGDEz46sQ7KXIBbVGokswhW5FcAL4XvDerq0ha05wGR+fZ7IFIH2J/rhjqLCVyYDVkL8EcI5BIM+jcTkMJcG+aoJwGReZiOmv1hgAMAXm/YmJgVjuAJUC6H51/EJXjcrODyj6anAJEBZyYonwNwMMieyj31VBLxAbqwvK9yER5Mba8iBnpikgx/LXsqyD0rMi7mhhlt7nENAn6Jg9495gaaTWRdC4iE+6t67RCAp4CcmY1camW0AnILBAvZ9H/ercp0HSAyGza2qR0BWCeD2KFbB86wvO6FBAsxo3U1FyAwLLZU4XQVINKw94DwIhDbp1JFO3emgOB+BDiai727OzNgXq+uAEQGsC1ofwvkv5kncY9FFO5RwMvge5/lEvxf1bOvNCDR49S29okAzgD40qoPRnfFL6sQ8HTs4F1Q5ceuygIiA/ZusHgRgBndNbG6LJvwsQvyUTb9ZVXMrHKASD9eDcc5B0D4I59+qqBA+9zX5fC8k6v22FUpQKRRmwOhC/JlVZgXGuOGCsgzEMyr0tfClQAkeinpudo3AOsTOukqrkC0icc38KR/Cm+Fb3o2xgMiDbwe4vwExC6mi6nxJVLgXtA7mIvwp0S9Cm5sNCDSqPVDeAnIzQvWRd0VoYDIalAadFs3FOGuEx9GAhK9xfcP5zsgPtxJUtqnagoE52Hz1gm8EOFbj0Z9jAOkfRTduUa/vjVqnuQfjOC3oHcIXTyav7P4HowCRAbs2bBwnf7oF38Au6ulPIuA+3DQ+5UpeRkDiAzU9ofFqwE6poijcZSggMjfARzApn9zCd43cmkEINKoHRm9Cw1aJoiiMZStgHgI5FAOtsJH7VI/pQMidTt8X2NhqSqocwMVkAAiR7PZurTM4EoFRBq1b+uPf2UOfyV8f5qud25ZkZYCSPttP+dSEB8oK3H1WyEFRL7Mpn96GRGXA0jd/hHIuWUkrD6rqkBwAd3Wx4uOvnBApO644fpRdKLqrxsUkC/R9c8oMpNCAZG6fRbIU4tMUH11mQKC49j0zi8qq8IAkbpzLIjvFpWY+ulSBcLTwCKHcbB1VREZFgKINGqHQHiVFmsrYkh7wEdYxI7Yh65/S97Z5g6I1O3dAdwE0s47GbXfSwrI84D/Xrr4TZ5Z5wqI1PFm0F4GcLM8k1DbvaqAPA3478jzgGNugEg/psGx7wb4il4dPs27EAUeR82bldfdJrkAEl1c6Tj3A3hjIRKpkx5XQH4N139XHtc05ANI3VkM4rAeHzVNv1AF5Cy6/mlZu8wcEBmofQSWdWHWgao9VWBCBdrFIPbO+ph8poDIPOyImn1fV97pp/PTfAVE/grH34FX4Omsgs0MEN13ZDUkaiedAvILuv7e6Wy82Ds7QHTfkdWYqJ20Coicyqb/lbRmwv6ZACKN2lGAdXEWAakNVSC1AuEv7QF3zeIahtSADFchWZE6KTWgCmSrwONY4+3CH2NVGrPpAWnYNwPcI00Q2lcVyEmB79P1jk5jOxUgUeVDWD9ME4D2VQVyVSDArDSXjXYMSLv6of0YyFfnmqAaVwXSKCC4n02v47rOnQPSsL8C8LNpYte+qkAhCkjwETZbHX2J1BEgwwcRV2iRt0KGV52kVkBWwfPfwCVYndRUZ4Doxjypztq+dAWC79BtJb5fJjEgujEvfaQ1gE4UCM9qWf4uXITfJemeCBDdmCeRVtuap4DcTdd/R5K4kgGiZUKTaKttTVQgCN6fpOZvbECiewKH7JUgtzIxb41JFYilgMg9bPqzYrVNchZLBpzjYOG8uIa1nSpgrgLyPrr+TXHii7WCSD9qcJw/Anh9HKPaRhUwWgGRW9n0Yx2PigdIo3YEYF1hdNIanCqQTIGZdL17J+sSD5C68yCIHSczpn+vCkQKiNwJYt01av8McAcArzNKHZHr2fQPmCymSQGRRu39gPXjyQzp3/e4AiL3APgUm/6ysZSQOnYAnEGz7rv33jpZ4bkYgDjhMvS2Hh9+TX88BURaIBZipf953gp/IqGGvwkN3/Q73pAytEvoehNW35kQkPats8y9/qnOvqoqIGsQYH8O+rcmyUAG7NNh8YtJ+uTWtuXN4GI8PJ79iQFpOOHG/IjcglPDFVZA1kQFpBf5v+wkCWnYNwHcq5O+mfYR+Tqb/smJAZH9sAm2tFdpCZ9Mh6NLjKWDI9rHH4lXwLOXl/7Ds8hf2PTHfadp3BVEBmoNWNaiLhlRTSMzBdLDsS4UqdtfApl5NcTkqcqe412lMD4gDfsGgPsld6Y9uleB7OCIVpGB2v6wrOtK10twCZveUWPFMSYg0o9XwrafBFkrPXgNwBAFsoUjAuQg9GFz59nyE5QhrPRfPta3cGMD0nA+BaC0u6nLF0wjGK1A9nBEgCyAhYedlhFqB0H/WNe6jQOI/WuAsU88GpGgBpGTAvnAEQFyOGYgcJbnFHgysyI/ZtPf6GryjQBpv2/uPJrMurbuTgXyg8OoPUg0eOJhjb/1hoXmNgakYX8BYKF3UXfn5Kp6VvnCEU3JunM5iCMNUupYut6oqzs2BqTu/Mas8zIGydczoRQAxzxMR81+CKBljKxjHGAcBYg0sCXg/M2YgDWQEhTIH4726mH/BORBJSQ4vkuR59D0t1j/KrfRgNRrB4PW1UYFrcEUqICsgWAOm/5teTqVhr03wJ/n6aNj2xuUKt0AEPubIP+9Y+PasboKiPwdxL50/aV5JiH92A6OfRfA1+Tpp2PbIiez6X99Xf8NANH9R8fCVrpjQY9VA9gWlnOn2a9uy410/TkbAaL7j0rP8BTBFwRHP14HxwlXJ7PrGmywDxlZQUT3HykmWVW7FgiHbd8JcrtKKBXgXRz0oleG1wNE9x+VGLzMglQ4xpVyvTsO1wNE9x+ZzT3jDSkcEw+R/Iyuv+/ICmLOqUrjZ1b1Awy/rQL2y/2r3PDIkm3fAXLb6okmz9D1X/4iIA3n7QDCqhT66WoFdOWIPby2txWvwNPRI5bUa3XQcmN31oYVVEDhSDRogbyHg/6dbUAa9gKA/5HIgDaukAIKR+LBkuDDbLYuHV5BHBdEPbER7VABBRSOzgZJvkrXP2V4BdHicJ2JaHovhaPjERp+gWrdI9azAPs6NlZGR8FDUf1XwV0I5DFYnAEG0yHcGeTuZYRkls+oqNu+HPRvzzMuGcAbwOjbqmr8CBhXDMFDbHo7UQ7HNgiclXH7ld5O8AjoHTZRTVUZqM2FxUsATi093lIC0JUjtexhSdUZ/hRK3d4dZKLSkamdd2pAgvPxXOszvBZrJjMRnRq17UW9t5royjHZ3Ij99y3vjZSGcwyA78XuVFrD4Dy6rU8mcT9cLPkakNGvot3/kbUg9u60HGhcfSQ8eFils1VxE9uwHYMDWZGveB/FM95OvBH/SJpr70AiawHMGa9CYFLdxmsfFfWw7du7bs8xdsLHho9YZ4M8ISsBs7cjAQJ/Jgfx353a7n5ICoVjGchXdToWleoncmL4iBU+XoWPWWZ+RO5g098tbXDdC4nCkXZujN9fFlDqhv9IKMH5bLaOy0KE7oNE4chiXoxrQ+TscA9yLcBJ72rLNZCJjW9UqyhNLN0DicKRZh7E7HthCMjNAGNdiRvTaLbNJJjLZivzOxKlbl8PcuTd42yDLsCayF5s+jfn6UkaeBNg3wZwmzz9GGzbDfcght9BKKfR9c/KWsTqriS6cmQ9FyZ4xLo23IOsADG9MKfJHbl0vfnJu03eo3qQKByTj2qGLURuDR+xVhq9hAruZ9PbJcO0R5mqDiQKR15zYAK794a/gwyB3LwE5/FcigiI2XkWNDMfEoUj3mTJuJXg4XAFWQ1wi4xNZ2xOnsQaf6cNS9Nn6cRcSBSOLMc5kS3BI+EK8udqvFj/YqWJREkmbCx1+0ajzm4V8W1VdJGNvRTg1gnl6vbm91Vhk/7iIIhcA98/hEuQ27Vd5qwkunKUT58srcDXvBvI1BOQKBzlwxEWa5Drw0esWyv3zkRxkPwU5J7FDlZBcIQX2Fj20p45eNjZIA6GgFwHcv/O+pfYqwhI9sMmmGrfUBwkhcLxS5BblTiC5rsWXBw+Yg0CmGd+tGNE2FWQKBzmzUE5JwTkYgBHmRdczIhCSGb4c7kAQcweiZtJ7iuJwpF4UIroIPKF8BHrHJCfLsJfbj5ErsIMf141IVE4cpsXaQ2Ht01Jw/4iwNPT2iq9fyUhUThKnzcTBRDgY+Ej1scAnG90oHGDqxQkCkfcYS2tXRC8nzJg7wWLN5UWRNaOKwGJwpH1sOdiT7wdKfPxGojzRC4OyjJqNCQKR1nTIpHfdYXjwk5St9eC3CSRAdMbGwmJwmH6tBmJLzyo2PSmryteHZbUeUtlgo8baAhJ0z+MgMTtkrRd/K+AFY6k2pbbXq6j6x+4DpDq/lg4uYqL4HpHlAuJwjH5MBnWQuQbbPonDt8PYn8e5JmGhZhlOCVConBkOZAF2oqq6bQBGag1YFmLCnRehqsSIFE4yhjoTHyKzA4vOh0GxJkJC3dnYthsIwVCgl0LqZXbPpWrBw+znneetw2X4H/bgByIzdDnPJ+1DyPtCa5g0/tAnrFJPzZFzXkzB71f5epnPnZGYP8C5Cvz9NN7tmUVXX/LMO8IkAgS4+tjZTpMua8kmUY7hjGZj50g9h0Ao4HUT4YKiNzAph+9AvIiIMZXec9QgLapRXS9wzO3WoBBhSNnkcNDik3/6xsAUjsQtK7J2bVZ5gWXsOlV6qi/wlHAFAowi4PePaMB6cfmcKISQFYBIZjjokKQKBxFTBt5nq4/Uidu5BGrB/chL6pdAUgUjiLgiCiIfkFf5200IL23D6kEJApHUXBElUxOYtM/exxAenAfsr72Bq4kCkeBcLRdzaTrhTceRJ/RK0iv7kMMhUThKBqO0fuPjQDp6X2IYZAoHEXDET1eXcumf9D6nketIG1A7P8AuKCE8MxyWeLjlsJR0lSQ4CNstsIqPyOfjQGZh+1Rc/5QUoiGuQ0uoNv6eJFBKRxFqj3qscFDzd+SV2LUkauNABleRZYBfFdZoZrltzhIFI4SR17kP9n0D90wgnEAcT4B4NslhmuY6/whUThKHvIgOISDravjAXIwpmJT+68gayWHbZD7/CCRedgFNfsWPXhY1nDLM1jpb81b4ccCJHrMqmpR61w1zh6SYTjCy2sMv+UrV2HLNn4hXe/YsYIY8xGrDUitDlpu2ZGb5z87SBQOU0ZXdh/vDszxAfkgXoIX7KcA9pmShjlxpIdE4TBlNOVPdP3XjhfNuIC0VxHnchBHmpKKUXGIfJNN//hOYlI4OlEtpz4iC9n0P9cZIAP2brC4NKfQqm+2A0hknjMLNfkvgFOrL0AXZNDyZnAxHu4IkOHN+t0gZ3aBFPmkIHInfP9wLsFjEzmQBbCw3P4cLJwJ0MknGLWaSAGRq9n0D5moz4SPWBEg82sHQKxrEznutcYiz4E8MayjNFbq0j6dsBjA23tNGqPzDby3cRBhVdFxP5MCEkHScO4HsLPRyZoQnMhqAL8HuByQZwDsCHAnEG8wITyNYT0FRH7Opr/PZJrEA6Q3CstNppX+fVcpIHvS9W+ZLKV4gITvjdSdR/W/hJPJqX9fEQXuo+vFetyNBUj0mDXgfBQWLqiIABqmKjC+AuHNUYOtWBV84gNyDBwM2X/WKn468yqtwPC9H3FziA1ItIrU7ZNBfjWucW2nChingARHsNn6Qdy4kgES1px17D8C3CauA22nChikwO/oem9OEk8iQNp7kdqhsKwlSZxoW1XAEAVGVSyJE1NiQCJIGvZNAPeK40DbqAKGKHAZXe9DSWPpDJB+TINjr9AjE0nl1vblKCBDsP1pvAJPJ/XfESDDG/aFIE9J6lDbqwIlKPBJut55nfjtHBDdsHeit/YpXoHfYbr3Fi5A0InrjgFp70Vq/YD1w04cax9VoCAFEm/M148rFSC6YS9oiNVNZwoILmfT+2Bnndu90gMSXiJZc1akCUL7qgKZKxCerLb96bwST6WxnRqQ4UetowBrVMnGNEFpX1UgvQKyL13/Z2ntZAJIGxKnCWAgbUDaXxVIr4CcQ9c/Ib2dDB6x1gURXX1sOw/qkfgshkVtdKyA4LfwvbdzCVod21ivY2YrSLSKhBUCLfvXIKdkEZzaUAWSKSBDgL8zXfxPsn7jt84UkAiSuvNJEN/KKkC1owrEViDBex5xbWYOSBsS+3qQc+IGoe1UgfQKpC/mN1YM+QDSj5fBsR8A+Jr0iasFVWBSBR7ESm+XsYpPT9pzkga5ADK8H/kX1Oy7AL40bZDaXxUYVwGRv0D8WRzEE3molBsgESQD9l6wcKOe+s1j6NQmIM9D/HeyGZZayueTKyDt/UjtMNAKi6bpRxXITgERH8Q+cUr3pHGaOyDDm/ZTQZ6VJlDtqwqMUiAI+jnYuipvVQoBJIKk4XwPwDF5J6T2e0ABkdPZ9L9cRKbFARIVn7Ov069/ixjWrvbxfbre0UVlWBgg0SrSvpQnvItPb9AtaoS7yY/IT9H05xCQotIqFJAIkn68HLazDMT0opJUP12ggMg98P1/5RL8vchsCgdkPUhuAvHWIpNVXxVVQOQ2+P5+RcMRqlUKIBEkB2Iz9NlXA5y0BH1Fh1XDzkQB+QlW+ofm8St5nPBKA2R4JanBccIykPoeSZzR6rk2+ZyvSiJjqYCsC1QatW8D1ieSBK5tu10BOY2uX/pvZ0YAEq0mDfskCL4G0piYun0KmpmfBAjkCA62XBPiM2oyykBtHsgfgLRNEEdjKFoBWQvBXDb9nxbteTx/RgESrSR1+90AfgTy1aaIpHEUosBjaHkHcTEeKMRbTCfGAdKGBFsB9lUgd4+ZhzarsgIi18D353MJnjMtDSMBiSAJ7xV/2D4TwBkALdOE03iyUEA8gJ+h652bhbU8bBgLyMg3XOE7JURTr37LY/hLtfk4WjiUi727S41iEufGAzL8yPUqwA73JbuaLKbGFlcBuRH0B7gIz8btUVa7SgASQdKPGmx7IYCT9KvgsqZLSr/tl5xOp+tX5p7LygAy8shVt98H8rsA/inlcGn3YhUIiwoexUXeXcW6TeetcoAMryZT4NgnATgN4GbpJNDeuSoQFpEmz8R077xO7+jINb5u2IOMl4MM4LWw7G8CPKRMEdX3GAqICMArAO8kNvHXqmpUyRVkQ7GlYe8B4UUgtq/qQHRV3ILfI/CO5GLcV/W8ugKQkccu2z4BjH430ceuUmamPIOAZ2AH74IqPk6NJVnXADKyie/HK2HbnwHwMZCblzJPes2pyN8AnAvfP5dLsLqb0u86QEZAORhTsal9PIhPAZzaTYNmTC5hVUPgbNj++bwSzxsTV4aBdC0gI6AchD681D4OxPEAt85Qu941JXgCxNcwxbuYl2FtNwvR9YCMgBJVVHGOgcjJILfr5kHNMbc/AMFXsLJ1eVmvwOaY25imewaQ9bOXunMsIB8C+c6iBa+kv7BoAuX7dFtXVjL+FEH3JCDrbeinwbaPADhfyxBtMIsE9wOyCOL/gINYmWKOVbprTwMyalWZ58xCTQ5vF5Do0b1KuLeANBH4l3ExHqr0zM4oeAVkw/9whociHXtvCA8HZW73328iqyC8CiKLMOjfVmTVwozmcK5mFJAJ5JV+TMEU520IJDxmH74K/O4u2OA/BmDZyD+e95usboTNdaaWZFwBSSh8dP6LtXcD3BWMoHmruRcERUUQ7olgEFkGp/VLXomnEqbc080VkJTDL7Nh41V4E6zaDIA7RP9QZgAI/1zMD5Qi4WHA5SBXALIcIivA1nJ4eFRXh3QDrICk02/C3lJH+CbkOmi2g8hU0OqDSB+IPgg2iyAitgCkD+CWbYPyNIRDIIYgsgrEGgiGgPD/kyEIVoHyOMjleMF/oNuOd+Q4JIlN/z8uDC5fplz44QAAAABJRU5ErkJggg==);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain
+    }</style>
+    <style type="text/css">.MathJax_Display {
+        overflow: auto
+    }
+
+    .poster {
+        position: fixed;
+        left: -10000px;
+        top: -10000px;
+        overflow: hidden;
+        padding: 1rem;
+        background: #ececec
+    }
+
+    .richcontent-pre-copy {
+        font-size: 13px;
+        color: #888;
+        position: absolute;
+        right: 1em;
+        top: .2em;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .richcontent-pre-copy .iconfont {
+        font-size: 12px;
+        margin-right: .2em
+    }</style>
+    <style type="text/css">.breadcrumb {
+        padding: 30px 0;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        background: #fff
+    }
+
+    .breadcrumb a.title {
+        color: #e57c39;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb span.title {
+        color: #888;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb .split {
+        color: #ccc;
+        font-size: 10px;
+        margin-right: 5px
+    }</style>
+    <style type="text/css">.comment-item {
+        list-style-position: inside;
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-bottom: 1rem
+    }
+
+    .comment-item a {
+        border-bottom: none
+    }
+
+    .comment-item .avatar {
+        width: 2.625rem;
+        height: 2.625rem;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+        border-radius: 50%
+    }
+
+    .comment-item .info {
+        margin-left: .5rem;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1
+    }
+
+    .comment-item .info .hd {
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .username {
+        color: #888;
+        font-size: 15.25px;
+        font-weight: 400;
+        line-height: 1.2
+    }
+
+    .comment-item .info .hd .control {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .control .btn-share {
+        color: #888;
+        font-size: .75rem;
+        margin-right: 1rem
+    }
+
+    .comment-item .info .hd .control .btn-praise {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        font-size: 15.25px;
+        text-decoration: none
+    }
+
+    .comment-item .info .hd .control .btn-praise i {
+        color: #888;
+        display: inline-block;
+        font-size: .75rem;
+        margin-right: .3rem;
+        margin-top: -.01rem
+    }
+
+    .comment-item .info .hd .control .btn-praise i.on, .comment-item .info .hd .control .btn-praise span {
+        color: #fa8919
+    }
+
+    .comment-item .info .bd {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.6
+    }
+
+    .comment-item .info .time {
+        color: #888;
+        font-size: 9px;
+        line-height: 1
+    }
+
+    .comment-item .info .reply .reply-hd {
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-hd span {
+        margin-left: -12px;
+        color: #888;
+        font-weight: 400
+    }
+
+    .comment-item .info .reply .reply-hd i {
+        color: #fa8919;
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-content {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all
+    }
+
+    .comment-item .info .reply .reply-time {
+        color: #888;
+        font-size: 9px
+    }
+
+    .comment-template {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div data-v-87ffcada="" class="article"><!---->
+        <div data-v-87ffcada="" class="main main-app">
+            <h1 data-v-87ffcada="" class="article-title pd">
+                04 | 互斥锁（下）：如何用一把锁保护多个资源？
+            </h1>
+            <div data-v-87ffcada="" class="article-info pd"><span data-v-87ffcada="">2019-03-07</span> <span data-v-87ffcada="">王宝令</span></div>
+            <div data-v-87ffcada="" class="article-content typo common-content pd">
+                <img data-v-87ffcada="" src="https://static001.geekbang.org/resource/image/c8/54/c8301ef2513f4466c3bbda3c17b8df54.jpg">
+                <!---->
+                <div data-v-87ffcada="" class="mini-audio-player">
+                    <div class="audio-info">
+                        <p><span>朗读人：王宝令&nbsp;&nbsp;&nbsp;</span>
+                        </p></div> <!---->
+                    <audio title="" src="https://static001.geekbang.org/resource/audio/c8/d1/c8c4d60e8cd63aee893dcb395ef08dd1.mp3" controls="controls"></audio>
+                </div>
+                <div data-v-87ffcada="" id="article-content" class="">
+                    <div class="text"><p>在上一篇文章中，我们提到<strong>受保护资源和锁之间合理的关联关系应该是N:1的关系</strong>，也就是说可以用一把锁来保护多个资源，但是不能用多把锁来保护一个资源，并且结合文中示例，我们也重点强调了“不能用多把锁来保护一个资源”这个问题。而至于如何保护多个资源，我们今天就来聊聊。</p><p>当我们要保护多个资源时，首先要区分这些资源是否存在关联关系。</p><h2>保护没有关联关系的多个资源</h2><p>在现实世界里，球场的座位和电影院的座位就是没有关联关系的，这种场景非常容易解决，那就是球赛有球赛的门票，电影院有电影院的门票，各自管理各自的。</p><p>同样这对应到编程领域，也很容易解决。例如，银行业务中有针对账户余额（余额是一种资源）的取款操作，也有针对账户密码（密码也是一种资源）的更改操作，我们可以为账户余额和账户密码分配不同的锁来解决并发问题，这个还是很简单的。</p><p>相关的示例代码如下，账户类Account有两个成员变量，分别是账户余额balance和账户密码password。取款withdraw()和查看余额getBalance()操作会访问账户余额balance，我们创建一个final对象balLock作为锁（类比球赛门票）；而更改密码updatePassword()和查看密码getPassword()操作会修改账户密码password，我们创建一个final对象pwLock作为锁（类比电影票）。不同的资源用不同的锁保护，各自管各自的，很简单。</p><!-- [[[read_end]]] --><pre><code>class Account {
+  // 锁：保护账户余额
+  private final Object balLock
+    = new Object();
+  // 账户余额  
+  private Integer balance;
+  // 锁：保护账户密码
+  private final Object pwLock
+    = new Object();
+  // 账户密码
+  private String password;
+
+  // 取款
+  void withdraw(Integer amt) {
+    synchronized(balLock) {
+      if (this.balance &gt; amt){
+        this.balance -= amt;
+      }
+    }
+  } 
+  // 查看余额
+  Integer getBalance() {
+    synchronized(balLock) {
+      return balance;
+    }
+  }
+
+  // 更改密码
+  void updatePassword(String pw){
+    synchronized(pwLock) {
+      this.password = pw;
+    }
+  } 
+  // 查看密码
+  String getPassword() {
+    synchronized(pwLock) {
+      return password;
+    }
+  }
+}
+</code></pre><p>当然，我们也可以用一把互斥锁来保护多个资源，例如我们可以用this这一把锁来管理账户类里所有的资源：账户余额和用户密码。具体实现很简单，示例程序中所有的方法都增加同步关键字synchronized就可以了，这里我就不一一展示了。</p><p>但是用一把锁有个问题，就是性能太差，会导致取款、查看余额、修改密码、查看密码这四个操作都是串行的。而我们用两把锁，取款和修改密码是可以并行的。<strong>用不同的锁对受保护资源进行精细化管理，能够提升性能</strong>。这种锁还有个名字，叫<strong>细粒度锁</strong>。</p><h2>保护有关联关系的多个资源</h2><p>如果多个资源是有关联关系的，那这个问题就有点复杂了。例如银行业务里面的转账操作，账户A减少100元，账户B增加100元。这两个账户就是有关联关系的。那对于像转账这种有关联关系的操作，我们应该怎么去解决呢？先把这个问题代码化。我们声明了个账户类：Account，该类有一个成员变量余额：balance，还有一个用于转账的方法：transfer()，然后怎么保证转账操作transfer()没有并发问题呢？</p><pre><code>class Account {
+  private int balance;
+  // 转账
+  void transfer(
+      Account target, int amt){
+    if (this.balance &gt; amt) {
+      this.balance -= amt;
+      target.balance += amt;
+    }
+  } 
+}
+</code></pre><p>相信你的直觉会告诉你这样的解决方案：用户synchronized关键字修饰一下transfer()方法就可以了，于是你很快就完成了相关的代码，如下所示。</p><pre><code>class Account {
+  private int balance;
+  // 转账
+  synchronized void transfer(
+      Account target, int amt){
+    if (this.balance &gt; amt) {
+      this.balance -= amt;
+      target.balance += amt;
+    }
+  } 
+}
+</code></pre><p>在这段代码中，临界区内有两个资源，分别是转出账户的余额this.balance和转入账户的余额target.balance，并且用的是一把锁this，符合我们前面提到的，多个资源可以用一把锁来保护，这看上去完全正确呀。真的是这样吗？可惜，这个方案仅仅是看似正确，为什么呢？</p><p>问题就出在this这把锁上，this这把锁可以保护自己的余额this.balance，却保护不了别人的余额target.balance，就像你不能用自家的锁来保护别人家的资产，也不能用自己的票来保护别人的座位一样。</p><p><img src="https://static001.geekbang.org/resource/image/1b/d8/1ba92a09d1a55a6a1636318f30c155d8.png" alt=""></p><center><span class="reference">用锁this保护this.balance和target.balance的示意图</span></center><p>下面我们具体分析一下，假设有A、B、C三个账户，余额都是200元，我们用两个线程分别执行两个转账操作：账户A转给账户B 100 元，账户B转给账户C 100 元，最后我们期望的结果应该是账户A的余额是100元，账户B的余额是200元， 账户C的余额是300元。</p><p>我们假设线程1执行账户A转账户B的操作，线程2执行账户B转账户C的操作。这两个线程分别在两颗CPU上同时执行，那它们是互斥的吗？我们期望是，但实际上并不是。因为线程1锁定的是账户A的实例（A.this），而线程2锁定的是账户B的实例（B.this），所以这两个线程可以同时进入临界区transfer()。同时进入临界区的结果是什么呢？线程1和线程2都会读到账户B的余额为200，导致最终账户B的余额可能是300（线程1后于线程2写B.balance，线程2写的B.balance值被线程1覆盖），可能是100（线程1先于线程2写B.balance，线程1写的B.balance值被线程2覆盖），就是不可能是200。</p><p><img src="https://static001.geekbang.org/resource/image/a4/27/a46b4a1e73671d6e6f1bdb26f6c87627.png" alt=""></p><center><span class="reference">并发转账示意图</span></center><h2>使用锁的正确姿势</h2><p>在上一篇文章中，我们提到用同一把锁来保护多个资源，也就是现实世界的“包场”，那在编程领域应该怎么“包场”呢？很简单，只要我们的<strong>锁能覆盖所有受保护资源</strong>就可以了。在上面的例子中，this是对象级别的锁，所以A对象和B对象都有自己的锁，如何让A对象和B对象共享一把锁呢？</p><p>稍微开动脑筋，你会发现其实方案还挺多的，比如可以让所有对象都持有一个唯一性的对象，这个对象在创建Account时传入。方案有了，完成代码就简单了。示例代码如下，我们把Account默认构造函数变为private，同时增加一个带Object lock参数的构造函数，创建Account对象时，传入相同的lock，这样所有的Account对象都会共享这个lock了。</p><pre><code>class Account {
+  private Object lock；
+  private int balance;
+  private Account();
+  // 创建Account时传入同一个lock对象
+  public Account(Object lock) {
+    this.lock = lock;
+  } 
+  // 转账
+  void transfer(Account target, int amt){
+    // 此处检查所有对象共享的锁
+    synchronized(lock) {
+      if (this.balance &gt; amt) {
+        this.balance -= amt;
+        target.balance += amt;
+      }
+    }
+  }
+}
+</code></pre><p>这个办法确实能解决问题，但是有点小瑕疵，它要求在创建Account对象的时候必须传入同一个对象，如果创建Account对象时，传入的lock不是同一个对象，那可就惨了，会出现锁自家门来保护他家资产的荒唐事。在真实的项目场景中，创建Account对象的代码很可能分散在多个工程中，传入共享的lock真的很难。</p><p>所以，上面的方案缺乏实践的可行性，我们需要更好的方案。还真有，就是<strong>用Account.class作为共享的锁</strong>。Account.class是所有Account对象共享的，而且这个对象是Java虚拟机在加载Account类的时候创建的，所以我们不用担心它的唯一性。使用Account.class作为共享的锁，我们就无需在创建Account对象时传入了，代码更简单。</p><pre><code>class Account {
+  private int balance;
+  // 转账
+  void transfer(Account target, int amt){
+    synchronized(Account.class) {
+      if (this.balance &gt; amt) {
+        this.balance -= amt;
+        target.balance += amt;
+      }
+    }
+  } 
+}
+</code></pre><p>下面这幅图很直观地展示了我们是如何使用共享的锁Account.class来保护不同对象的临界区的。</p><p><img src="https://static001.geekbang.org/resource/image/52/7c/527cd65f747abac3f23390663748da7c.png" alt=""></p><h2>总结</h2><p>相信你看完这篇文章后，对如何保护多个资源已经很有心得了，关键是要分析多个资源之间的关系。如果资源之间没有关系，很好处理，每个资源一把锁就可以了。如果资源之间有关联关系，就要选择一个粒度更大的锁，这个锁应该能够覆盖所有相关的资源。除此之外，还要梳理出有哪些访问路径，所有的访问路径都要设置合适的锁，这个过程可以类比一下门票管理。</p><p>我们再引申一下上面提到的关联关系，关联关系如果用更具体、更专业的语言来描述的话，其实是一种“原子性”特征，在前面的文章中，我们提到的原子性，主要是面向CPU指令的，转账操作的原子性则是属于是面向高级语言的，不过它们本质上是一样的。</p><p><strong>“原子性”的本质</strong>是什么？其实不是不可分割，不可分割只是外在表现，其本质是多个资源间有一致性的要求，<strong>操作的中间状态对外不可见</strong>。例如，在32位的机器上写long型变量有中间状态（只写了64位中的32位），在银行转账的操作中也有中间状态（账户A减少了100，账户B还没来得及发生变化）。所以<strong>解决原子性问题，是要保证中间状态对外不可见</strong>。</p><h2>课后思考</h2><p>在第一个示例程序里，我们用了两把不同的锁来分别保护账户余额、账户密码，创建锁的时候，我们用的是：<code>private final Object xxxLock = new Object();</code>，如果账户余额用 this.balance 作为互斥锁，账户密码用this.password作为互斥锁，你觉得是否可以呢？</p><p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p><p><img src="https://static001.geekbang.org/resource/image/cf/aa/cf393cd748a4f0e6451807c4b61843aa.jpg" alt=""></p></div>
+                </div> <!---->
+                <div data-v-87ffcada="" class="copyright">
+                    ©版权归极客邦科技所有，未经许可不得转载
+                </div>
+            </div>
+            <div data-v-87ffcada="" class="article-comments pd"><h2 data-v-87ffcada=""><span data-v-87ffcada="">精选留言</span></h2>
+                <ul data-v-87ffcada="">
+
+                    <li data-v-87ffcada="" class="comment-item comment-template">
+                        <img src="${user_header}" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">${user_name}</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">${like_count}</span></a></div>
+                            </div>
+                            <div class="bd comment-content">${comment_content}
+                            </div>
+                            <span class="time">${comment_ctime}</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">${user_name}</span></div>
+                                <p class="reply-content">${content}</p>
+                                <p class="reply-time">${ctime}</p></div>
+                        </div>
+                    </li>
+                <li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/6d/48/1978424c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">树森</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">49</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有个疑问，使用Account.class获得锁，那所有转账操作不是都成串行了，这里实践中可行吗？</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不可行，下一期讲优化<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/06/29/00a319e3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">少主江衫</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">40</span></a></div>
+                            </div>
+                            <div class="bd comment-content">用this.balance 和this.password 都不行。在同一个账户多线程访问时候，A线程取款进行this.balance-=amt;时候此时this.balance对应的值已经发生变换，线程B再次取款时拿到的balance对应的值并不是A线程中的，也就是说不能把可变的对象当成一把锁。this.password 虽然说是String修饰但也会改变，所以也不行。老师所讲的例子中的两个Object无论多次访问过程中都未发生变化？<br>请老师指正。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确，不能用可变对象做锁<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">senekis</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">31</span></a></div>
+                            </div>
+                            <div class="bd comment-content">解决原子性问题，是要保证中间状态对外不见<br><br>太精辟了！</div>
+                            <span class="time">2019-03-07</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/57/6e/dd0eee5f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">夜空中最亮的星（华仔）</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">12</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我是一名普通的运维工程师，我是真看不懂java代码，我是来听思想的 。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">那我就放心了<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/03/f7/3a493bec.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">老杨同志</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">10</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题：<br>我觉得不能用balance和password做为锁对象。这两个对象balance是Integer，password是String都是不可变变对象，一但对他们进行赋值就会变成新的对象，加的锁就失效了</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/69/c6/513df085.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">强哥</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">8</span></a></div>
+                            </div>
+                            <div class="bd comment-content">文章里第二个例子根本无法用到实践中，锁力度太大，可以用乐观关锁解决，另外分布式的情况下，应该如何分析也应该讲讲？至于原子性其实跟数据库的原子性还是有差异的，例如虚拟机异常退出时，synchinzed也无法操作原子操作的。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">分布式的不讲了，分支太多不好。下一期会讲优化<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">yuc</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">6</span></a></div>
+                            </div>
+                            <div class="bd comment-content">是否可以在Account中添加一个静态object，通过锁这个object来实现一个锁保护多个资源，如下：<br>class Account {<br>  private static Object lock = new Object();<br>  private int balance;<br>  // 转账<br>  void transfer(Account target, int amt){<br>    synchronized(lock) {<br>      if (this.balance &gt; amt) {<br>        this.balance -= amt;<br>        target.balance += amt;<br>      }<br>    }<br>  } <br>}<br></div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这种方式比锁class更安全，因为这个缺是私有的。有些最佳实践要求必须这样做。👍</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/64/86/6b593cb9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zach_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">5</span></a></div>
+                            </div>
+                            <div class="bd comment-content">王老师， 您在第二讲中贴出的英文链接的地址很棒，看着您写过的专栏，再去看它，有种恍然大悟地感觉~！  恳请您还是在后续地专栏里，继续保持这种死磕并发基础地原汁原味地链接啊~！  您地专栏是您多年地理解与实战的营养，加上您亲自地朗读，当然也是原汁原味。但是我的意思是，我们应该有一批人很少看英文类的文档，所以才会有这种恳请~！   谢谢老师~!</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">感谢盛赞，我会继续保持的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/f7/0a/067537fc.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">别皱眉</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">4</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，很感谢有这个专栏，让我能够更加系统的学习并发知识。<br>对于思考题,之所以不可行是因为每次修改balance和password时都会使锁发生变化。<br>-----------------------------------------------------------------------<br>以下只是我的猜想<br>比如有线程A、B、C <br>线程A首先拿到balance1锁，线程B这个时候也过来，发现锁被拿走了，线程B被放入一个地方进行等待。<br>当A修改掉变量balance的值后，锁由balance1变为balance2.<br>线程B也拿到那个balance1锁，这时候刚好有线程C过来，拿到了balance2锁。<br>由于B和C持有的锁不同，所以可以同时执行这个方法来修改balance的值,这个时候就有可能是线程B修改的值会覆盖掉线程C修改的值?<br>-----------------------------------------------------------------------<br>不知道到底是不是这样?老师可以详细讲下这个过程吗?谢谢</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你分析的很仔细了，就是这样的，bc锁的不是一个对象。不能保证互斥性<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/1d/13/31ea1b0b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">峰</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">4</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题，我的答案是不行，因为对象可变，所以导致加锁对象不一样。<br><br>然后感觉加锁的所有用户用同一个锁的粒度太大了，但如果每次转账操作，是不是可以同时加两个用户的锁，如果有先后顺序又可能有死锁问题。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">下一期会讲这个<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/52/fe/1241bc83.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">水如天</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">以前碰到一个坑，线程上下文的类加载器改变了，导致前后加载的类不一致</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">osgi？</p>
+                                <p class="reply-time">2019-03-08</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/c7/ba/4490a37f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zhaozp</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">可变对象不能作为锁</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">总结的到位</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/mFkjLNhwXxEpxnt1w7qRic5NGP0WjOWZSUgGXnyaZWicq8Z8jztP7M9NGZ42F27XqabrVuYZwkHrAh6VfrnYCT0Q/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">walkingonair</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">使用Account.class获得锁有很明显的性能问题，而如何解决这个性能问题恰恰是我想知道的。我的一个想法是利用String对象的intern方法生成转账相关的字符串，利用这个字符串作为锁，这个方案不知道在实践中是否可行？<br>另外，狂战俄洛伊同学提出的锁两个对象的示例，我看着像是经典的死锁案例，因加锁顺序不一致导致的死锁，当A-&gt;B，A等待B的锁，而当B-&gt;A，B等待A的锁，产生死锁，不知理解的是否有问题，欢迎老师和各位同学指教。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">下一期介绍优化</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/0e/0a/1564a5e1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">忠艾一生</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">这两把锁是会变的，所以无法保证互斥性。在第一个线程执行完之后，this.balance与this.password这两个对象锁都与第一个线程的对象锁是不一样的。 所以是不正确的。<br></div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">回答正确<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/4e/3a/2aa0f5cf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">linqw</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，有个疑问，锁是为了保证在多个线程操作，每个线程的操作之前多能先读取到其余线程的操作结果，保证数据的一致性，防止数据被覆盖，但是为什么锁不能使用可变的对象作为锁，Integer和String都是不可变对象，操作都会生成新对象，但是这个会影响到多个线程对数据的操作结果么？比如取款，虽然取款完锁对象改变，但是在并发的时候，不管是其他线程在前一个线程取款前获取到的锁还是取款后获取到的锁，对数据都不会覆盖呀？老师帮忙解答下哦</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">多把锁保护一个资源，起不到互斥作用，就可能同时取款，这样数据就被覆盖了。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJUzv6S9wroydkGP6m3OsQ8QuI4jAibv21tNkm7KVGPffJibj8Y29yIdKl4qkDGd3iaGJCSGVarfxoibQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">狂战俄洛伊</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">首先，对于文中的课后思考，这个问题肯定是不行的。<br>synchronized加锁的对象是根据地址来的，只要地址变了，锁也就变了。<br>当balance或者password发生变化的时候（地址变化），其他线程还是能获得锁，然后执行转账的操作。<br>所以这里加锁的对象一定要是地址不能变的资源，例如文中的Account.class这个对象地址就不会变化，所以可以用来作为锁。<br>但是问题来了，如果用Account.class作为加锁对象的话，那所有的转账功能将会是串行。实际上4个不同账户之间的转账是可以并行执行的，例如A给B转账，C给D转账，这两个动作是可以一起执行的。<br>为了解决这个问题，我对转账代码做了些调整，目的是为了让不同账户之间的转账可以并发运行。下面是我对转账改进后的代码：<br>	  // 转账<br>	   void transfer( Account target, int amt){<br>		   synchronized(this) {<br>			   synchronized (target) {<br>				    if (this.balance &gt; amt) {<br>					      this.balance -= amt;<br>					      target.balance += amt;<br>					}<br>			   }<br>		   }<br>	  } <br><br>首先这段代码是线程安全的。<br><br>但是我实际测试下来性能却反而不如直接对Account.class加锁高，请问老师这是为什么呢？</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">转账里面sleep一段时间就有效果了<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83epY7qGk5GXlibDY3f88RsZZUicUaLuiaIXfIGiczS54kD1hNobYWxcCFHCyiaEru9wpcWuI9WcBB7oNRfA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zyl</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问这个画图软件是什么？谢谢</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我已经确认过了，是PPT</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/06/df/60126ff3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">0bug</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题：<br>结论：不可行<br>原因：举个例子，假如this.balance = 10 ，多个线程同时竞争同一把锁this.balance，此时只有一个线程拿到了锁，其他线程等待，拿到锁的线程进行this.balance -= 1操作，this.balance = 9。 该线程释放锁， 之前等待锁的线程继续竞争this.balance=10的锁，新加入的线程竞争this.balance=9的锁，导致多个锁对应一个资源 </div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">分析的很仔细👍<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/bc/eb/c22ef3a5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Nevermore</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Integer i = 6 --&gt;Integer i = 7 ，这个过程经历了引用重新指向的问题 ，就相当于new Integer(6) --&gt;  new Integer(7)，但是对于Integer和string ，jvm对他们都有优化处理，integer是-127-127内的数值都会放入缓存，而对于本例子的string也会放进常量池，我的理解是，假如A,B线程同时修改余额，当A修改余额成功之前，A,B线程看到的都是同一个余额，也就是同一个对象，当A修改成功后，改变了对象，原先的锁就不是原来的锁了，对于线程A来说，就相当于释放了锁，但是，当余额的范围超过了127之后，以上的逻辑就失效了。而密码的修改不会存在这个问题，能完全的锁住。<br><br>以上是我的理解，望老师指正！</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">密码的修改也锁不住</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/08/09/1504f5ca.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">落叶</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题:受保护资源作为锁保护自己，跟没加锁一样。修改金额后，锁对象都变了，加锁不成功</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/b7/f0/a570f68a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">wang</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可以。因为balance为integer对象，当值被修改相当于换锁，还有integer有缓存-128到127，相当于同一个对象。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">深刻！👍<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e8/dc/32e78f02.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">乐凡</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">this.balance和this.password都是可变的，这样锁就会失效了，解决原子性问题，就是保证中间状态对外不可见，这句话记牢</div>
+                            <span class="time">2019-04-14</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/cc/43/22e1d2a5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">掌心童话</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">其实想听到更细粒度的操作。就是A，B的转账操作不会锁住C，D间的转账操作，沙发回复也有提。比如concurrencyhashmap中的分段锁</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">更细粒度的锁，其实面临着更大的风险。下一期会讲更细粒度的锁。这一章的内容只是让大家学会用锁。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/14/3c/d6be29f3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">SnowsonZ</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，有个疑问，为什么作为互斥锁的对象一定要是final的？非final导致两个互斥锁的原因是什么？是工作内存从主内存拷贝的原因吗？</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这是个最佳实践。只是为了防止一不小心改变了它。搞成final类型，就再也改变不了。只是最佳实践而已。</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83epY7qGk5GXlibDY3f88RsZZUicUaLuiaIXfIGiczS54kD1hNobYWxcCFHCyiaEru9wpcWuI9WcBB7oNRfA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zyl</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">谢谢 看来要苦练ppt技术 才能画出漂亮的图纸😀</div>
+                            <span class="time">2019-03-09</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个技能比并发编程难多了😀</p>
+                                <p class="reply-time">2019-03-09</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/fb/3c/e92d40f6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">不靠谱的琴谱</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">之前评论可以忽略了一个因素，每次赋值都改变了这个对象。但是我有一个疑问 integer在-128~127之间  这个锁是不是有效的<br></div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不是有效的，其他功能也可能用到这个锁</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/52/fe/1241bc83.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">水如天</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">类加载去器如果中途改变了，Account.class还可以吗</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">触发JVM重启了，否则不会中途改变的</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKtS26SJpSF7JLu9pusGsy1Qln0NdQg1eV2YKOJxpX2QXaBuuyXMqZY3fm0rhzKwsqN5aa6CVNOQQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈华</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">真实代码，一般直接利用数据库的原子性来 做转账操作，</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个靠谱<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/79/69/5960a2af.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">王智</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">本来我是觉得可行了,看了留言之后觉得不可行了.<br>使用 private final Object balLock = new Object();的目的就是保证在一个对象里面balLock是不可变的,所以使用private final修饰代表私有不可变,虽然Integer也是fianl类型,但是对外提供了修改的方法,也就是说在一个对象里面,这个是个变量,变量应该无法作为锁来出现吧,所以我觉那种方案不可行.<br><br></div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">看留言让人进步👍<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/0b/78/22410c47.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">魏春河</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">感觉转账这个所有对象共享Account.class是不太合适的，锁粒度太大了。<br>所有的转账都串行化了，即A转B和C转D也不能并行了。<br><br>应该每个用户的所有账户对象使用同一把锁。即所有A账号的对象使用同一把锁，所有B账号的对象使用同一把锁，这两个锁是不一样的。这样A转B的时候锁定A和B的锁，而与CD的锁都不冲突，可以并行。<br><br>这个锁可以使用根据静态属性保存锁。如果多节点可以使用redis等实现的分布式锁。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">下一期讲优化<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/97/54/54dccfa7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">王昊</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">账户转账这个是一个特别好的例子，但感觉老师讲的不透彻。锁Account.class性能太差了，细粒度锁又可能死锁，这块希望能好好讲讲</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">下一期会接着讲这个<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/b2/51/69bbd5ef.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">布鲁斯特</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">买了好久,终于来看了,理解了很多</div>
+                            <span class="time">2019-05-13</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/05Wiazxo0OS5w9KdJ4OQAe3ezwaCXNY4DGoE0noPFzXtUhOGejgGKFR6WmMxr0KcEGOSahnjbOwxPSib88h0E6zA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">linsen</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">如果不行的原因是这两个是可变对象，可变对象不能用作锁，那么老师在文章中说的“this 这把锁可以保护自己的余额 this.balance...”是不是也有问题呢？</div>
+                            <span class="time">2019-05-06</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/c8/d5/e88c1805.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">JackLei</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">如果是在多进程中的，锁class，能解决这个问题么？如取款、存款是一个分布式的服务。</div>
+                            <span class="time">2019-05-05</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/cc/54/f8cdc6b9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Andy Wooh</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师你好，我执行的代码会显示B账户的余额为200呢？很困惑啊.......<br>public class Account {<br>	private String name;<br>	private int balance;<br><br>	public Account(String name, int balance) {<br>		this.name = name;<br>		this.balance = balance;<br>	}<br><br>	public static void main(String[] args) throws InterruptedException {<br>		Account a = new Account("A", 200);<br>		Account b = new Account("B", 200);<br>		Account c = new Account("C", 200);<br><br>		Thread t1 = new Thread("t1") {<br>			public void run() {<br>				a.transfer(b, 100);<br>			}<br>		};<br><br>		Thread t2 = new Thread("t2") {<br>			public void run() {<br>				b.transfer(c, 100);<br>			}<br>		};<br><br>		t1.start();<br>		t2.start();<br><br>		t1.join();<br>		t2.join();<br><br>		System.out.println("a: " + a.balance);<br>		System.out.println("b: " + b.balance);<br>		System.out.println("c: " + c.balance);<br>	}<br><br>	synchronized void transfer(Account target, int amt) {<br>		if (this.balance &gt; amt) {<br>			this.balance -= amt;<br>			target.balance += amt;<br>		}<br>	}<br>}</div>
+                            <span class="time">2019-04-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/fb/6a/be4956a3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">劉小强</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在查看密码和查看余额的时候为什么要加锁呢，这样如果一个线程在修改密码的时候必须在该线程执行完才能看见查询到密码，这样性能上可以么</div>
+                            <span class="time">2019-04-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/d2/9a/d56bb650.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">多多</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">代码有错就没人提吗？王老师你错误的代码太多了！Class中方法可以没有方法体吗？你把这个括号加上会怎样？麻烦用心点！</div>
+                            <span class="time">2019-04-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e7/50/d476ed6c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Mr.Panda</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题解答：<br><br>答案：不可以，锁对象引用必须保持不可切换特性。原因加锁本质是引用指向的对象头附上了线程id。若引用切换别的对象了，执行synchronized就会检查别的对象是否被线程加锁。毫无意义。</div>
+                            <span class="time">2019-04-07</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/e4/dc/00cf43a7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">龙文子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">可变对象不宜做锁对象  是因为可见性，若用volatile 修饰，对于多线程共享的对象，一个线程修改，其它线程立马可见。这样来看，也可以作为锁对象</div>
+                            <span class="time">2019-04-06</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/52/37/13b4c8aa.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Vincent</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题: 不可行，锁对象会随时改变，而我们用互斥锁的目的是保证同一时刻只有一个线程执行临界区代码，所以对于并发执行的线程来说，锁对象不应该变化</div>
+                            <span class="time">2019-04-03</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/52/37/13b4c8aa.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Vincent</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">你好老师你说用Account.class这个锁做互斥协调，你说到有一个问题是账户类在不同工程中使用，那就是说在不同JVM里面，那这个Account.class也就不唯一！</div>
+                            <span class="time">2019-04-03</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，我们说的都是单进程的，多进程没有数据共享，也没这些问题<br></p>
+                                <p class="reply-time">2019-04-03</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/0e/c5/d73030ee.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">光明势力</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">this 是对象级别的锁，那多线程调用该类的方法，每次调用类，这个类的this锁是一样的？还说每次调用一次new一次对象，this锁就不一样了？？互斥锁就这点有疑惑，望作者或读者大神解答，谢谢</div>
+                            <span class="time">2019-04-02</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/08/d2/ff076782.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">星愿</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">讲的特别好，评论区也很精彩。就是自己资质尚浅，引出来很多好奇心，很难受<br>1、锁是什么，怎么实现的？(不只是使用...)<br>2、怎么控制临界区？<br>3、为什么对象变了，会new出来新的锁？<br>......</div>
+                            <span class="time">2019-04-01</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/f6/cc/0394b0ff.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">龙腾</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师好，我一般用全局锁的时候是定义一个常量作为锁，这个和class对象有什么区别么？哪个比较好点</div>
+                            <span class="time">2019-03-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">答疑里面有答案<br></p>
+                                <p class="reply-time">2019-03-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_13ada7</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">使用static变量不可以吗，老师</div>
+                            <span class="time">2019-03-23</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以，实现单例的方式有很多<br></p>
+                                <p class="reply-time">2019-03-23</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83erXWOnwPrqib55A607Q0GksnJhBvND2MUNDNNd3ibDqXAYMm4ic7BV0LcLouI2mnjgNmLKLLDgM3v4Sg/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_646e52</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">密码为什么要加锁</div>
+                            <span class="time">2019-03-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e0/24/4529f2a4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WP</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">学习到了很多，评论区看到了常量池，缓存区，享元模式，哈哈，赚到了</div>
+                            <span class="time">2019-03-20</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/15/69/fc60d1f4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈华应</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">个人理解不可行<br>1、String作互斥锁，相同的String的值是在字符串常量池中的，值相同会被视为同一个对象，当两个密码相同，但是账户不同的情况下，对于这两个账户的密码操作都是同一把锁，出现了使用自家锁包货别家资源的情况，并且String的值会改变，改变之后锁也就变了，失去了锁的意义。<br>2、Integer类型作为互斥锁本身就不合适，相同的int可以有不同的Integer，并且在这里Integer的值也是可变的</div>
+                            <span class="time">2019-03-19</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/6b/53/a102d6a5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">朱江涛</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">事例中的转账，实践中是直接操作数据库事务吗，数据库的行级锁更新操作也是互斥的吧，还是有更好的办法，在高并发情况下？</div>
+                            <span class="time">2019-03-17</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">实践中都是利用数据库来解决。这里只是作为例子说明锁的用法而已。<br></p>
+                                <p class="reply-time">2019-03-17</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/03/4c/0513fa13.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">呼哥</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可行，锁的意义在于锁住相同的对象，如果两个线程锁住的对象不一样，就不是互斥锁了，就会出现同时访问，交叉覆盖的情况。</div>
+                            <span class="time">2019-03-15</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/f3/4a/b6a46894.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Ying</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">受保护资源之间的关系 决定了锁的粒度  原子性保证中间状态对外不可见 要开始跟一个新的专栏了 加油喽</div>
+                            <span class="time">2019-03-14</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/fc/01/27108d5d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">坤</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在account类里声明一个static  final类型的常量作为锁</div>
+                            <span class="time">2019-03-13</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e4/e9/0dd3829f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">aguan(^･ｪ･^)</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师我有个疑问，如果是在分布式系统，要怎么解决多资源用一把锁的问题呢？</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有分布式锁，用zk，数据库，redis都能实现<br><br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKmibzSicIgPib83RowJgzhPicq0FiaPSXY8NqyaKOkYGROUGibO5rrzgP56BHicL2fNSibJqD7Tic2NJib8SWg/0" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">星火</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，如果在分布式环境下，那个A、B、C账户转账的例子用Account.class 作为共享的锁，是不是就不正确了</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的</p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/1d/f1/05d5579d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">规划</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问老师，单例是可以锁住A,B资源吧？比如spring管理管理的单例</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以</p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83epLhKkTgowm9PqUwP9k90DecpOU7HQ0IRuAp515kIonbfyqYm6ME7s2bmaPX0sSA14micZ2DAfLLibw/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zsh0103</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我的理解不知道是否正确，首先，password是String类型，String类型变量每次赋值等于一个新对象，所以对password加锁等没有加锁。</div>
+                            <span class="time">2019-03-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，改变之后，相当于没有加锁</p>
+                                <p class="reply-time">2019-03-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/24/28/9b5b1396.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">我真不是地球</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">创建 Account 对象时，传入相同的 lock，请问Account target的target也要再传参进来之前，事先set入同一个lock吧</div>
+                            <span class="time">2019-03-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的</p>
+                                <p class="reply-time">2019-03-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/7b/57/a9b04544.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">QQ怪</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">this.balance发生改变就会不是同一把锁了，所以不可以</div>
+                            <span class="time">2019-03-09</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/f5/98/477a2da0.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小小小丶盘子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，我想问一下，哪种场景下修改密码要加锁，是随便举例子，还是？</div>
+                            <span class="time">2019-03-08</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">随便举个例子。当然不加锁也是有风险的。</p>
+                                <p class="reply-time">2019-03-08</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/f3/de/c6509355.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">花蛋壳</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，我有一个疑问，在多线程当中，如果Account是不同的对象，那么对于final类型的锁对象不也失效了吗？</div>
+                            <span class="time">2019-03-08</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不同对象也没关系，每个对象都有自己的锁。管好自家就可以了。</p>
+                                <p class="reply-time">2019-03-08</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/bc/eb/c22ef3a5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Nevermore</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">拿this.balance作为锁对象举例，由于它是可变的，线程1在拿到这个锁对象的监视器进入这个临界区以后，this.balance会发生变化，线程2就会拿到变化后的this.balance锁对象的监视器进入临界区，毕竟这两个锁不是互斥的。</div>
+                            <span class="time">2019-03-08</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，可变的对象不能做互斥锁<br></p>
+                                <p class="reply-time">2019-03-08</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/00/f2/66a1461d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Solitary_J</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，改成这样是不是一样锁的同一资源Account.class，也是正确的？<br>class Account {<br>  private int balance;<br>  // 转账<br>  static void synchronized transfer(Account target, int amt){<br>      if (this.balance &gt; amt) {<br>        this.balance -= amt;<br>        target.balance += amt;<br>      }<br>  } <br>}<br></div>
+                            <span class="time">2019-03-08</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">语法有问题，访问不了对象成员<br></p>
+                                <p class="reply-time">2019-03-08</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e4/76/a97242c0.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">黄朋飞</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师你好，一直有个问题没明白，cpu-1缓存执行完变量值后什么时候会把变量值写回内存，写回内存后，另外一个cpu-2缓存会直接从驻内存读取数据吗（不是直接操作cpu上的缓存吗）</div>
+                            <span class="time">2019-03-08</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">cpu什么时候刷缓存是不确定的，要看cpu心情。所以不要做这个假设，除非你调用cpu刷缓存的指令<br></p>
+                                <p class="reply-time">2019-03-08</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/19/18/33b7e63b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">wypsmall</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">存在死锁</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">下一期介绍死锁</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/79/57/1103638a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Evelyn_hf</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可以，this.balance和this.password指向的地址都变了，不是同一把锁。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/18/f6/2ff7bc7a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">轻歌赋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">这里感觉用数据库自身的锁更好一些<br>请问老师，目前分布式锁的解决方案大概都有哪些呢？理论依据又是什么呢？</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">zk,redis,db都可以，依据是去分布式吧<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/c8/6b/0f3876ef.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">iron_man</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，关于转账的这个例子，如果加锁在 account.class 上，那么单台机器上执行的转账操作就是串行的了，就是 a 转 b，c转 d，这两个不需要互斥的转账操作，都需要互斥执行了。<br>对于这种情况，应该对有变动的两个账户加锁吧，是这样吗？</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">下一期会讲这个问题<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/a0/88/a7a96ef1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ZYY</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，<br>中间状态对外不可见<br><br>这个怎么理解呢？</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">中间状态，你看不到就操作不了</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e7/7c/a8275e98.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">wilburjiang91</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题  这两种都不可行<br>1. 这两个字段都需要初始化，否则会空指针<br>2. String是不可变的，即每次修改后都是一个新的对象，没有起到加锁的作用。看了下基本类型的对应的封箱类，都是final 修饰的，在idea 里看都是不同的对象了。<br>请老师指正</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">很全面了<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/01/6e/a217a0f6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">master</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">什么样的元素能做锁，只有对象吧，思考题的两个是对象吗，个人水平有限，望老师解答!</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是对象<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/04/ef/fea0fdbd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小黄</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可行，我分析：balance  password每次改变后被赋值成不同的对象。所以，其他线程可能仍加锁在旧对象上，导致操作不互斥，存在多个线程同时操作余额。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是这样的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/99/2c/faadcfbc.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ChallengeND</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">总结一下，这篇文章就是讲的锁可以锁类，也可以锁对象，只是力度不同。。这个案例，在实际开发场景用，要造成多大的阻塞。。。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">其实我是想让大家注意别锁漏了，优化下一期会讲<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fc/90/c9df0459.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ack</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不能吧，基本类型放在堆栈里面，传的是值。对象放在堆里面传的是地址，而synchronized锁的是对象的内存地址。所以所有对象都可以作为锁，基本类型应该是不行的。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">锁的不是内存地址，就是对象。基本类型包装程对象后语法上是可以作为锁的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">老斯基</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">应该是不行的，如果一开始线程获得了锁，在临界区改变了balance或password的值，相当于锁对象发生了变化，此时的线程持有的还是旧锁，其它线程可以获取新的锁来操作，就会出现多个锁保护一种资源的情况。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是这样<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/f3/69/7039d03f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">书策稠浊</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可以，因为锁住修改之后就不是原来那个对象了。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/4f/7f/5dc11380.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">苏志辉</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题，应该不能，作为锁的对象是不能改变的，锁是存放在对象头中的，变了以后变不是同一把锁，没有互斥性</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是这样的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/00/f2/66a1461d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Solitary_J</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不行，每个实例的this不同，锁住锁住的不是同一个对象</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/da/ec/779c1a78.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">往事随风，顺其自然</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">虽然对象值会更改，但是对象不会变，还是同一个对象，是还可以作为互斥对象的</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不可以，对象有改变的可能</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJupkAwlMPemsyBhOT2BWJPnyicAqQhH731C7uV5fXjz9DicxO0eySia1JLqeMXAkQlFZZ41uXsw1I7g/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">yang</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">banlance可以，因为用的是堆中对象的地址，当其值改变时，引用地址不变；password不可以，因为string是存在堆中的常量池中，如果值变了，引用关系也变了，所以就是不同的锁对象了。<br>个人理解，敬请指正</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">都不可以</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/78/c7/083a3a0b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">新世界</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可行，java的integer和string代码有采用享元模式，比如Integer.valueOf创建两个都是1的对象，其实本质是一个对象吧，如果在这个对象上加锁，粒度太粗了</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/4c/12/6d9493c3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">rayjun</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">可以的，因为 this.balance 和 this.password 相互之间是没有关系的，可以分别用做保护自己的锁</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不可以<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/99/c9/a7c77746.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">冰激凌的眼泪</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">string一旦修改，就成了其他的对象，可能无效吧。<br>小整数是不是有个缓存问题，导致要么被共享锁粒度过大，要么被换成其他对象导致失效。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">分析的很全面👍<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/30/c1/2dde6700.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">密码123456</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可行，假设余额是100。只是锁了100。如果值更改成200。其他线程发现锁的是100，而当前值并不是100，也可以进去临界区</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是这样的</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/19/a3/600bc13d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">无庸</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可以的。不同对象实例的this 是不同的对象。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">结论正确，理由没看懂</p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/73/4f/abb7bfe3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">沙漠里的骆驼</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">个人感觉不可行；<br>因为Integer对象是不可变的，每次更新时是new了一个新对象。所以在A线程对balance做变更的时候，导致this.balance对象发生变化，而B线程此时是可以进入临界区的(锁已经是新锁)，而进入临界区的时候对象甚至可能未初始化。<br></div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">结论是对的<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJMWl3EYJ7sNZVH468kicYjJ3xBWPyc1r02iaRs7vibIAvt8AbnKxMCKbjXkuXaC0sBYlbYWTXQtOfuA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_693587</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">考虑密码和余额这两个资源没有关联关系，所以这两个资源使用各自的锁来控制自身的操作，是完全没有问题的。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不可以<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/64/86/6b593cb9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zach_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在第一个示例程序里，我们用了两把不同的锁来分别保护账户余额、账户密码，创建锁的时候，我们用的是：private final Object xxxLock = new Object();，如果账户余额用 this.balance 作为互斥锁，账户密码用 this.password 作为互斥锁，你觉得是否可以呢？<br><br>用this.balance this.password 相当于私有锁 可以作为业务与其他Account没有关联关系的锁 如果要用this.balance this.password 放在关联其他Account的业务中，恐怕还是一把this.xx锁不够用，还是用共享所靠谱一点吧？</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">引申后就复杂了<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/19/60/888f1371.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Kid😋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">定义一个静态对象也可以作为互斥锁管理多个关联的资源<br>思考题:可以的 每个账户只访问自身的资源</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以使用静态对象<br>思考题那个不可以<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/1a/66/2d9db9ed.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">苦行僧</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对象锁 类锁</div>
+                            <span class="time">2019-03-07</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/1b/ac/41ec8c80.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">孙悟空</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题，不行。<br>Java里的对象变量仅仅是一个引用，每次写入这两个成员变量后，他们指向的对象都会发生变化，所以对应的锁不止一个。多线程写入时，会出现多个锁保护同一个资源的情况。就会出现不止一个线程可以进去临界区的问题。</div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/d0/03/2e632d36.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_c42505</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">不可以吧，锁在运行期间不能改变锁值吧，值改变了怎么锁住？  </div>
+                            <span class="time">2019-03-07</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的，不能改变<br></p>
+                                <p class="reply-time">2019-03-07</p></div>
+                        </div>
+                    </li></ul>
+            </div>
+        </div> <!----> <!----></div>
+</div>
+<link rel="dns-prefetch" href="//cdn.mathjax.org">
+<script type="text/x-mathjax-config">MathJax.Hub.Config({
+        showProcessingMessages: false,
+        messageStyle: "none",
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a']
+        }
+      });
+      MathJax.Hub.Register.MessageHook("End Process", function (message) {
+        var eve = new Event('mathjaxfini')
+        window.dispatchEvent(eve)
+      })
+
+
+
+
+</script>
+
+</body>

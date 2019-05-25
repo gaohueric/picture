@@ -1,0 +1,1997 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="Keywords" content="极客时间,极客邦,极客邦科技,极客邦控股,极客时间App,专栏订阅,极客新闻,二叉树,极客Live,QCon,左耳听风,AI技术内参,大航海时代,陈皓,徐飞,洪亮劼,霍泰稳,池建强,Selina,Gary,InfoQ,极客搜索">
+    <meta name="description" content="极客时间是极客邦科技出品的一款 IT 内容知识服务 App，内容包含专栏订阅、极客新闻、热点专题、直播、视频和音频等多形式的知识内容，并设有陈皓专栏、徐飞专栏、洪亮劼专栏等专栏供订阅。">
+    <link rel="apple-touch-icon" sizes="180x180" href="//static001.geekbang.org/static/icon/time/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="//static001.geekbang.org/static/icon/time/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="//static001.geekbang.org/static/icon/time/favicon-16x16.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>12 | 如何用面向对象思想写好并发程序？</title>
+
+    <link href="https://static001.geekbang.org/static/time/css/app.3e04e644962ca8c2f97ec7731bb7710c.css" rel="stylesheet">
+    <style type="text/css">.hljs-ln {
+        border-collapse: collapse
+    }
+
+    .hljs-ln td {
+        padding: 0
+    }
+
+    .hljs-ln-n:before {
+        content: attr(data-line-number)
+    }</style>
+    <style type="text/css">#iv-container {
+        position: fixed;
+        background: #0d0d0d;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        display: none;
+        z-index: 1000
+    }
+
+    .iv-container {
+        overflow: hidden
+    }
+
+    .iv-close {
+        width: 26px;
+        height: 26px;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        cursor: pointer;
+        text-align: center;
+        overflow: hidden;
+        text-shadow: 0 0 3px #6d6d6d;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all ease .2s;
+        -o-transition: all ease .2s;
+        transition: all .2s ease
+    }
+
+    .iv-close:after, .iv-close:before {
+        content: "";
+        height: 2px;
+        width: 26px;
+        background: #fff;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        margin-top: -2px;
+        border-radius: 2px
+    }
+
+    .iv-close:before {
+        -webkit-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        transform: rotate(45deg)
+    }
+
+    .iv-close:after {
+        -webkit-transform: rotate(-45deg);
+        -moz-transform: rotate(-45deg);
+        -ms-transform: rotate(-45deg);
+        -o-transform: rotate(-45deg);
+        transform: rotate(-45deg)
+    }
+
+    .iv-close:hover {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .iv-image-view {
+        position: absolute;
+        height: 100%;
+        width: 100%
+    }
+
+    .iv-image-wrap {
+        display: inline-block
+    }
+
+    .iv-image-wrap:active {
+        cursor: move
+    }
+
+    .iv-large-image {
+        cursor: move;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: #ececec;
+        -moz-transform: translateZ(0);
+        -o-transform: translateZ(0)
+    }
+
+    .iv-large-image, .iv-loader {
+        position: absolute;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0)
+    }
+
+    .iv-loader {
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        z-index: 100;
+        margin-top: -16px;
+        margin-left: -16px;
+        font-size: 5px;
+        text-indent: -9999em;
+        border-top: 1em solid hsla(0, 0%, 100%, .2);
+        border-right: 1em solid hsla(0, 0%, 100%, .2);
+        border-bottom: 1em solid hsla(0, 0%, 100%, .2);
+        border-left: 1em solid #fff;
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear
+    }
+
+    .iv-loader:after {
+        width: 10em;
+        height: 10em;
+        border-radius: 50%
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }</style>
+    <style type="text/css">.vue-pull-to-wrapper[data-v-12abd9fb] {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .scroll-container[data-v-12abd9fb] {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .vue-pull-to-wrapper .action-block[data-v-12abd9fb] {
+        position: relative;
+        width: 100%
+    }
+
+    .default-text[data-v-12abd9fb] {
+        height: 100%;
+        line-height: 50px;
+        text-align: center
+    }</style>
+    <style type="text/css">.button-cancel[data-v-87ffcada] {
+        color: #888;
+        border: 1px solid #888;
+        border-radius: 3px;
+        margin-right: 12px
+    }
+
+    .button-cancel[data-v-87ffcada], .button-primary[data-v-87ffcada] {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        height: 35px;
+        display: inline-block;
+        font-size: 15px;
+        text-align: center;
+        line-height: 36px
+    }
+
+    .button-primary[data-v-87ffcada] {
+        color: #fff;
+        background-color: #ff5a05;
+        border-radius: 3px
+    }
+
+    .pd[data-v-87ffcada] {
+        padding-left: 1.375rem;
+        padding-right: 1.375rem
+    }
+
+    .article[data-v-87ffcada] {
+        max-width: 46.25rem;
+        margin: 0 auto
+    }
+
+    .article .article-unavailable[data-v-87ffcada] {
+        color: #fa8919;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 24px;
+        border-radius: 5px;
+        padding: 12px;
+        background-color: #f6f7fb;
+        margin-top: 20px
+    }
+
+    .article .article-unavailable .iconfont[data-v-87ffcada] {
+        font-size: 12px
+    }
+
+    .article .main[data-v-87ffcada] {
+        padding: 1.25rem 0;
+        margin-bottom: 52px
+    }
+
+    .article-title[data-v-87ffcada] {
+        color: #353535;
+        font-weight: 400;
+        line-height: 1.65rem;
+        font-size: 1.34375rem
+    }
+
+    .article-info[data-v-87ffcada] {
+        color: #888;
+        font-size: .9375rem;
+        margin-top: 1.0625rem
+    }
+
+    .article-content[data-v-87ffcada] {
+        margin-top: 1.0625rem
+    }
+
+    .article-content.android video[data-v-87ffcada]::-webkit-media-controls-fullscreen-button {
+        display: none
+    }
+
+    .copyright[data-v-87ffcada] {
+        color: #b2b2b2;
+        padding-bottom: 20px;
+        margin-top: 20px;
+        font-size: 13px
+    }
+
+    .audio-player[data-v-87ffcada] {
+        width: 100%;
+        margin: 20px 0
+    }
+
+    .to-comment[data-v-87ffcada] {
+        overflow: hidden;
+        padding-top: 10px;
+        margin-bottom: -30px
+    }
+
+    .to-comment a.button-primary[data-v-87ffcada] {
+        float: right;
+        height: 20px;
+        font-size: 12px;
+        line-height: 20px;
+        padding: 4px 8px;
+        cursor: pointer
+    }
+
+    .article-comments[data-v-87ffcada] {
+        margin-top: 2rem
+    }
+
+    .article-comments h2[data-v-87ffcada] {
+        text-align: center;
+        color: #888;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1rem
+    }
+
+    .article-comments h2[data-v-87ffcada]:before {
+        border-top: 1px dotted #888;
+        content: "";
+        position: absolute;
+        top: 56%;
+        left: 0;
+        width: 100%;
+        z-index: -1
+    }
+
+    .article-comments h2 span[data-v-87ffcada] {
+        font-size: 15.25px;
+        font-weight: 400;
+        padding: 0 1rem;
+        background: #fff;
+        display: inline-block
+    }
+
+    .article-sub-bottom[data-v-87ffcada] {
+        z-index: 10;
+        cursor: pointer
+    }
+
+    .switch-btns[data-v-87ffcada] {
+        height: 76px;
+        cursor: pointer;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        border-bottom: 10px solid #f6f7fb;
+        position: relative
+    }
+
+    .switch-btns[data-v-87ffcada]:before {
+        content: " ";
+        height: 1px;
+        background: #e8e8e8;
+        position: absolute;
+        top: 0;
+        left: 0;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        left: 1.375rem;
+        right: 1.375rem
+    }
+
+    .switch-btns .btn[data-v-87ffcada] {
+        height: 38px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .switch-btns .btn .tag[data-v-87ffcada] {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 62px;
+        flex: 0 0 62px;
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        border-radius: 10px;
+        height: 22px;
+        line-height: 22px;
+        background: #f6f7fb;
+        font-weight: 400
+    }
+
+    .switch-btns .btn .txt[data-v-87ffcada] {
+        margin-left: 10px;
+        -webkit-box-flex: 1;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        color: #888;
+        font-size: 15px;
+        height: 22px;
+        line-height: 22px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 400
+    }
+
+    @media (max-width: 769px) {
+        .article .breadcrumb[data-v-87ffcada] {
+            padding-top: 10px;
+            padding-bottom: 10px
+        }
+    }</style>
+    <style type="text/css">.empty {
+        height: 51px
+    }
+
+    .mobile-tips {
+        width: 100%;
+        height: 51px;
+        background: rgba(0, 0, 0, .8);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 0 12px;
+        -webkit-transition: opacity .35s;
+        transition: opacity .35s;
+        opacity: 0;
+        pointer-events: none
+    }
+
+    .mobile-tips.istop {
+        opacity: 1;
+        pointer-events: auto
+    }
+
+    .mobile-tips .mobile-tips-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: start;
+        -ms-flex-pack: start;
+        justify-content: flex-start
+    }
+
+    .mobile-tips .mobile-tips-info i {
+        width: 36px;
+        height: 36px;
+        background-image: url(data:image/png;base64,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);
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        background-size: contain;
+        border-radius: 7px
+    }
+
+    .mobile-tips .mobile-tips-info h2 {
+        font-size: 15px;
+        color: #fff;
+        font-weight: 400;
+        margin-left: 6px
+    }
+
+    .mobile-tips .mobile-tips-info h2 span {
+        font-size: 11px
+    }
+
+    .mobile-tips a {
+        width: 72px;
+        height: 31px;
+        text-align: center;
+        border: 1px solid #fa8919;
+        border-radius: 3px;
+        font-size: 13px;
+        color: #fa8919;
+        line-height: 31px
+    }</style>
+    <style type="text/css">.share-poster-wrapper {
+        position: fixed;
+        background-color: #fff;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -moz-user-select: -moz-none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .share-poster-wrapper .poster-bottom, .share-poster-wrapper .poster-middle, .share-poster-wrapper .poster-top {
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle {
+        padding: 16px 32px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-bottom: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo .poster-avatar {
+        min-width: 45px;
+        min-height: 45px;
+        width: 7vw;
+        height: 7vw;
+        border-radius: 50%;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle .nickname {
+        font-size: 5vw;
+        font-weight: 400;
+        margin-left: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .time {
+        font-size: 3.2vw
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content {
+        font-size: 4vw;
+        font-weight: 400;
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+        letter-spacing: 1px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content {
+        font-size: 3.7vw;
+        padding: 32px 0
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info {
+        border-left: 1px solid #000;
+        padding-left: 10px;
+        margin-top: 38px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info p {
+        font-size: 3.2vw;
+        line-height: 1.5
+    }
+
+    .share-poster-wrapper.theme0 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/top.png") no-repeat 15px 1px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle {
+        width: 100%;
+        padding-left: 56px;
+        padding-right: 56px;
+        background-image: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/middle.png");
+        background-repeat: repeat-y;
+        background-position: 15px 0
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .time {
+        margin-bottom: 45px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .quote-content {
+        border-top: 1px solid #e3e1dc;
+        margin-top: 30px
+    }
+
+    .share-poster-wrapper.theme0 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/bottom.png") no-repeat 15px -10px
+    }
+
+    .share-poster-wrapper.theme1 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/top.png") no-repeat 38px 1px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle {
+        width: 100%;
+        padding: 0 42px 10px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/middle.png") repeat-y 38px 0
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo {
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo .poster-avatar {
+        margin-left: 38px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-wrapper {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        min-height: 260px;
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time {
+        max-width: 65px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        text-align: center;
+        vertical-align: middle;
+        border-right: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time span {
+        white-space: nowrap;
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-content {
+        padding: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-content {
+        font-size: 3.7vw;
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-info {
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .footer {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-right: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/bottom.png") no-repeat 38px -10px
+    }
+
+    .share-poster-wrapper .share-poster {
+        background: #fefdf8;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #9b8d73;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        overflow: auto;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .share-poster-wrapper .share-poster.color0 {
+        background-color: #fefdf8
+    }
+
+    .share-poster-wrapper .share-poster.color1 {
+        background-color: #4d4d4d
+    }
+
+    .share-poster-wrapper .share-poster .footer {
+        margin-top: 2rem;
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: end;
+        -ms-flex-pack: end;
+        justify-content: flex-end;
+        -webkit-box-align: end;
+        -ms-flex-align: end;
+        align-items: flex-end
+    }
+
+    .share-poster-wrapper .share-poster .footer p {
+        margin: 0;
+        line-height: 1.4;
+        margin-left: 20px;
+        text-align: right;
+        padding-right: 20px
+    }
+
+    .share-poster-wrapper .controls {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        width: 100%;
+        padding-top: 5px;
+        -webkit-box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        z-index: 1;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .controls > div {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding: 10px 0
+    }
+
+    .share-poster-wrapper .controls > div span {
+        font-size: .85rem
+    }
+
+    .share-poster-wrapper .controls > div button {
+        width: 100px;
+        height: 24px;
+        background: #eee;
+        margin: 0 10px;
+        border-radius: 5px;
+        border: 2px solid #b2b2b2;
+        outline: none
+    }
+
+    .share-poster-wrapper .controls > div button.on {
+        border: 2px solid #ff5a05
+    }
+
+    .share-poster-wrapper .controls .controls-themes button {
+        color: #b2b2b2;
+        font-size: 12px;
+        background: #fff;
+        text-align: center
+    }
+
+    .share-poster-wrapper .controls .controls-themes button.on {
+        color: #ff5a05
+    }
+
+    .share-poster-wrapper .buttons {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .buttons a {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        text-align: center;
+        color: #000;
+        font-weight: 400;
+        height: 3rem;
+        line-height: 3rem
+    }
+
+    .share-poster-wrapper .buttons a .icon-share-money {
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px
+    }
+
+    .share-poster-wrapper .buttons a:last-child {
+        border-left: 1px solid #f5f5f5
+    }
+
+    .share-poster-wrapper img {
+        max-width: 100%
+    }
+
+    .share-poster-wrapper.android .poster-middle .nickname {
+        font-size: 10vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .time {
+        font-size: 6.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .poster-middle-content {
+        font-size: 8vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-content {
+        font-size: 7.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-info p {
+        font-size: 6.4vw
+    }</style>
+    <style type="text/css">.mini-audio-player {
+        width: 100%;
+        height: 5.25rem;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 1rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        margin: 1rem 0
+    }
+
+    .mini-audio-player > a {
+        border: none;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .mini-audio-player .btn-play {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .btn-pause, .mini-audio-player .btn-play {
+        width: 2.6875rem;
+        height: 2.6875rem;
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none
+    }
+
+    .mini-audio-player .btn-pause {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .audio-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        margin-left: .6875rem;
+        min-width: 0
+    }
+
+    .mini-audio-player .audio-info h3 {
+        color: #353535;
+        font-size: 15.25px;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .mini-audio-player .audio-info p {
+        margin: 0;
+        margin-top: .125rem;
+        font-size: 11px;
+        line-height: 1rem
+    }
+
+    .mini-audio-player .audio-info p span {
+        color: #888
+    }
+
+    .mini-audio-player .btn-download {
+        width: 1.25rem;
+        height: 1.25rem;
+        position: relative;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAA+CAYAAACbQR1vAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAA4hJREFUaIHtm8lOFFEUhr9qCWGHGxcaY1joK2h0YRzAtYmsWbAGGidEXOACbAYRxfgAPoEPoInGxJgg86gsJTHMw86EhS7O7TDk3uqq6qo6HahvQ7pOce7//1U0feve9vr6+lAiD3QC/4AC8FZDRJXGoMB14PWB1yPANPA1bSG5tAc0XLEcu5y6CvQCOGU5pnI3agVQMWQBaAvQJgtAW4A2WQDaArTJAtAWoE0WgLYAbbIAtAVokwWgLUCbLABtAdpkAfjU6oC7wKV0pCTCRcRDnesEVwDNwC/gg/nZHbeyFOgGltj30Gw7yRZALfAOqDavPeA50BO7xOToQTR75nU14qn26Im2AM4DNZbjz4DeePQlSi+i9Sg1iLdD2AJYApYdzbuo7BBeIBptLCPeDmELYA9oBHYdjbqQpaxKowA8ddR2gXuIt0O43gRHgTu4Q+ikskIoIJps7AINwA9b0e/fYJAQ1FZWD9CP2/wOUI/DPJT+IDRqGrhCeGIEaNEPdDhqO8iVH/NrEOST4BgSwo6j3gEMBOgTNwP4m6+nhHkI/lG4VAiPgcGAveJg0IxpYxvROh6kUZi5wLhpvO2oPyKdEF6asWyEMg/hJ0PjyN+VXwhDIXuGYQh46KhtIeYnwjSMMhss3glbjvoDkglhyPS2Eck8RJ8OTyB3gl8IryL2tjGM2/wmYn4ySuNyngdMmIE3HfX7iHDPUQ+CZ3q0O+qbyIWIZB7KfyAyaQS4QmhH7oQoIZQyv0EZV75IHE+EJvG/E9oJfyd4yC6yvKO+gQQ/FaKnlbgeiU0hIWw46nnEUJAQiubbHPV1M1bZ5iHeZ4KlQmgD3uAfgofsGfQz34DsKYyFuLemTSMhfATOWOqtiMk/llrRfIuj9zpwG5gtX+Y+SezNK4bwCXsILdgDaAXOOnomYh6Seyw+gwhed9TPWY75mb9FAuYh2XWBWUS4K4QgrAE3gblYFFlIemFkDjEQJYQ1JMD5WBUdIY2VoXkkhLUQv7NqfidR85De0liYEFaRK7+QqCJDmmuDC0gIqz7nrJhzUjEP6S+O+oWwglz5xTQFaawOLwI3gO8Hjo2ZY6maB72vzPwErgEXkO8MuVaiEkcrgCK/lcfPNkhkAWgL0KYKmZiMIG9Ktn0Bx5G/wDcgXwW8R6avJ41G4HQOufInlas5ZO5+UpnJAU3AFyy7J44xe8BnoOk/JruwYo92bigAAAAASUVORK5CYII=);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none;
+        padding-right: .25rem
+    }
+
+    .mini-audio-player .btn-download .icon-download-done {
+        width: .45rem;
+        height: .45rem;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        display: inline-block;
+        background-image: url(data:image/png;base64,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);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain
+    }</style>
+    <style type="text/css">.MathJax_Display {
+        overflow: auto
+    }
+
+    .poster {
+        position: fixed;
+        left: -10000px;
+        top: -10000px;
+        overflow: hidden;
+        padding: 1rem;
+        background: #ececec
+    }
+
+    .richcontent-pre-copy {
+        font-size: 13px;
+        color: #888;
+        position: absolute;
+        right: 1em;
+        top: .2em;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .richcontent-pre-copy .iconfont {
+        font-size: 12px;
+        margin-right: .2em
+    }</style>
+    <style type="text/css">.breadcrumb {
+        padding: 30px 0;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        background: #fff
+    }
+
+    .breadcrumb a.title {
+        color: #e57c39;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb span.title {
+        color: #888;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb .split {
+        color: #ccc;
+        font-size: 10px;
+        margin-right: 5px
+    }</style>
+    <style type="text/css">.comment-item {
+        list-style-position: inside;
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-bottom: 1rem
+    }
+
+    .comment-item a {
+        border-bottom: none
+    }
+
+    .comment-item .avatar {
+        width: 2.625rem;
+        height: 2.625rem;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+        border-radius: 50%
+    }
+
+    .comment-item .info {
+        margin-left: .5rem;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1
+    }
+
+    .comment-item .info .hd {
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .username {
+        color: #888;
+        font-size: 15.25px;
+        font-weight: 400;
+        line-height: 1.2
+    }
+
+    .comment-item .info .hd .control {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .control .btn-share {
+        color: #888;
+        font-size: .75rem;
+        margin-right: 1rem
+    }
+
+    .comment-item .info .hd .control .btn-praise {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        font-size: 15.25px;
+        text-decoration: none
+    }
+
+    .comment-item .info .hd .control .btn-praise i {
+        color: #888;
+        display: inline-block;
+        font-size: .75rem;
+        margin-right: .3rem;
+        margin-top: -.01rem
+    }
+
+    .comment-item .info .hd .control .btn-praise i.on, .comment-item .info .hd .control .btn-praise span {
+        color: #fa8919
+    }
+
+    .comment-item .info .bd {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.6
+    }
+
+    .comment-item .info .time {
+        color: #888;
+        font-size: 9px;
+        line-height: 1
+    }
+
+    .comment-item .info .reply .reply-hd {
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-hd span {
+        margin-left: -12px;
+        color: #888;
+        font-weight: 400
+    }
+
+    .comment-item .info .reply .reply-hd i {
+        color: #fa8919;
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-content {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all
+    }
+
+    .comment-item .info .reply .reply-time {
+        color: #888;
+        font-size: 9px
+    }
+
+    .comment-template {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div data-v-87ffcada="" class="article"><!---->
+        <div data-v-87ffcada="" class="main main-app">
+            <h1 data-v-87ffcada="" class="article-title pd">
+                12 | 如何用面向对象思想写好并发程序？
+            </h1>
+            <div data-v-87ffcada="" class="article-info pd"><span data-v-87ffcada="">2019-03-26</span> <span data-v-87ffcada="">王宝令</span></div>
+            <div data-v-87ffcada="" class="article-content typo common-content pd">
+                <img data-v-87ffcada="" src="https://static001.geekbang.org/resource/image/74/c9/74c3b96e7526ecef0af465a5aeae47c9.jpg">
+                <!---->
+                <div data-v-87ffcada="" class="mini-audio-player">
+                    <div class="audio-info">
+                        <p><span>朗读人：王宝令&nbsp;&nbsp;&nbsp;</span>
+                        </p></div> <!---->
+                    <audio title="" src="https://static001.geekbang.org/resource/audio/42/36/42b535904316f092b21379de2ab9c936.mp3" controls="controls"></audio>
+                </div>
+                <div data-v-87ffcada="" id="article-content" class="">
+                    <div class="text"><p>在工作中，我发现很多同学在设计之初都是直接按照单线程的思路来写程序的，而忽略了本应该重视的并发问题；等上线后的某天，突然发现诡异的Bug，再历经千辛万苦终于定位到问题所在，却发现对于如何解决已经没有了思路。</p><p>关于这个问题，我觉得咱们今天很有必要好好聊聊“如何用面向对象思想写好并发程序”这个话题。</p><p>面向对象思想与并发编程有关系吗？本来是没关系的，它们分属两个不同的领域，但是在Java语言里，这两个领域被无情地融合在一起了，好在融合的效果还是不错的：<strong>在Java语言里，面向对象思想能够让并发编程变得更简单</strong>。</p><p>那如何才能用面向对象思想写好并发程序呢？结合我自己的工作经验来看，我觉得你可以从封装共享变量、识别共享变量间的约束条件和制定并发访问策略这三个方面下手。</p><h2>一、封装共享变量</h2><p>并发程序，我们关注的一个核心问题，不过是解决多线程同时访问共享变量的问题。在<a href="https://time.geekbang.org/column/article/84344">《03 | 互斥锁（上）：解决原子性问题》</a>中，我们类比过球场门票的管理，现实世界里门票管理的一个核心问题是：所有观众只能通过规定的入口进入，否则检票就形同虚设。在编程世界这个问题也很重要，编程领域里面对于共享变量的访问路径就类似于球场的入口，必须严格控制。好在有了面向对象思想，对共享变量的访问路径可以轻松把控。</p><!-- [[[read_end]]] --><p>面向对象思想里面有一个很重要的特性是<strong>封装</strong>，封装的通俗解释就是<strong>将属性和实现细节封装在对象内部</strong>，外界对象<strong>只能通过</strong>目标对象提供的<strong>公共方法来间接访问</strong>这些内部属性，这和门票管理模型匹配度相当的高，球场里的座位就是对象属性，球场入口就是对象的公共方法。我们把共享变量作为对象的属性，那对于共享变量的访问路径就是对象的公共方法，所有入口都要安排检票程序就相当于我们前面提到的并发访问策略。</p><p>利用面向对象思想写并发程序的思路，其实就这么简单：<strong>将共享变量作为对象属性封装在内部，对所有公共方法制定并发访问策略</strong>。就拿很多统计程序都要用到计数器来说，下面的计数器程序共享变量只有一个，就是value，我们把它作为Counter类的属性，并且将两个公共方法get()和addOne()声明为同步方法，这样Counter类就成为一个线程安全的类了。</p><pre><code>public class Counter {
+  private long value;
+  synchronized long get(){
+    return value;
+  }
+  synchronized long addOne(){
+    return ++value;
+  }
+}
+</code></pre><p>当然，实际工作中，很多的场景都不会像计数器这么简单，经常要面临的情况往往是有很多的共享变量，例如，信用卡账户有卡号、姓名、身份证、信用额度、已出账单、未出账单等很多共享变量。这么多的共享变量，如果每一个都考虑它的并发安全问题，那我们就累死了。但其实仔细观察，你会发现，很多共享变量的值是不会变的，例如信用卡账户的卡号、姓名、身份证。<strong>对于这些不会发生变化的共享变量，建议你用final关键字来修饰</strong>。这样既能避免并发问题，也能很明了地表明你的设计意图，让后面接手你程序的兄弟知道，你已经考虑过这些共享变量的并发安全问题了。</p><h2>二、识别共享变量间的约束条件</h2><p>识别共享变量间的约束条件非常重要。因为<strong>这些约束条件，决定了并发访问策略</strong>。例如，库存管理里面有个合理库存的概念，库存量不能太高，也不能太低，它有一个上限和一个下限。关于这些约束条件，我们可以用下面的程序来模拟一下。在类SafeWM中，声明了两个成员变量upper和lower，分别代表库存上限和库存下限，这两个变量用了AtomicLong这个原子类，原子类是线程安全的，所以这两个成员变量的set方法就不需要同步了。</p><pre><code>public class SafeWM {
+  // 库存上限
+  private final AtomicLong upper =
+        new AtomicLong(0);
+  // 库存下限
+  private final AtomicLong lower =
+        new AtomicLong(0);
+  // 设置库存上限
+  void setUpper(long v){
+    upper.set(v);
+  }
+  // 设置库存下限
+  void setLower(long v){
+    lower.set(v);
+  }
+  // 省略其他业务代码
+}
+</code></pre><p>虽说上面的代码是没有问题的，但是忽视了一个约束条件，就是<strong>库存下限要小于库存上限</strong>，这个约束条件能够直接加到上面的set方法上吗？我们先直接加一下看看效果（如下面代码所示）。我们在setUpper()和setLower()中增加了参数校验，这乍看上去好像是对的，但其实存在并发问题，问题在于存在竞态条件。这里我顺便插一句，其实当你看到代码里出现if语句的时候，就应该立刻意识到可能存在竞态条件。</p><p>我们假设库存的下限和上限分别是(2,10)，线程A调用setUpper(5)将上限设置为5，线程B调用setLower(7)将下限设置为7，如果线程A和线程B完全同时执行，你会发现线程A能够通过参数校验，因为这个时候，下限还没有被线程B设置，还是2，而5&gt;2；线程B也能够通过参数校验，因为这个时候，上限还没有被线程A设置，还是10，而7&lt;10。当线程A和线程B都通过参数校验后，就把库存的下限和上限设置成(7, 5)了，显然此时的结果是不符合<strong>库存下限要小于库存上限</strong>这个约束条件的。</p><pre><code>public class SafeWM {
+  // 库存上限
+  private final AtomicLong upper =
+        new AtomicLong(0);
+  // 库存下限
+  private final AtomicLong lower =
+        new AtomicLong(0);
+  // 设置库存上限
+  void setUpper(long v){
+    // 检查参数合法性
+    if (v &lt; lower.get()) {
+      throw new IllegalArgumentException();
+    }
+    upper.set(v);
+  }
+  // 设置库存下限
+  void setLower(long v){
+    // 检查参数合法性
+    if (v &gt; upper.get()) {
+      throw new IllegalArgumentException();
+    }
+    lower.set(v);
+  }
+  // 省略其他业务代码
+}
+</code></pre><p>在没有识别出<strong>库存下限要小于库存上限</strong>这个约束条件之前，我们制定的并发访问策略是利用原子类，但是这个策略，完全不能保证<strong>库存下限要小于库存上限</strong>这个约束条件。所以说，在设计阶段，我们<strong>一定要识别出所有共享变量之间的约束条件，如果约束条件识别不足，很可能导致制定的并发访问策略南辕北辙</strong>。</p><p>共享变量之间的约束条件，反映在代码里，基本上都会有if语句，所以，一定要特别注意竞态条件。</p><h2>三、制定并发访问策略</h2><p>制定并发访问策略，是一个非常复杂的事情。应该说整个专栏都是在尝试搞定它。不过从方案上来看，无外乎就是以下“三件事”。</p><ol>
+<li>避免共享：避免共享的技术主要是利于线程本地存储以及为每个任务分配独立的线程。</li>
+<li>不变模式：这个在Java领域应用的很少，但在其他领域却有着广泛的应用，例如Actor模式、CSP模式以及函数式编程的基础都是不变模式。</li>
+<li>管程及其他同步工具：Java领域万能的解决方案是管程，但是对于很多特定场景，使用Java并发包提供的读写锁、并发容器等同步工具会更好。</li>
+</ol><p>接下来在咱们专栏的第二模块我会仔细讲解Java并发工具类以及他们的应用场景，在第三模块我还会讲解并发编程的设计模式，这些都是和制定并发访问策略有关的。</p><p>除了这些方案之外，还有一些宏观的原则需要你了解。这些宏观原则，有助于你写出“健壮”的并发程序。这些原则主要有以下三条。</p><ol>
+<li>优先使用成熟的工具类：Java SDK并发包里提供了丰富的工具类，基本上能满足你日常的需要，建议你熟悉它们，用好它们，而不是自己再“发明轮子”，毕竟并发工具类不是随随便便就能发明成功的。</li>
+<li>迫不得已时才使用低级的同步原语：低级的同步原语主要指的是synchronized、Lock、Semaphore等，这些虽然感觉简单，但实际上并没那么简单，一定要小心使用。</li>
+<li>避免过早优化：安全第一，并发程序首先要保证安全，出现性能瓶颈后再优化。在设计期和开发期，很多人经常会情不自禁地预估性能的瓶颈，并对此实施优化，但残酷的现实却是：性能瓶颈不是你想预估就能预估的。</li>
+</ol><h2>总结</h2><p>利用面向对象思想编写并发程序，一个关键点就是利用面向对象里的封装特性，由于篇幅原因，这里我只做了简单介绍，详细的你可以借助相关资料定向学习。而对共享变量进行封装，要避免“逸出”，所谓“逸出”简单讲就是共享变量逃逸到对象的外面，比如在<a href="https://time.geekbang.org/column/article/84017">《02 | Java内存模型：看Java如何解决可见性和有序性问题》</a>那一篇我们已经讲过构造函数里的this“逸出”。这些都是必须要避免的。</p><p>这是我们专栏并发理论基础的最后一部分内容，这一部分内容主要是让你对并发编程有一个全面的认识，让你了解并发编程里的各种概念，以及它们之间的关系，当然终极目标是让你知道遇到并发问题该怎么思考。这部分的内容还是有点烧脑的，但专栏后面几个模块的内容都是具体的实践部分，相对来说就容易多了。我们一起坚持吧！</p><h2>课后思考</h2><p>本期示例代码中，类SafeWM不满足库存下限要小于库存上限这个约束条件，那你来试试修改一下，让它能够在并发条件下满足库存下限要小于库存上限这个约束条件。</p><p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p><h2>延伸阅读</h2><p>关于这部分的内容，如果你觉得还不“过瘾”，这里我再给你推荐一本书吧——<a href="time://mall?url=https%3A%2F%2Fh5.youzan.com%2Fv2%2Fgoods%2F2758xqdzr6uuw">《Java并发编程实战》</a>，这本书的第三章《对象的共享》、第四章《对象的组合》全面地介绍了如何构建线程安全的对象，你可以拿来深入地学习。</p><p><img src="https://static001.geekbang.org/resource/image/cf/aa/cf393cd748a4f0e6451807c4b61843aa.jpg" alt=""></p></div>
+                </div> <!---->
+                <div data-v-87ffcada="" class="copyright">
+                    ©版权归极客邦科技所有，未经许可不得转载
+                </div>
+            </div>
+            <div data-v-87ffcada="" class="article-comments pd"><h2 data-v-87ffcada=""><span data-v-87ffcada="">精选留言</span></h2>
+                <ul data-v-87ffcada="">
+
+                    <li data-v-87ffcada="" class="comment-item comment-template">
+                        <img src="${user_header}" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">${user_name}</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">${like_count}</span></a></div>
+                            </div>
+                            <div class="bd comment-content">${comment_content}
+                            </div>
+                            <span class="time">${comment_ctime}</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">${user_name}</span></div>
+                                <p class="reply-content">${content}</p>
+                                <p class="reply-time">${ctime}</p></div>
+                        </div>
+                    </li>
+                <li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/d9/93/098e5ef5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">海鸿</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">12</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我看有些人评论用volatie，volatie只能保证可见性，但是保证不了原子性，所以得加锁保证互斥。<br>老师我这样理解对吗？</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">相当正确！<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/7b/57/a9b04544.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">QQ怪</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">7</span></a></div>
+                            </div>
+                            <div class="bd comment-content">必须加锁啊，synchronized (this)就行了，最简单加锁吧，volatile只能保证内存可见性，并不能保证原子性</div>
+                            <span class="time">2019-03-27</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/ed/4d/1d1a1a00.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">magict4</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">5</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1. setUpper() 跟 setLower() 都加上 "synchronized" 关键字。不要太在意性能，老师都说了，避免过早优化。<br>2. 如果性能有问题，可以把 lower 跟 upper 两个变量封装到一个类中，例如<br>```<br>public class Boundary {<br>    private final lower;<br>    private final upper;<br>    <br>    public Boundary(long lower, long upper) {<br>        if(lower &gt;= upper) {<br>            // throw exception<br>        }<br>        this.lower = lower;<br>        this.upper = upper;<br>    }<br>}<br>```<br>移除 SafeVM 的 setUpper() 跟 setLower() 方法，并增入 setBoundary(Boundary boundary) 方法。</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍👍<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/c6/ac/60d1fd42.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">抽离の❤️</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师、讲的真好！</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/19/a3/600bc13d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">无庸</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">compareAndSet吧<br><br>void setUpper（long v）{<br>  upper.compareAndSet(upper.longValue<br>(),v);<br>}</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不满足合理库存的约束条件<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/ff/bf/2f0a337c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Cc</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">又想到一种，既然两个变量要同时锁定，那就把两个变量封装成一个，然后使用cas操作。这样行不行，另外老师帮我看看volatile是不是有多余的地方<br>···········<br>volatile AtomicReference&lt;Inventory&gt; inventory = new AtomicReference&lt;&gt;();<br><br>    static class Inventory {<br>        private volatile long upper = 0;<br><br>        private volatile long lower = 0;<br>    }<br><br>    void setUpper(long v) {<br>        long low;<br>        Inventory oldObj;<br>        Inventory newObj;<br>        do {<br>            oldObj = inventory.get();<br>            if (v &gt;= (low = oldObj.lower)) {<br>                throw new IllegalArgumentException();<br>            }<br>            newObj = new Inventory();<br>            newObj.lower = low;<br>            newObj.upper = v;<br><br>        } while (inventory.compareAndSet(oldObj, newObj));<br>    }<br><br>    void setLower(long v) {<br>        long upp;<br>        Inventory oldObj;<br>        Inventory newObj;<br>        do {<br>            oldObj = inventory.get();<br>            if (v &lt;= (upp = oldObj.upper)) {<br>                throw new IllegalArgumentException();<br>            }<br>            newObj = new Inventory();<br>            newObj.lower = v;<br>            newObj.upper = upp;<br><br>        } while (inventory.compareAndSet(oldObj, newObj));<br>    }<br><br><br></div>
+                            <span class="time">2019-03-29</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我觉得这个没有问题，volatile 换成 final会更好</p>
+                                <p class="reply-time">2019-03-30</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/24/75/808ac160.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">悟空</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">访问时使用syncchronize对类加锁。保证变量访问的互斥</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">对象加锁就可以了<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/a1/92/ad27079c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Lemon</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">使用 Condition<br>public class SafeWM {<br><br>    // 库存上限<br>    private final AtomicLong upper =<br>            new AtomicLong(10);<br>    // 库存下限<br>    private final AtomicLong lower =<br>            new AtomicLong(2);<br><br>    private ReentrantLock lock = new ReentrantLock();<br>    private Condition c1 = lock.newCondition();<br>    private Condition c2 = lock.newCondition();<br>    <br>    // 设置库存上限<br>    void setUpper(long v) {<br>        try {<br>            lock.lock();<br>            // 检查参数合法性<br>            while (v &lt; lower.get()) {<br>                c1.await();<br>            }<br>            upper.set(v);<br>            c2.signal();<br>        } catch (Exception e) {<br>            e.printStackTrace();<br>        } finally {<br>            lock.unlock();<br>        }<br><br>    }<br><br>    // 设置库存下限<br>    void setLower(long v) {<br><br>        try {<br>            lock.lock();<br>            // 检查参数合法性<br>            while (v &gt; upper.get())  {<br>                c2.await();<br>            }<br>            lower.set(v);<br>            c1.signal();<br>        } catch (Exception e) {<br>            e.printStackTrace();<br>        } finally {<br>            lock.unlock();<br>        }<br>    }<br><br>}</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">错误的设置会导致永远等待，太危险了<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKj4w4lW7ibGEVxPv8wS1CrXKDeBz3RAaAdISxQSD23uUpV3wicsIMepaYZE8GzRcWmSpjet5NDN4MA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zm</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Volatile修饰变量</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIWgpgEACljAII095cibNoPxlR6X3sIY1fmf4KjNjIoZ8icUOYL206lAcsqMsMl80pc4IbnsrpE28rQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">京</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">一早起来，就把文章看完了，期待老师后面更精彩的内容</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/ef/04/f2942f14.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Boomkeeper</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我就不明白了，使用了synchronized，为啥还用voliate，他的确是保证可见性，但是并不能保证原子性，一般他的应用场景应该是不依赖之前的结果而改变数据，累加的场景明显不适合</div>
+                            <span class="time">2019-04-09</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/f1/64/18366f31.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">逆水行舟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">那本书，有些晦涩，但是是必读的。</div>
+                            <span class="time">2019-03-31</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">太晦涩了</p>
+                                <p class="reply-time">2019-03-31</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/4f/78/c3d8ecb0.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">undifined</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">要保证变量间的约束条件，就必须保证判断和赋值是一个原子操作，可以通过给 upper 和 lower 同时加锁，也可以通过 AtomicLong 提供的方法进行操作<br><br>    // 设置库存上限<br>    void setUpper(long v) {<br>        // 检查参数合法性<br>        upper.getAndUpdate(u -&gt; {<br>            if (v &lt; lower.get()) {<br>                throw new IllegalArgumentException();<br>            } else {<br>                return v;<br>            }<br>        });<br>    }<br><br>    // 设置库存下限<br>    void setLower(long v) {<br>        // 检查参数合法性<br>        lower.getAndUpdate(u -&gt; {<br>            if (v &gt; upper.get()) {<br>                throw new IllegalArgumentException();<br>            } else {<br>                return v;<br>            }<br>        });<br>    }<br> <br>老师这样理解对吗</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我感觉不可以，还是有竞态条件，你可以在return前面增加sleep看看</p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIhvw4HpdqXOUJnFcRKsKZwZAubZwYCtqFYLNVpp52QEWTZoMHU0DU634loe8ia4iaZibBege6SpLatQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">minggushen</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">getset方法使用一把锁就好，</div>
+                            <span class="time">2019-05-16</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELZPnUAiajaR5C25EDLWeJURggyiaOP5GGPe2qlwpQcm5e3ybib8OsP4tvddFDLVRSNNGL5I3SFPJHsA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">null</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">synchronized this(无需 volatile)<br>@蓝天白云看…<br>@非礼勿言-…<br><br>synchronized this + volatile：<br>@靖远小和尚<br>@陈华应<br><br>看了老师对他们的回复，感觉一下又迷糊了。<br><br>--------<br><br>假设成员变量 upper、lower 只有 setUpper(...) 和 setLower(...) 方法对其更新，只要保证这两个 set 方法互斥就可以了，即 synchronized setUpper(...) 和 synchronized setLower(...)。而成员变量在此也可以从 atomic 换成原始数据类型。<br>如理解有误，还望老师指正，谢谢！！</div>
+                            <span class="time">2019-05-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你说的这个条件下，有synch保证互斥就没必要用其他手段了，如果还有读操作，而读操作没用synch，最好用同时用volatile。总之能用内存模型的规则推断出来可见性就可以<br></p>
+                                <p class="reply-time">2019-05-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/61Y6viaroCFWTsQticyOBnrTHdzJbg1oEicBWxaibBOtfLUCoNpSRgNZVbb0FGw2Ff2kpt8s3r6NjmSmbwpmgmDlOA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">皮蛋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">方法内使用对象加🔒可以解决竞态条件，但不就是用了低级的原语处理了吗，还有其他更好的方式吗？</div>
+                            <span class="time">2019-04-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以用无锁算法，不过都很复杂，建议还是先用锁</p>
+                                <p class="reply-time">2019-04-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/e7/56/c72997f3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">缪文@有赞</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作为后端服务开发者，我们开发的是服务接口，实际上很多并发问题都不会遇到，比如这里提到的设置库存上下线，要考虑上限要大于下限，都是在数据库层才考虑的，java这一层dubbo为每个请求分配不同的线程的</div>
+                            <span class="time">2019-04-03</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/b4/3b/a1f7e3a4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ZOU志伟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">利用之前管程的管程知识也可以解决这个约束条件问题</div>
+                            <span class="time">2019-04-03</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/e0/8e/2376cd87.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">蓝天白云看大海</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有些评论里说，加syncronized和volatile，但我觉得syncronized已经可以保证可见性啊，为啥还要加volatile？</div>
+                            <span class="time">2019-03-31</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果用syncronized，就没必要加volatile</p>
+                                <p class="reply-time">2019-03-31</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e7/b1/5c63be67.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">非礼勿言-非礼勿听-非礼勿视</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">使用synchronized（this）的话，感觉volatie都不需要用了，jmm模型不是说，释放锁的操作先于后续的加锁发生，加锁成功后，对于上一次释放锁之前的操作结果是可见的</div>
+                            <span class="time">2019-03-30</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是这样的<br></p>
+                                <p class="reply-time">2019-03-31</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/ff/bf/2f0a337c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Cc</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看到前面好多人用cas操作，我也想了一下，是不行的，因为cas只能同时操作一个变量，这涉及了两个变量。想问下老师java有涉及两个变量的cas吗。比如啊a b   两个变量。如果b的值为比就把a设为c，类似redis的watch。</div>
+                            <span class="time">2019-03-29</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我感觉应该没有</p>
+                                <p class="reply-time">2019-03-30</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/64/be/12c37d15.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">CityAnimal</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">使用AtomicLong的compareAndSet方法可以吗？<br><br>/**<br>     * 设置库存上限<br>     */<br>    void setUpper(long v) {<br>        long previous;<br>        do {<br>            previous = upper.get();<br>            if (v &lt; previous) {<br>                throw new IllegalArgumentException();<br>            }<br>        } while (!upper.compareAndSet(previous, v));<br>    }<br><br>    /**<br>     * 设置库存下限<br>     */<br>    void setLower(long v) {<br>        long previous;<br>        do {<br>            previous = lower.get();<br>            if (v &gt; previous) {<br>                throw new IllegalArgumentException();<br>            }<br>        } while (!lower.compareAndSet(previous, v));<br>    }</div>
+                            <span class="time">2019-03-29</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content"><br>一致性约束是，最大库存大于最小库存，所以逻辑好像不对<br></p>
+                                <p class="reply-time">2019-03-29</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/06/29/00a319e3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">少主江衫</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">分析一下上述代码出现并发问题的情况是lower.get() or upper.get()值的时候会被抢占资源，就在这两个操作上加锁即可解决问题。</div>
+                            <span class="time">2019-03-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-03-30</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/85/a5/471ce926.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">靖远小和尚</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content"> synchronized (this) 加在if那里,讲道理已经没有必要在使用AtomicLong修饰那二个变量了,直接valatie修饰一下保证可见性, synchronized (this) 保证原子性.希望老师指正,这样是不是更好点</div>
+                            <span class="time">2019-03-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是这样的<br></p>
+                                <p class="reply-time">2019-03-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/36/d2/c7357723.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">发条橙子 。</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">听老师的 去把书第三章第四章知识看一遍😁</div>
+                            <span class="time">2019-03-27</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/15/69/fc60d1f4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈华应</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1，set方法synchronized this<br>2，if抽成方法添加synchronized this，变量volatile</div>
+                            <span class="time">2019-03-27</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/48/12/1457f6df.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李冰成</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">期待老师下面文章</div>
+                            <span class="time">2019-03-27</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zero</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">public class SafeWM {<br>  // 库存上限<br>  private final AtomicLong upper =<br>        new AtomicLong(0);<br>  // 库存下限<br>  private final AtomicLong lower =<br>        new AtomicLong(0);<br>  // 设置库存上限<br>  void setUpper(long v) {<br>    synchronized (this) {<br>      // 检查参数合法性<br>      if (v &lt; lower.get()) {<br>        throw new IllegalArgumentException();<br>      }<br>      upper.set(v);<br>    }<br>  }<br>  // 设置库存下限<br>  void setLower(long v) {<br>    synchronized (this) {<br>      // 检查参数合法性<br>      if (v &gt; upper.get()) {<br>        throw new IllegalArgumentException();<br>      }<br>      lower.set(v);<br>    }<br>  }<br>  // 省略其他业务代码<br>}<br><br>老师，这样处理可以吗？</div>
+                            <span class="time">2019-03-27</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/T20hJrvWdrfxL0u5grbbX9eHQgVWtP1okkibs31HUgKUkmdAbCtmw8QUVGtQRPjaVicrIwCAxGGjPY4tKMxNLZvg/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">我是卖报小行家</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">前面有个朋友说final保证不会逃逸，理解应该有误，fianl的禁止重排序前提是构造函数里面没有this逃逸，他只保证final变量不会重排序到构造函数之外。并不保证逃逸。</div>
+                            <span class="time">2019-03-27</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/bc/a0/97c7679b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username"></span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">大佬问下，我这种小白(学生，没啥项目经验)。如何学这个，才比较好。感觉这些内容是战略上，对我来说感觉比较空。 😂😂</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有些书十年前在读，十年后还在读，但是理解不同了，我庆幸的是一直在读。没有经验可以自讨苦吃，自己假想一个项目来做，不动手不遇到问题是没办法成长的<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/52/3c/0c71ad7e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">张三</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师在第一模块里边举的所有例子几乎都犯过错误，完全没有考虑线程安全的问题，以为框架（最常用的SpringMVC）已经帮我们搞定这些了，看完真的认识到了。接下来再跟着老师熟悉熟练SDK里边的并发包类。</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/4d/87/57236a2d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">榣山樵客™</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">方案一，加锁：<br>public class SafeWM {<br>  // 库存上限<br>  private final AtomicLong upper =<br>        new AtomicLong(0);<br>  // 库存下限<br>  private final AtomicLong lower =<br>        new AtomicLong(0);<br>private final Object lock = new Object();<br>  // 设置库存上限<br>  void setUpper(long v){<br>synchronized(lock){<br>    if...<br>    upper.set(v);<br>    }<br>  }<br>  // 设置库存下限<br>  void setLower(long v){<br>    synchronized(lock){<br>     if...<br>    lower.set(v);}<br>  }<br>  // 省略其他业务代码<br>}<br><br>方案二，将上下限封装到一个不可变对象中，或者封装到一个primitive变量中，比如如果最大上下限不超过32位，分别放到long型的高低32位上，但是在获取上或下限时需要另一个同步<br><br>方案三，设置两个锁来管理上和下限的交错读和写，为了避免死锁，需要保持lock1，lock2的锁获取顺序<br><br>老师，这样有问题吗？</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我觉得1就可以了，final也可以，其他的有点复杂，一不小心就会出错，建议工作中别用<br></p>
+                                <p class="reply-time">2019-03-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/66/57/e3bd54bd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">笃行之</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">synchronized(this)</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/44/d7/915da418.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Tomcat</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，这样写有什么问题吗，总感觉哪里怪怪的。<br>public class DBPush {<br>    private volatile static DBPush dbPush = null;<br><br>    private DBPush() {<br>    }<br><br>    public static DBPush getInStance() {<br>        if (dbPush == null) {<br>            synchronized (DBPush.class) {<br>                if (dbPush == null) {<br>                    dbPush = new DBPush();<br>                }<br>            }<br>        }<br>        return dbPush;<br>    }<br>}</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">没问题<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fb/f5/6521cb02.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李可威</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在setUpper和setLower的方法中使用同一个锁能解决问题吗？</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">能<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/e1/ca/a41422f6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">橘子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">第一，用委托的方式，把两个变量放到同一个类中，然后用final注释。因为jvm能够保证final类型的变量不会逸出。<br>第二，使用监视器同步，方法中需要分别同步两个变量，主要是依赖happen before规则实现。不知道对不对，是否还有其他方法</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">同步一下方法就行了，你的第二条没看明白😂<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/fd/9a/5be920c9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">wxh</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">用一个原子操作的引用类型封装upper和lower是否可以</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/32/dc/d3e3847f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">江南豆沙包</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">令哥，一直在追你的专栏，结合公司目前实际情况，有个疑问，如果你专栏中的例子中的共享信息，是整个系统维度的，系统又是多实例集群部署的，我们该怎么办呢，能不能在思想或实现思路上给点建议指导。</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">感谢信任！我们这里说的共享是进程级别的，如果是分布式计算只能靠redis,db,zk这些来搞分布式的锁，当然不共享是最好的解决方案。</p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/a1/92/ad27079c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Lemon</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">将这两个变量放到一个类里面，然后使用volitale修饰，这样保证了写对读可见，这样多吗</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">对，但是思考题不是可见性问题<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/2b/45/e8f64725.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Smile</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对于safeWM的上线和下限，当多个线程操作这两个变量时，由于不同线程操作不同的变量，所以不存在变量的竞争关系，volatile关键字是保证了同一变量在不同线程的可见性问题，但是此处涉及两个变量所以，无法解决。解决方法：<br>1. 在set方法上加上synchronizd关键字，这样使用共享变量safeWM来进行控制<br>2. 在该类构造方法中，传入同一个变量，用来作为锁<br><br>3. 使用private static volatile SafeWM safeWM = new SafeWM(2,10);保证了safeWM内部的参数改变时，强行写入内存，使其他线程中缓冲失效，从内存获取，从而保证safeWM内部数据的可见性，但是发现，仍然存在并发问题，希望老师解答一下？</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">1可以，2工程上没可行性，3不可以，没有解决竞态条件问题<br></p>
+                                <p class="reply-time">2019-03-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/ac/ef/8336bd81.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">crazypokerk</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我觉得对于上限与下限不一致的问题，主要是因为出现了竞态条件，而解决竞态条件与数据竞争的解决办法就是互斥，即加锁。只有当一个线程获得锁之后，判断条件是否成立之后，再进行更改操作。如理解有误，还请老师指正。</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">对的<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/4f/7f/5dc11380.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">苏志辉</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">存在问题的本质就是因为两个变量可能被同时操作，解决思路就是只允许同一时刻一个线程修改，加synchronized或读写锁</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">没想清楚你说的读写锁<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/32/c5/4b5cea9f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">逍遥子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师讲得浅入深出</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/64/86/6b593cb9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zach_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">比起 用同步synchronized 用锁Lock 屏蔽可见性使用volatile ，使用 cas操作好像更简洁 !</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">一点都不简洁，如果简洁一定是错了。无锁的并发，保证组合操作的原子性没那么容易<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/47/39/cda2f2b3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">木木匠</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题:对于两个互相比较的变量来说，赋值的时候只能加锁来控制。但是这也会带来性能问题，不过可以采用读锁和写锁来优化，申请写锁了就互斥，读锁可以并发访问，这样性能相对粗粒度的锁来说会高点。</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLUdGtTfe4kBzS6EwvyNkqBGZpKE0vpic8zgZXgoJE3pgHfa2iaulictROn3NsICbZOjz1ELybdf5P6g/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Vickygu</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">是不是可以设置一个静态锁，来锁住这两个资源：public class SafeWM {<br>  private final AtomicLong upper = new AtomicLong(0);<br>  private final AtomicLong lower =new AtomicLong(0);<br>  //静态锁<br>  private static Object lock = new Object();<br><br><br>  void setUpper(long v){<br>    sychronized(lock){<br>        upper.set(v);<br>    }<br>  }<br>  <br>  void setLower(long v){<br>    sychronized(lock){<br>       lower.set(v);<br>       }<br>  }<br>  <br>}</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不能用静态锁，太影响性能<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/19/60/888f1371.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Kid😋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.修改变量声明，利用transient关键字修改上下限变量；<br>2.用synchronize修饰设置方法；<br>老师，这两种方法是否可行？</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">后者可以<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/18/f6/2ff7bc7a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">轻歌赋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">第一种方案加锁<br>第二种方案，两个变量只能通过一个方法set，如果只修改其中一个，则另一个为Null。<br>两个属性额外定义一个类，属性final。当修改的时候只能额外创建新的类，修改引用。<br>对于并发替换类的引用问题，可以通过原子引用，返回boolean判断。具体不成功之后的策略根据实际情况来。<br>希望老师同学能够给出宝贵的意见评价一下方案的优劣，谢谢！</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">很全面！👍<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/1d/31/dc8ea649.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">handylin</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">可以说说java对象之间是怎么考虑共享的吗， 必须要一个线程对应一个对象吗？</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">当然不是这样，如果这样就没并发问题了<br><br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/01/37/58650ade.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">高源</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">王老师我能想到的就是将变量v 前加上volatile,原子性控制解决</div>
+                            <span class="time">2019-03-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJS0jwYKhjm1pRfCu5X6U0VyVS4ibgdhoAkEyV7FNdIMlXoibCyticb0kGYfDUibGcNrHtmkd8SWJekAA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">IamNigel</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">竞态条件要实现同步</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">简单正确！</p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/03/89/e1621a01.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zhangtnty</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">文中问题可以把if条件和set方法放入synchronized（class）中，这样会不会影响性能。</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">会<br></p>
+                                <p class="reply-time">2019-03-26</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/e9/0b/1171ac71.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WL</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师如果像以下这么写有什么问题没?<br>@Data<br>public class SafeWM {<br><br>    private final AtomicLong upper = new AtomicLong(0);<br><br>    private final AtomicLong lower = new AtomicLong(0);<br><br>    public synchronized void setUpper(long v){<br><br>        synchronized (this.lower){<br>            if (this.getLower().get() &gt; v) {<br>                throw new IllegalArgumentException();<br>            }<br>        }<br>        upper.set(v);<br>    }<br>    <br>    public synchronized void setLower(long v) {<br><br>        synchronized (this.upper) {<br>            if (this.getUpper().get() &lt; v) {<br>                throw new IllegalArgumentException();<br>            }<br>            lower.set(v);<br>        }<br>    }<br>}</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">synch用的太多了，最外面一个就够了<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/ea/05/c0d8014d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">刘章周</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">简单粗暴方法：在两个if语句外层加上synchronize(this){...}同步块。<br>其他的方法没想到。<br></div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍<br></p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/3d/51/9723276c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">邋遢的流浪剑客</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题可以用等待唤醒机制实现</div>
+                            <span class="time">2019-03-26</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">感觉不能用等待唤醒机制</p>
+                                <p class="reply-time">2019-03-27</p></div>
+                        </div>
+                    </li></ul>
+            </div>
+        </div> <!----> <!----></div>
+</div>
+<link rel="dns-prefetch" href="//cdn.mathjax.org">
+<script type="text/x-mathjax-config">MathJax.Hub.Config({
+        showProcessingMessages: false,
+        messageStyle: "none",
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a']
+        }
+      });
+      MathJax.Hub.Register.MessageHook("End Process", function (message) {
+        var eve = new Event('mathjaxfini')
+        window.dispatchEvent(eve)
+      })
+
+
+
+
+</script>
+
+</body>

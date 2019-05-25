@@ -1,0 +1,2486 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="Keywords" content="极客时间,极客邦,极客邦科技,极客邦控股,极客时间App,专栏订阅,极客新闻,二叉树,极客Live,QCon,左耳听风,AI技术内参,大航海时代,陈皓,徐飞,洪亮劼,霍泰稳,池建强,Selina,Gary,InfoQ,极客搜索">
+    <meta name="description" content="极客时间是极客邦科技出品的一款 IT 内容知识服务 App，内容包含专栏订阅、极客新闻、热点专题、直播、视频和音频等多形式的知识内容，并设有陈皓专栏、徐飞专栏、洪亮劼专栏等专栏供订阅。">
+    <link rel="apple-touch-icon" sizes="180x180" href="//static001.geekbang.org/static/icon/time/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="//static001.geekbang.org/static/icon/time/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="//static001.geekbang.org/static/icon/time/favicon-16x16.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>06 | 用“等待-通知”机制优化循环等待</title>
+
+    <link href="https://static001.geekbang.org/static/time/css/app.3e04e644962ca8c2f97ec7731bb7710c.css" rel="stylesheet">
+    <style type="text/css">.hljs-ln {
+        border-collapse: collapse
+    }
+
+    .hljs-ln td {
+        padding: 0
+    }
+
+    .hljs-ln-n:before {
+        content: attr(data-line-number)
+    }</style>
+    <style type="text/css">#iv-container {
+        position: fixed;
+        background: #0d0d0d;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        display: none;
+        z-index: 1000
+    }
+
+    .iv-container {
+        overflow: hidden
+    }
+
+    .iv-close {
+        width: 26px;
+        height: 26px;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        cursor: pointer;
+        text-align: center;
+        overflow: hidden;
+        text-shadow: 0 0 3px #6d6d6d;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all ease .2s;
+        -o-transition: all ease .2s;
+        transition: all .2s ease
+    }
+
+    .iv-close:after, .iv-close:before {
+        content: "";
+        height: 2px;
+        width: 26px;
+        background: #fff;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        margin-top: -2px;
+        border-radius: 2px
+    }
+
+    .iv-close:before {
+        -webkit-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        transform: rotate(45deg)
+    }
+
+    .iv-close:after {
+        -webkit-transform: rotate(-45deg);
+        -moz-transform: rotate(-45deg);
+        -ms-transform: rotate(-45deg);
+        -o-transform: rotate(-45deg);
+        transform: rotate(-45deg)
+    }
+
+    .iv-close:hover {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .iv-image-view {
+        position: absolute;
+        height: 100%;
+        width: 100%
+    }
+
+    .iv-image-wrap {
+        display: inline-block
+    }
+
+    .iv-image-wrap:active {
+        cursor: move
+    }
+
+    .iv-large-image {
+        cursor: move;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: #ececec;
+        -moz-transform: translateZ(0);
+        -o-transform: translateZ(0)
+    }
+
+    .iv-large-image, .iv-loader {
+        position: absolute;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0)
+    }
+
+    .iv-loader {
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        z-index: 100;
+        margin-top: -16px;
+        margin-left: -16px;
+        font-size: 5px;
+        text-indent: -9999em;
+        border-top: 1em solid hsla(0, 0%, 100%, .2);
+        border-right: 1em solid hsla(0, 0%, 100%, .2);
+        border-bottom: 1em solid hsla(0, 0%, 100%, .2);
+        border-left: 1em solid #fff;
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear
+    }
+
+    .iv-loader:after {
+        width: 10em;
+        height: 10em;
+        border-radius: 50%
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }</style>
+    <style type="text/css">.vue-pull-to-wrapper[data-v-12abd9fb] {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .scroll-container[data-v-12abd9fb] {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .vue-pull-to-wrapper .action-block[data-v-12abd9fb] {
+        position: relative;
+        width: 100%
+    }
+
+    .default-text[data-v-12abd9fb] {
+        height: 100%;
+        line-height: 50px;
+        text-align: center
+    }</style>
+    <style type="text/css">.button-cancel[data-v-87ffcada] {
+        color: #888;
+        border: 1px solid #888;
+        border-radius: 3px;
+        margin-right: 12px
+    }
+
+    .button-cancel[data-v-87ffcada], .button-primary[data-v-87ffcada] {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        height: 35px;
+        display: inline-block;
+        font-size: 15px;
+        text-align: center;
+        line-height: 36px
+    }
+
+    .button-primary[data-v-87ffcada] {
+        color: #fff;
+        background-color: #ff5a05;
+        border-radius: 3px
+    }
+
+    .pd[data-v-87ffcada] {
+        padding-left: 1.375rem;
+        padding-right: 1.375rem
+    }
+
+    .article[data-v-87ffcada] {
+        max-width: 46.25rem;
+        margin: 0 auto
+    }
+
+    .article .article-unavailable[data-v-87ffcada] {
+        color: #fa8919;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 24px;
+        border-radius: 5px;
+        padding: 12px;
+        background-color: #f6f7fb;
+        margin-top: 20px
+    }
+
+    .article .article-unavailable .iconfont[data-v-87ffcada] {
+        font-size: 12px
+    }
+
+    .article .main[data-v-87ffcada] {
+        padding: 1.25rem 0;
+        margin-bottom: 52px
+    }
+
+    .article-title[data-v-87ffcada] {
+        color: #353535;
+        font-weight: 400;
+        line-height: 1.65rem;
+        font-size: 1.34375rem
+    }
+
+    .article-info[data-v-87ffcada] {
+        color: #888;
+        font-size: .9375rem;
+        margin-top: 1.0625rem
+    }
+
+    .article-content[data-v-87ffcada] {
+        margin-top: 1.0625rem
+    }
+
+    .article-content.android video[data-v-87ffcada]::-webkit-media-controls-fullscreen-button {
+        display: none
+    }
+
+    .copyright[data-v-87ffcada] {
+        color: #b2b2b2;
+        padding-bottom: 20px;
+        margin-top: 20px;
+        font-size: 13px
+    }
+
+    .audio-player[data-v-87ffcada] {
+        width: 100%;
+        margin: 20px 0
+    }
+
+    .to-comment[data-v-87ffcada] {
+        overflow: hidden;
+        padding-top: 10px;
+        margin-bottom: -30px
+    }
+
+    .to-comment a.button-primary[data-v-87ffcada] {
+        float: right;
+        height: 20px;
+        font-size: 12px;
+        line-height: 20px;
+        padding: 4px 8px;
+        cursor: pointer
+    }
+
+    .article-comments[data-v-87ffcada] {
+        margin-top: 2rem
+    }
+
+    .article-comments h2[data-v-87ffcada] {
+        text-align: center;
+        color: #888;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1rem
+    }
+
+    .article-comments h2[data-v-87ffcada]:before {
+        border-top: 1px dotted #888;
+        content: "";
+        position: absolute;
+        top: 56%;
+        left: 0;
+        width: 100%;
+        z-index: -1
+    }
+
+    .article-comments h2 span[data-v-87ffcada] {
+        font-size: 15.25px;
+        font-weight: 400;
+        padding: 0 1rem;
+        background: #fff;
+        display: inline-block
+    }
+
+    .article-sub-bottom[data-v-87ffcada] {
+        z-index: 10;
+        cursor: pointer
+    }
+
+    .switch-btns[data-v-87ffcada] {
+        height: 76px;
+        cursor: pointer;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        border-bottom: 10px solid #f6f7fb;
+        position: relative
+    }
+
+    .switch-btns[data-v-87ffcada]:before {
+        content: " ";
+        height: 1px;
+        background: #e8e8e8;
+        position: absolute;
+        top: 0;
+        left: 0;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        left: 1.375rem;
+        right: 1.375rem
+    }
+
+    .switch-btns .btn[data-v-87ffcada] {
+        height: 38px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .switch-btns .btn .tag[data-v-87ffcada] {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 62px;
+        flex: 0 0 62px;
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        border-radius: 10px;
+        height: 22px;
+        line-height: 22px;
+        background: #f6f7fb;
+        font-weight: 400
+    }
+
+    .switch-btns .btn .txt[data-v-87ffcada] {
+        margin-left: 10px;
+        -webkit-box-flex: 1;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        color: #888;
+        font-size: 15px;
+        height: 22px;
+        line-height: 22px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 400
+    }
+
+    @media (max-width: 769px) {
+        .article .breadcrumb[data-v-87ffcada] {
+            padding-top: 10px;
+            padding-bottom: 10px
+        }
+    }</style>
+    <style type="text/css">.empty {
+        height: 51px
+    }
+
+    .mobile-tips {
+        width: 100%;
+        height: 51px;
+        background: rgba(0, 0, 0, .8);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 0 12px;
+        -webkit-transition: opacity .35s;
+        transition: opacity .35s;
+        opacity: 0;
+        pointer-events: none
+    }
+
+    .mobile-tips.istop {
+        opacity: 1;
+        pointer-events: auto
+    }
+
+    .mobile-tips .mobile-tips-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: start;
+        -ms-flex-pack: start;
+        justify-content: flex-start
+    }
+
+    .mobile-tips .mobile-tips-info i {
+        width: 36px;
+        height: 36px;
+        background-image: url(data:image/png;base64,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);
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        background-size: contain;
+        border-radius: 7px
+    }
+
+    .mobile-tips .mobile-tips-info h2 {
+        font-size: 15px;
+        color: #fff;
+        font-weight: 400;
+        margin-left: 6px
+    }
+
+    .mobile-tips .mobile-tips-info h2 span {
+        font-size: 11px
+    }
+
+    .mobile-tips a {
+        width: 72px;
+        height: 31px;
+        text-align: center;
+        border: 1px solid #fa8919;
+        border-radius: 3px;
+        font-size: 13px;
+        color: #fa8919;
+        line-height: 31px
+    }</style>
+    <style type="text/css">.share-poster-wrapper {
+        position: fixed;
+        background-color: #fff;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -moz-user-select: -moz-none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .share-poster-wrapper .poster-bottom, .share-poster-wrapper .poster-middle, .share-poster-wrapper .poster-top {
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle {
+        padding: 16px 32px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-bottom: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo .poster-avatar {
+        min-width: 45px;
+        min-height: 45px;
+        width: 7vw;
+        height: 7vw;
+        border-radius: 50%;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle .nickname {
+        font-size: 5vw;
+        font-weight: 400;
+        margin-left: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .time {
+        font-size: 3.2vw
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content {
+        font-size: 4vw;
+        font-weight: 400;
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+        letter-spacing: 1px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content {
+        font-size: 3.7vw;
+        padding: 32px 0
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info {
+        border-left: 1px solid #000;
+        padding-left: 10px;
+        margin-top: 38px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info p {
+        font-size: 3.2vw;
+        line-height: 1.5
+    }
+
+    .share-poster-wrapper.theme0 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/top.png") no-repeat 15px 1px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle {
+        width: 100%;
+        padding-left: 56px;
+        padding-right: 56px;
+        background-image: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/middle.png");
+        background-repeat: repeat-y;
+        background-position: 15px 0
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .time {
+        margin-bottom: 45px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .quote-content {
+        border-top: 1px solid #e3e1dc;
+        margin-top: 30px
+    }
+
+    .share-poster-wrapper.theme0 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/bottom.png") no-repeat 15px -10px
+    }
+
+    .share-poster-wrapper.theme1 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/top.png") no-repeat 38px 1px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle {
+        width: 100%;
+        padding: 0 42px 10px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/middle.png") repeat-y 38px 0
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo {
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo .poster-avatar {
+        margin-left: 38px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-wrapper {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        min-height: 260px;
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time {
+        max-width: 65px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        text-align: center;
+        vertical-align: middle;
+        border-right: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time span {
+        white-space: nowrap;
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-content {
+        padding: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-content {
+        font-size: 3.7vw;
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-info {
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .footer {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-right: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/bottom.png") no-repeat 38px -10px
+    }
+
+    .share-poster-wrapper .share-poster {
+        background: #fefdf8;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #9b8d73;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        overflow: auto;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .share-poster-wrapper .share-poster.color0 {
+        background-color: #fefdf8
+    }
+
+    .share-poster-wrapper .share-poster.color1 {
+        background-color: #4d4d4d
+    }
+
+    .share-poster-wrapper .share-poster .footer {
+        margin-top: 2rem;
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: end;
+        -ms-flex-pack: end;
+        justify-content: flex-end;
+        -webkit-box-align: end;
+        -ms-flex-align: end;
+        align-items: flex-end
+    }
+
+    .share-poster-wrapper .share-poster .footer p {
+        margin: 0;
+        line-height: 1.4;
+        margin-left: 20px;
+        text-align: right;
+        padding-right: 20px
+    }
+
+    .share-poster-wrapper .controls {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        width: 100%;
+        padding-top: 5px;
+        -webkit-box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        z-index: 1;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .controls > div {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding: 10px 0
+    }
+
+    .share-poster-wrapper .controls > div span {
+        font-size: .85rem
+    }
+
+    .share-poster-wrapper .controls > div button {
+        width: 100px;
+        height: 24px;
+        background: #eee;
+        margin: 0 10px;
+        border-radius: 5px;
+        border: 2px solid #b2b2b2;
+        outline: none
+    }
+
+    .share-poster-wrapper .controls > div button.on {
+        border: 2px solid #ff5a05
+    }
+
+    .share-poster-wrapper .controls .controls-themes button {
+        color: #b2b2b2;
+        font-size: 12px;
+        background: #fff;
+        text-align: center
+    }
+
+    .share-poster-wrapper .controls .controls-themes button.on {
+        color: #ff5a05
+    }
+
+    .share-poster-wrapper .buttons {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .buttons a {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        text-align: center;
+        color: #000;
+        font-weight: 400;
+        height: 3rem;
+        line-height: 3rem
+    }
+
+    .share-poster-wrapper .buttons a .icon-share-money {
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px
+    }
+
+    .share-poster-wrapper .buttons a:last-child {
+        border-left: 1px solid #f5f5f5
+    }
+
+    .share-poster-wrapper img {
+        max-width: 100%
+    }
+
+    .share-poster-wrapper.android .poster-middle .nickname {
+        font-size: 10vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .time {
+        font-size: 6.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .poster-middle-content {
+        font-size: 8vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-content {
+        font-size: 7.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-info p {
+        font-size: 6.4vw
+    }</style>
+    <style type="text/css">.mini-audio-player {
+        width: 100%;
+        height: 5.25rem;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 1rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        margin: 1rem 0
+    }
+
+    .mini-audio-player > a {
+        border: none;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .mini-audio-player .btn-play {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAI0AAACNCAYAAACKXvmlAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAEsVJREFUeJztnXuQVNWdxz9zHUeR9yuYLBgIvhAZIAiIkhRCwqprUGNiTNRskl2T3U0gPjayibJWCbEGTNCsuJXEqCnjMyYYJRrzWDCKKCrKgAoCAqIVxUFGQSSMOLN/fO/xnDt0T79u3763+36quurcV/e55/z6PH7nd36/uqamJmqEOuATwFHAUP8zBBgADAT6Az39e3sC9cB+YLd/bjfwFtAC7ABeBbb6n43AZqCjzO8QC+ornYEycjQwGTgRGAUcD/Qo8Dvqgb5+ui9wRBf3vgu8AKwBngSWAxsK/L1EUE1CMxg41f98GrUeUdIDmOh/LvLPtQCPAg/7n9cizlNZSLrQDAe+BHwRGJPH/W8CL2K7lc2oq3nLv/aOf99u1DXVY7us3sBHUDc2AHV1Q/3Pcf61zgwEzvE/AKuBe4F7gJfzyG8sSaLQ9AYuAP4ZGN/FfTuBJ4AVwNPAWuCNAn9rP9Dqp1uRoGVjENDo5+kkYBLQr9M9Y/zPD/083Qb8CiusiaAuQQPhccBM4FygW4brbWgcYbqC56nswLQOjaNMlzkZaMhw317U+vwPsCqy3JVA3IWmDjgduAw4JcP1NuBPqNDvJ97/2F7AmUjop5NZgJYB1wG/J8YzMa/SGchCHTADeA4VYGeBWQvMAj4KfA4183EWGIBdqCv6HMr3LPQeLqcAD6CxzwxUDrEjjkIzBXgKtRyjnfP7gbvRWKERuAGNW5LITpT/RqQSuBu9n6ERvf9TqDxiRZyE5khgMWqiT3DO7wWu969/GelAqomV6L2ORO+517l2AiqPxf71WBAHoekGXI0UY2c75/ehf+Nw4BLgleizFimvoPccjgbF+5xrZ6PyuZrMk4BIqbTQTEb99xzswLADuAtpdGcBr1cmaxXjdeC76P3vwg6IG1A5rQY+VZmsiUoJzaHAj4C/osIxPId0HF8BtlUgX3FiGyqHk4BnnfNHA48AP0blGDmVEJrjUD9+mfP7e/zj8VTfmKVUngQmoPLZ45/zgEvRQPm4qDMUtdBcgDShjc65pWhBcSHwQcT5SQofoPIZhcrLMAqV54VRZiYqoTkYWIT0FIf559qA2cBngS0R5SPpbEHlNRuVH6g8b0Ple3AUmYhCaPoCfwC+7ZzbjPrqBUB7BHmoJtpRuU1C5Wj4NirnvpkeCpNyC81Q4DFgmnPuIaR/SMQ6S4x5FpXjQ865aai8h5bzh8spNKPRKvNI/7gDmIfU6K3ZHkopiFZUnvOccyNRuY/O+EQIlEtoJqAB2+H+cRsyZZhD2h2FTTsq168D7/vnDkflP6EcP1gOofkU8BesLclu4DQ0CE4pH79E5WxsmvuheghdERi20EwElmCt3VqRGcDSrE+khMn/odmV6f57ovqYGOaPhCk0o9CgrLd/3IKW+lNlXbSsBKai8gfVx0OofkIhLKEZTLBLehtJfHNI359SGKtR+b/tH/dDrdCQML48DKExkmwMq3ch88ZUYCpLM6qHXf7xQOBBbE9QNKUKzcHI1sM0fW1oGX9lid+bEg4rUX0Y7fEoVF8laY5LFZoFqP80/CvpoDduLAX+xTmeiuqtaEoRmvOAi53jJtJpdVy5HdWP4WJUf0VRrNAcC9zsHP8BuKLYTKREwhWongw3o3osmGKEpgG4A7tavRk4n1TTG3faUT2ZnZ2HAXeSeStNlxQjNPOAT/rpNrSPJ11LSgataBuzGRiPJbhulReFCs3JyILMMId0tTpprAKudI4vQ/WaN4UIzSHATc4zy5Cdb0ry+DF2luuhej0k34cLEZorgBF+eg+aXqfjmGTSjurP2ByPoICJTL5CMxy43Dn+b4JWYynJYwsaXhguJ88NefkKzY+wzdcq4Cd5Zy0lzrieKg4Brs3noXyEZhpwlp/uQBu50l0D1cEHaEOi2ZB3FkENf0ZyCU0dQU3i3cDjxeQuJbasQDs5DU3k8FaRS2hmYDfj7wP+q+ispcSZ72P3jo9H9Z6Vrtyn1aEN54afE9OtsrPXzMl9U8KY3zg3yp/bhup3pn98NfKTk9GxUlctzQzsTsj3gGtCymBKPLkG1TOo3rO2Nl0JjbuCfROFOzmsNIPQWstsNHg/Fehe0RzFmzeAnznHF2e7MVv3dALWA9N+tI84KdQDVwHf40At5160SDeH2nNhkg/Xoy6qHtX/BORkIEC2lmamk15MTMcyGTCWhFeSWS3eDRkkbUBCVfAKb5WzDfitc/ydTDdlEpo+yJmzIUmtzKVox2EueiDrNWOAnWK5zkl/AclDgExCcz7WRddakmXvOzP3LQFGIJeyv6HruAe1xEoU3wEkB1/pfEMmofm6k/55GTJVLnoA/1Dks+cA69GiXUW8S8WMm5z0Nzpf7Cw0RyLP4CBDnTvLlKlycFCJz3dDBklrgX8qPTuJ5g6sodY4Oi1kdhaac530n0iun95SOBI5vF5CjNywRkwrqn+DKxddCs095cpRQjgD9e1ziYEb1grg1n9WofkYVgP8PlIj1zrd0PR9PUEfx7XAA9guajSSDyAoNKdhVzeXY7dzpmhmtRj4I3BMhfMSFbsIWjScbhKu0Pyjk3ZdcqVYpqMuaz6FhzZMIg866ekm4QrNFCftDoJSgjQg08iXUEyDasaVgyn4PZERmmOwMR93cmBImWojjH1aH0MqiWUoGFg18jx2Bj0Q37u8ERp338sKYhygKiRORbOifbluzIMpyD3/dWRQuSecDoLjmpPBCo3rXqsWzDn3oh0Vx6PBbanUI1OCdcghZSyDexXJCic9EazQuJFma2nH5CbU6nyBcFbyD0cOEx9HW16rAVceRoOExsP6+oXqH89k4reoDOZjdROlMAl4BriRAyPmJg1XHo4HPA8YhrVo207yLPTC4l1kOD8G+acrFQ/4DzTL+iaVj61VLG9gZaI7MMwjuL6yLvIsxY91wGeQ05+/hfB9A5AZ5UoUrzKJrHfSR3kE/ehvjTQr8eYepIpYSDAoabGcgMY6NyNBShLuFuxhHvAJ58TLpLi8i1xxjAUeDeH7PGSfshGZUna1hShOuKGVhnrIB7Dh1YgzkxSeR/qYrxLOmK8PCur6NBWOR5kn7sxyiIfVBEPtDoLzoQM5ohyBNs6H0WWNQXE8f0oB/mEqwHYnPcAjOCWsRaOrQnkb7aMaT1DxVSx1wLeQ0Vdcu6u3nHR/D+if5WJK16xGIaK/AewI4fs+i3ZTxBG3MennEVwvSR0uFkYHcCtayPsppXsGm0k8lyDcxqSvRzCTqTu04mgF/h2tzTxdwvcMRsrWWONh/QGDFvJSiucZpMD7N4rv6gfnviVy9jjp7h7B4AphrLvUOu3AfYSj14kL7kyx3sPGPYSI4jpXMR4KdfwSxRuix1Ht4c7q9ntYnyQQ7KpSCsOMZxZRvDHWTuKplXddtOzxCFrpJXUltpIMQNtYV2Dd/xfLXSTACaaHDVkHEUSPryI8ZPKwHjlyLvUP1wL8sNRMlQlXl9fqERzlJ91gKCrGoYDpPyNYoMXyJto/HldHS4FVA4+gti+MAqhm+gD/i7xDhREovQO4BVnElaLfKTeBVYN6bChekJ+6lAOpQwbjCwgu8JbCKmQekYQQ1K5c7PCA15wTqWOfAxkNPIaWC8IQmB1I+TeBZAgMBOXiVY+ggc3wiDMTZ3ojx4XPUGA8pCy0o/WpY9FYKElLNu7SxtZ6OlllRZuXWFKHXIZdC3w0pO98EhmZPxfS90WNa9251UN7fwwjqG1GouBZtxOOwGxHphMnkVyBgWCA1A2mezILUoPQhq9aowdqWVYTdIRQLPtReKNj0VgoyducXZnYA2zxUN/6gnPTqKhzVWHORQq6/yQcy7lHkGb4YoKK06TS6KRfANqNFrPZuTCO2uAY4M9oq0qxXkFdXkdjoalU1y5Vd2lkNVjVt+srOIyZQtz5PnJO9JkQvqsNdW1Ho7WjJHdFmXDl4SmwzfFy58JJaAZRbS/vEpYzoj8jI/Nq3ZlaR1BoloNtaTZgNcP9qF4nPWGxDXmamE71CgxoNmnWnVqQnHwoNB1oAGeYTkom/o5Woo8lGHiiWnH9MP4Vv/dxl/Nd/2q17rE7Ew+imeWV1I4ttSsHHzp/coXG9eh5MtCr3DlKCJtQZJczCCpCq51eaHxr+FA+XKH5G3bq3UCO4Jc1wF4UTKwRub2vNWZgtwo347hd6Wxt9msn/aUyZyrO3IfGLfOona6oM279u3JxgNDc66SnU3vmny+hwd/nSU40vXLQl+BkqEuh2Qg866cbUMCwpFCKqcG7KEBqI6njbZBm24RqfJZOY7lMxtC3OumLypSpcrCb4lqHu9CSwgLSzYKGbzrpWztfzCQ0t2P78UaCPobjzrUF3Ps8cAr6V4XhW69amIBdpNyL5CFAJqF5G8V0NFwSfr7KxiJgFmp1stGK3mksQYVminDr+zdkWKnPZgqwCLjQT5+DbESTMjC8AbgNOZWehLVvfQU5SnyQ2p0R5eIItDxiuDHTTdmE5in0L5yCdeEeV4c7mXgHmTzUenS8QvkuViYeIUuk5K52BV7vpL9FbVr01RKD0C4Jw/XZbuzKUm0JsjlpRI4BfoDGC7FjfuPcSmehGvgB1gHEGlT/GemqpWkHrnKOLwKGlJy1lDgyhOA0+yq60Hvl2rR+PzYKx6FAU0lZS4krTdgg9qtQvWcll9B0oCAThi8TXPlMST6TCFoyziaH1WY+7jH+AvzOT9chx8sHFZO7lNhxEFJRGGedvyOPCDT5+lS5HBu6bxwxHRCnFMws7O6Tfaiec5Kv0GwkqKKfSwJcl6Z0yTBUj4ZrUT3npBDvTfOwcX+6A78o8PmU+OAhl2/Gl956VL95P5wv+5CbMDMVm4rC2qQkj8uAaX66A6lT8o4cXGhL8TgKmmWYR/UE+KwVxhJsVRYS3PeWk2K6lyvwt2ciQ517qb541NVKH2SFZwysViNNcEEUIzRtyAbF+B8eDtxR5HelREcdqicTs/Q9ZJlZsOFZsRW9jqBV3+nE151pipiH6slwEfBiMV9USutwJ/LBYphNsmyKa4nzkdMDw09Q/RVFqV3K95DnKFDzdwuaVaXEh6moXozWdyl5KvGyUarQvI+2exh/LA1oz1CS7IqrmYnAYuzAdy2qr5IM6MMYvL6Dtq0arxO9gIcJelBKiZ7RqB56+8ctwJmovkoirBnPK8hBkAln2ActdI4O6ftTCmMM8p1jVCGtqH62ZH2iAMKcJq8BTgN2+ccDgWWkXVXUTETjFuMoexeqlzVh/UDYupWVqKsyW0j6Iok/JeTfScnMNFTeZjv1blQfGQ3Ei6UcCrlHUbhg01X1RH3rBWX4rRTL15A7kJ7+cSuqh9DDIpZLi7sStS4mtF4D2os0t4y/Wat4qFxvwc6StqPyD7WFcX+wXDQj01CjdaxDXqSWUHveKMpFH+ABVK5GD/MiMuFszvZQqZT7X78FmIwGxIbTUWyjUkP31TqfRME+XBdny1B5hzJLykYUXUUr8vnibvEcjiKzXR5RHqoJD2ninyAYNedGVM6tmR4KOwNR8D4KiPVV7Op4AzAfjfZT09H8GIbKawF2/PIeCmD2HYLhsstG1P/yXwHjCbqBN27hLyHd5ZCNg1D5rCW4trcWledtUWamEl3Di8gHykKs6Wh3//gJ4MQK5CnOnIjKZSHWprcduA6VY1HmDaVQqfHE35Gd6hR8L9g+41F86ztJQyMegcphBSoXwwY0nb4UlWPkVHoQ+hhaJ5mHXXmtQzv+NiC7j1rzVnE4eu+XUDmYqXQbKqcxlEFhVwiVFhqw/npHIrMKwyFoM9dm1BR/PPqsRcrH0Xu+jN77UOfafah85hADh0xxEBrDJmTrMQ3pHwzdkFOlTcipYhjxsOPEBPRem9B7HuZcewatTn+eGHlLj5PQGJaigjyL4MpsPXAeUo03oylmUjXLfVH+m9H7nEfQV9Aa4GxUDjn3VkdNHIUGtIHrfrRH50w09nFpRBvX30DLEhcS/1gOvVA+l6AodDdwoKHaY+h9x6LN+LGMuRVGzMZy0o7WVh5AM4iZyJFgN/96Awp0cQYaKC5HK+oPI5evlSz0OhQ361T/MxmrkHPZi7xoLsKP3BZ36pqaEuenqA8ys/gaXcfb3Immq8uRo541wJtlzNdHUMsxDkWxORkbYCsTq4BfIj+9iQqQmkShcTkK+KL/GZPH/dtRxNetzqcFeAsJlLE6fAe1ch7WxrYXEoz+yCpuqPMZiRwd5mI1alV+TZ4eGuJI3LunXGwErvE/g7Fdwaex5o4ug8ivcsOiBelUTJf5WoS/XTaSLjQuryH3J7/wj0cgu5ITkYH7SKwavhzsQa1YM/AkUv1XZXzLahKazqzzP7f4xx5aJT4K260MAQagVqk/1lSyt39/O3bLx27UjbUAO4BXsV3cJqSELCUSTGL4fyx+lt5bqgReAAAAAElFTkSuQmCC)
+    }
+
+    .mini-audio-player .btn-pause, .mini-audio-player .btn-play {
+        width: 2.6875rem;
+        height: 2.6875rem;
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none
+    }
+
+    .mini-audio-player .btn-pause {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .audio-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        margin-left: .6875rem;
+        min-width: 0
+    }
+
+    .mini-audio-player .audio-info h3 {
+        color: #353535;
+        font-size: 15.25px;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .mini-audio-player .audio-info p {
+        margin: 0;
+        margin-top: .125rem;
+        font-size: 11px;
+        line-height: 1rem
+    }
+
+    .mini-audio-player .audio-info p span {
+        color: #888
+    }
+
+    .mini-audio-player .btn-download {
+        width: 1.25rem;
+        height: 1.25rem;
+        position: relative;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAA+CAYAAACbQR1vAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAA4hJREFUaIHtm8lOFFEUhr9qCWGHGxcaY1joK2h0YRzAtYmsWbAGGidEXOACbAYRxfgAPoEPoInGxJgg86gsJTHMw86EhS7O7TDk3uqq6qo6HahvQ7pOce7//1U0feve9vr6+lAiD3QC/4AC8FZDRJXGoMB14PWB1yPANPA1bSG5tAc0XLEcu5y6CvQCOGU5pnI3agVQMWQBaAvQJgtAW4A2WQDaArTJAtAWoE0WgLYAbbIAtAVokwWgLUCbLABtAdpkAfjU6oC7wKV0pCTCRcRDnesEVwDNwC/gg/nZHbeyFOgGltj30Gw7yRZALfAOqDavPeA50BO7xOToQTR75nU14qn26Im2AM4DNZbjz4DeePQlSi+i9Sg1iLdD2AJYApYdzbuo7BBeIBptLCPeDmELYA9oBHYdjbqQpaxKowA8ddR2gXuIt0O43gRHgTu4Q+ikskIoIJps7AINwA9b0e/fYJAQ1FZWD9CP2/wOUI/DPJT+IDRqGrhCeGIEaNEPdDhqO8iVH/NrEOST4BgSwo6j3gEMBOgTNwP4m6+nhHkI/lG4VAiPgcGAveJg0IxpYxvROh6kUZi5wLhpvO2oPyKdEF6asWyEMg/hJ0PjyN+VXwhDIXuGYQh46KhtIeYnwjSMMhss3glbjvoDkglhyPS2Eck8RJ8OTyB3gl8IryL2tjGM2/wmYn4ySuNyngdMmIE3HfX7iHDPUQ+CZ3q0O+qbyIWIZB7KfyAyaQS4QmhH7oQoIZQyv0EZV75IHE+EJvG/E9oJfyd4yC6yvKO+gQQ/FaKnlbgeiU0hIWw46nnEUJAQiubbHPV1M1bZ5iHeZ4KlQmgD3uAfgofsGfQz34DsKYyFuLemTSMhfATOWOqtiMk/llrRfIuj9zpwG5gtX+Y+SezNK4bwCXsILdgDaAXOOnomYh6Seyw+gwhed9TPWY75mb9FAuYh2XWBWUS4K4QgrAE3gblYFFlIemFkDjEQJYQ1JMD5WBUdIY2VoXkkhLUQv7NqfidR85De0liYEFaRK7+QqCJDmmuDC0gIqz7nrJhzUjEP6S+O+oWwglz5xTQFaawOLwI3gO8Hjo2ZY6maB72vzPwErgEXkO8MuVaiEkcrgCK/lcfPNkhkAWgL0KYKmZiMIG9Ktn0Bx5G/wDcgXwW8R6avJ41G4HQOufInlas5ZO5+UpnJAU3AFyy7J44xe8BnoOk/JruwYo92bigAAAAASUVORK5CYII=);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none;
+        padding-right: .25rem
+    }
+
+    .mini-audio-player .btn-download .icon-download-done {
+        width: .45rem;
+        height: .45rem;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        display: inline-block;
+        background-image: url(data:image/png;base64,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);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain
+    }</style>
+    <style type="text/css">.MathJax_Display {
+        overflow: auto
+    }
+
+    .poster {
+        position: fixed;
+        left: -10000px;
+        top: -10000px;
+        overflow: hidden;
+        padding: 1rem;
+        background: #ececec
+    }
+
+    .richcontent-pre-copy {
+        font-size: 13px;
+        color: #888;
+        position: absolute;
+        right: 1em;
+        top: .2em;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .richcontent-pre-copy .iconfont {
+        font-size: 12px;
+        margin-right: .2em
+    }</style>
+    <style type="text/css">.breadcrumb {
+        padding: 30px 0;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        background: #fff
+    }
+
+    .breadcrumb a.title {
+        color: #e57c39;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb span.title {
+        color: #888;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb .split {
+        color: #ccc;
+        font-size: 10px;
+        margin-right: 5px
+    }</style>
+    <style type="text/css">.comment-item {
+        list-style-position: inside;
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-bottom: 1rem
+    }
+
+    .comment-item a {
+        border-bottom: none
+    }
+
+    .comment-item .avatar {
+        width: 2.625rem;
+        height: 2.625rem;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+        border-radius: 50%
+    }
+
+    .comment-item .info {
+        margin-left: .5rem;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1
+    }
+
+    .comment-item .info .hd {
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .username {
+        color: #888;
+        font-size: 15.25px;
+        font-weight: 400;
+        line-height: 1.2
+    }
+
+    .comment-item .info .hd .control {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .control .btn-share {
+        color: #888;
+        font-size: .75rem;
+        margin-right: 1rem
+    }
+
+    .comment-item .info .hd .control .btn-praise {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        font-size: 15.25px;
+        text-decoration: none
+    }
+
+    .comment-item .info .hd .control .btn-praise i {
+        color: #888;
+        display: inline-block;
+        font-size: .75rem;
+        margin-right: .3rem;
+        margin-top: -.01rem
+    }
+
+    .comment-item .info .hd .control .btn-praise i.on, .comment-item .info .hd .control .btn-praise span {
+        color: #fa8919
+    }
+
+    .comment-item .info .bd {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.6
+    }
+
+    .comment-item .info .time {
+        color: #888;
+        font-size: 9px;
+        line-height: 1
+    }
+
+    .comment-item .info .reply .reply-hd {
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-hd span {
+        margin-left: -12px;
+        color: #888;
+        font-weight: 400
+    }
+
+    .comment-item .info .reply .reply-hd i {
+        color: #fa8919;
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-content {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all
+    }
+
+    .comment-item .info .reply .reply-time {
+        color: #888;
+        font-size: 9px
+    }
+
+    .comment-template {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div data-v-87ffcada="" class="article"><!---->
+        <div data-v-87ffcada="" class="main main-app">
+            <h1 data-v-87ffcada="" class="article-title pd">
+                06 | 用“等待-通知”机制优化循环等待
+            </h1>
+            <div data-v-87ffcada="" class="article-info pd"><span data-v-87ffcada="">2019-03-12</span> <span data-v-87ffcada="">王宝令</span></div>
+            <div data-v-87ffcada="" class="article-content typo common-content pd">
+                <img data-v-87ffcada="" src="https://static001.geekbang.org/resource/image/f5/fc/f57bca3f3286acbd1b9f85e38d55e2fc.jpg">
+                <!---->
+                <div data-v-87ffcada="" class="mini-audio-player">
+                    <div class="audio-info">
+                        <p><span>朗读人：王宝令&nbsp;&nbsp;&nbsp;</span>
+                        </p></div> <!---->
+                    <audio title="" src="https://static001.geekbang.org/resource/audio/2e/5b/2e5a654a57a3a1d8761333348a692d5b.mp3" controls="controls"></audio>
+                </div>
+                <div data-v-87ffcada="" id="article-content" class="">
+                    <div class="text"><p>由上一篇文章你应该已经知道，在<strong>破坏占用且等待条件</strong>的时候，如果转出账本和转入账本不满足同时在文件架上这个条件，就用死循环的方式来循环等待，核心代码如下：</p><pre><code>// 一次性申请转出账户和转入账户，直到成功
+while(!actr.apply(this, target))
+  ；
+</code></pre><p>如果apply()操作耗时非常短，而且并发冲突量也不大时，这个方案还挺不错的，因为这种场景下，循环上几次或者几十次就能一次性获取转出账户和转入账户了。但是如果apply()操作耗时长，或者并发冲突量大的时候，循环等待这种方案就不适用了，因为在这种场景下，可能要循环上万次才能获取到锁，太消耗CPU了。</p><p>其实在这种场景下，最好的方案应该是：如果线程要求的条件（转出账本和转入账本同在文件架上）不满足，则线程阻塞自己，进入<strong>等待</strong>状态；当线程要求的条件（转出账本和转入账本同在文件架上）满足后，<strong>通知</strong>等待的线程重新执行。其中，使用线程阻塞的方式就能避免循环等待消耗CPU的问题。</p><p>那Java语言是否支持这种<strong>等待-通知机制</strong>呢？答案是：一定支持（毕竟占据排行榜第一那么久）。下面我们就来看看Java语言是如何支持<strong>等待-通知机制</strong>的。</p><h2>完美的就医流程</h2><p>在介绍Java语言如何支持等待-通知机制之前，我们先看一个现实世界里面的就医流程，因为它有着完善的等待-通知机制，所以对比就医流程，我们就能更好地理解和应用并发编程中的等待-通知机制。</p><!-- [[[read_end]]] --><p>就医流程基本上是这样：</p><ol>
+<li>患者先去挂号，然后到就诊门口分诊，等待叫号；</li>
+<li>当叫到自己的号时，患者就可以找大夫就诊了；</li>
+<li>就诊过程中，大夫可能会让患者去做检查，同时叫下一位患者；</li>
+<li>当患者做完检查后，拿检测报告重新分诊，等待叫号；</li>
+<li>当大夫再次叫到自己的号时，患者再去找大夫就诊。</li>
+</ol><p>或许你已经发现了，这个有着完美等待-通知机制的就医流程，不仅能够保证同一时刻大夫只为一个患者服务，而且还能够保证大夫和患者的效率。与此同时你可能也会有疑问，“这个就医流程很复杂呀，我们前面描述的等待-通知机制相较而言是不是太简单了？”那这个复杂度是否是必须的呢？这个是必须的，我们不能忽视等待-通知机制中的一些细节。</p><p>下面我们来对比看一下前面都忽视了哪些细节。</p><ol>
+<li>患者到就诊门口分诊，类似于线程要去获取互斥锁；当患者被叫到时，类似线程已经获取到锁了。</li>
+<li>大夫让患者去做检查（缺乏检测报告不能诊断病因），类似于线程要求的条件没有满足。</li>
+<li>患者去做检查，类似于线程进入等待状态；然后<strong>大夫叫下一个患者，这个步骤我们在前面的等待-通知机制中忽视了，这个步骤对应到程序里，本质是线程释放持有的互斥锁</strong>。</li>
+<li>患者做完检查，类似于线程要求的条件已经满足；<strong>患者拿检测报告重新分诊，类似于线程需要重新获取互斥锁，这个步骤我们在前面的等待-通知机制中也忽视了</strong>。</li>
+</ol><p>所以加上这些至关重要的细节，综合一下，就可以得出<strong>一个完整的等待-通知机制：线程首先获取互斥锁，当线程要求的条件不满足时，释放互斥锁，进入等待状态；当要求的条件满足时，通知等待的线程，重新获取互斥锁</strong>。</p><h2>用synchronized实现等待-通知机制</h2><p>在Java语言里，等待-通知机制可以有多种实现方式，比如Java语言内置的synchronized配合wait()、notify()、notifyAll()这三个方法就能轻松实现。</p><p>如何用synchronized实现互斥锁，你应该已经很熟悉了。在下面这个图里，左边有一个等待队列，同一时刻，只允许一个线程进入synchronized保护的临界区（这个临界区可以看作大夫的诊室），当有一个线程进入临界区后，其他线程就只能进入图中左边的等待队列里等待（相当于患者分诊等待）。<strong>这个等待队列和互斥锁是一对一的关系，每个互斥锁都有自己独立的等待队列。</strong></p><p><img src="https://static001.geekbang.org/resource/image/c6/d0/c6640129fde927be8882ca90981613d0.png" alt=""></p><center><span class="reference">wait()操作工作原理图</span></center><p>在并发程序中，当一个线程进入临界区后，由于某些条件不满足，需要进入等待状态，Java对象的wait()方法就能够满足这种需求。如上图所示，当调用wait()方法后，当前线程就会被阻塞，并且进入到右边的等待队列中，<strong>这个等待队列也是互斥锁的等待队列</strong>。 线程在进入等待队列的同时，<strong>会释放持有的互斥锁</strong>，线程释放锁后，其他线程就有机会获得锁，并进入临界区了。</p><p>那线程要求的条件满足时，该怎么通知这个等待的线程呢？很简单，就是Java对象的notify()和notifyAll()方法。我在下面这个图里为你大致描述了这个过程，当条件满足时调用notify()，会通知等待队列（<strong>互斥锁的等待队列</strong>）中的线程，告诉它<strong>条件曾经满足过</strong>。</p><p><img src="https://static001.geekbang.org/resource/image/1b/8c/1b3e999c300166a84f2e8cc7a4b8f78c.png" alt=""></p><center><span class="reference">notify()操作工作原理图</span></center><p>为什么说是曾经满足过呢？因为<strong>notify()只能保证在通知时间点，条件是满足的</strong>。而被通知线程的<strong>执行时间点和通知的时间点</strong>基本上不会重合，所以当线程执行的时候，很可能条件已经不满足了（保不齐有其他线程插队）。这一点你需要格外注意。</p><p>除此之外，还有一个需要注意的点，被通知的线程要想重新执行，仍然需要获取到互斥锁（因为曾经获取的锁在调用wait()时已经释放了）。</p><p>上面我们一直强调wait()、notify()、notifyAll()方法操作的等待队列是互斥锁的等待队列，所以如果synchronized锁定的是this，那么对应的一定是this.wait()、this.notify()、this.notifyAll()；如果synchronized锁定的是target，那么对应的一定是target.wait()、target.notify()、target.notifyAll() 。而且wait()、notify()、notifyAll()这三个方法能够被调用的前提是已经获取了相应的互斥锁，所以我们会发现wait()、notify()、notifyAll()都是在synchronized{}内部被调用的。如果在synchronized{}外部调用，或者锁定的this，而用target.wait()调用的话，JVM会抛出一个运行时异常：<code>java.lang.IllegalMonitorStateException</code>。</p><h2>小试牛刀：一个更好地资源分配器</h2><p>等待-通知机制的基本原理搞清楚后，我们就来看看它如何解决一次性申请转出账户和转入账户的问题吧。在这个等待-通知机制中，我们需要考虑以下四个要素。</p><ol>
+<li>互斥锁：上一篇文章我们提到Allocator需要是单例的，所以我们可以用this作为互斥锁。</li>
+<li>线程要求的条件：转出账户和转入账户都没有被分配过。</li>
+<li>何时等待：线程要求的条件不满足就等待。</li>
+<li>何时通知：当有线程释放账户时就通知。</li>
+</ol><p>将上面几个问题考虑清楚，可以快速完成下面的代码。需要注意的是我们使用了：</p><pre><code>  while(条件不满足) {
+    wait();
+  }
+</code></pre><p>利用这种范式可以解决上面提到的<strong>条件曾经满足过</strong>这个问题。因为当wait()返回时，有可能条件已经发生变化了，曾经条件满足，但是现在已经不满足了，所以要重新检验条件是否满足。范式，意味着是经典做法，所以没有特殊理由不要尝试换个写法。后面在介绍“管程”的时候，我会详细介绍这个经典做法的前世今生。</p><pre><code>class Allocator {
+  private List&lt;Object&gt; als;
+  // 一次性申请所有资源
+  synchronized void apply(
+    Object from, Object to){
+    // 经典写法
+    while(als.contains(from) ||
+         als.contains(to)){
+      try{
+        wait();
+      }catch(Exception e){
+      }   
+    } 
+    als.add(from);
+    als.add(to);  
+  }
+  // 归还资源
+  synchronized void free(
+    Object from, Object to){
+    als.remove(from);
+    als.remove(to);
+    notifyAll();
+  }
+}
+</code></pre><h2>尽量使用notifyAll()</h2><p>在上面的代码中，我用的是notifyAll()来实现通知机制，为什么不使用notify()呢？这二者是有区别的，<strong>notify()是会随机地通知等待队列中的一个线程，而notifyAll()会通知等待队列中的所有线程</strong>。从感觉上来讲，应该是notify()更好一些，因为即便通知所有线程，也只有一个线程能够进入临界区。但那所谓的感觉往往都蕴藏着风险，实际上使用notify()也很有风险，它的风险在于可能导致某些线程永远不会被通知到。</p><p>假设我们有资源A、B、C、D，线程1申请到了AB，线程2申请到了CD，此时线程3申请AB，会进入等待队列（AB分配给线程1，线程3要求的条件不满足），线程4申请CD也会进入等待队列。我们再假设之后线程1归还了资源AB，如果使用notify()来通知等待队列中的线程，有可能被通知的是线程4，但线程4申请的是CD，所以此时线程4还是会继续等待，而真正该唤醒的线程3就再也没有机会被唤醒了。</p><p>所以除非经过深思熟虑，否则尽量使用notifyAll()。</p><h2>总结</h2><p>等待-通知机制是一种非常普遍的线程间协作的方式。工作中经常看到有同学使用轮询的方式来等待某个状态，其实很多情况下都可以用今天我们介绍的等待-通知机制来优化。Java语言内置的synchronized配合wait()、notify()、notifyAll()这三个方法可以快速实现这种机制，但是它们的使用看上去还是有点复杂，所以你需要认真理解等待队列和wait()、notify()、notifyAll()的关系。最好用现实世界做个类比，这样有助于你的理解。</p><p>Java语言的这种实现，背后的理论模型其实是管程，这个很重要，不过你不用担心，后面会有专门的一章来介绍管程。现在你只需要能够熟练使用就可以了。</p><h2>课后思考</h2><p>很多面试都会问到，wait()方法和sleep()方法都能让当前线程挂起一段时间，那它们的区别是什么？现在你也试着回答一下吧。</p><p>欢迎在留言区与我分享你的想法，也欢迎你在留言区记录你的思考过程。感谢阅读，如果你觉得这篇文章对你有帮助的话，也欢迎把它分享给更多的朋友。</p><p><img src="https://static001.geekbang.org/resource/image/cf/aa/cf393cd748a4f0e6451807c4b61843aa.jpg" alt=""></p></div>
+                </div> <!---->
+                <div data-v-87ffcada="" class="copyright">
+                    ©版权归极客邦科技所有，未经许可不得转载
+                </div>
+            </div>
+            <div data-v-87ffcada="" class="article-comments pd"><h2 data-v-87ffcada=""><span data-v-87ffcada="">精选留言</span></h2>
+                <ul data-v-87ffcada="">
+
+                    <li data-v-87ffcada="" class="comment-item comment-template">
+                        <img src="${user_header}" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">${user_name}</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">${like_count}</span></a></div>
+                            </div>
+                            <div class="bd comment-content">${comment_content}
+                            </div>
+                            <span class="time">${comment_ctime}</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">${user_name}</span></div>
+                                <p class="reply-content">${content}</p>
+                                <p class="reply-time">${ctime}</p></div>
+                        </div>
+                    </li>
+                <li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/28/9c/73e76b19.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">姜戈</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">89</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait与sleep区别在于：<br>1. wait会释放所有锁而sleep不会释放锁资源.<br>2. wait只能在同步方法和同步块中使用，而sleep任何地方都可以.<br>3. wait无需捕捉异常，而sleep需要.<br><br>两者相同点：都会让渡CPU执行时间，等待再次调度！</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/c0/b5/bd64c1ac.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Home</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">50</span></a></div>
+                            </div>
+                            <div class="bd comment-content">补充一下姜戈同学回答；1 sleep是Thread的方法，而wait是Object类的方法；2：sleep方法调用的时候必须指定时间</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/ac/ef/8336bd81.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">crazypokerk</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">33</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait()方法与sleep()方法的不同之处在于，wait()方法会释放对象的“锁标志”。当调用某一对象的wait()方法后，会使当前线程暂停执行，并将当前线程放入对象等待池中，直到调用了notify()方法后，将从对象等待池中移出任意一个线程并放入锁标志等待池中，只有锁标志等待池中的线程可以获取锁标志，它们随时准备争夺锁的拥有权。当调用了某个对象的notifyAll()方法，会将对象等待池中的所有线程都移动到该对象的锁标志等待池。<br>sleep()方法需要指定等待的时间，它可以让当前正在执行的线程在指定的时间内暂停执行，进入阻塞状态，该方法既可以让其他同优先级或者高优先级的线程得到执行的机会，也可以让低优先级的线程得到执行机会。但是sleep()方法不会释放“锁标志”，也就是说如果有synchronized同步块，其他线程仍然不能访问共享数据。</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/b7/f0/a570f68a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">wang</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">23</span></a></div>
+                            </div>
+                            <div class="bd comment-content">public class MyLock {<br>// 测试转账的main方法<br>public static void main(String[] args) throws InterruptedException {<br>    Account src = new Account(10000);<br>    Account target = new Account(10000);<br>    CountDownLatch countDownLatch = new CountDownLatch(9999);<br>    for (int i = 0; i &lt; 9999; i++) {<br>        new Thread(()-&gt;{<br>            src.transactionToTarget(1,target);<br>        countDownLatch.countDown();<br>        }).start();<br>    }<br>    countDownLatch.await();<br>    System.out.println("src="+src.getBanalce() );<br>    System.out.println("target="+target.getBanalce() );<br>}<br>static class Account{ //账户类<br>    public Account(Integer banalce) {<br>        this.banalce = banalce;<br>    }<br>    private Integer banalce;<br>    public void transactionToTarget(Integer money,Account target){//转账方法<br>        Allocator.getInstance().apply(this,target);<br>        this.banalce -= money;<br>        target.setBanalce(target.getBanalce()+money);<br>        Allocator.getInstance().release(this,target);<br>    }<br>    public  Integer getBanalce() {<br>        return banalce;<br>    }<br>    public void setBanalce(Integer banalce) {<br>        this.banalce = banalce;<br>    }<br>}<br>static class Allocator { //单例锁类<br>    private Allocator(){}<br>    private List&lt;Account&gt; locks = new ArrayList&lt;&gt;();<br>    public  synchronized void apply(Account src,Account tag){<br>        while (locks.contains(src)||locks.contains(tag)) {<br>            try {<br>                this.wait();<br>            } catch (InterruptedException e) {<br>            }<br>        }<br>        locks.add(src);<br>        locks.add(tag);<br>    }<br>    public synchronized void release(Account src,Account tag){<br>        locks.remove(src);<br>        locks.remove(tag);<br>        this.notifyAll();<br>    }<br>    public static  Allocator getInstance(){<br>        return AllocatorSingle.install;<br>    }<br>    static class AllocatorSingle{<br>        public static Allocator install = new Allocator();<br>    }<br>}<br>}</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">高手高手，让我写也这不这样好👍👍👍👍👍<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/5b/06/0c4be5d8.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">蜡笔</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">13</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师你不用在文章中贴出所有代码嘛，只贴出核心代码，然后把整个例子放在github上，文末的时候给出github的链接，水平基础一般的就可以去上面下载下来跑一跑调试加深印象理解，这样可以不老师😂</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/94/47/75875257.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">虎虎❤️</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">12</span></a></div>
+                            </div>
+                            <div class="bd comment-content">困惑<br>1. 对于从来没有获得过互斥锁的线程 所在的等待队列 和 因为wait() 释放锁而进入了等待队列，是否是同一个等待队列？也就是图中左侧和右侧的是否为同一个队列？<br>2. notifyAll() 会发通知给等待队列中所有的线程吗？包括那些从未获得过互斥锁的线程吗？<br>3. 因为wait()被阻塞，而又因为notify()重新被唤醒后，代码是接着在wait()之后执行，还是重新执行 apply 方法？</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不是一个队列<br>只唤醒右侧的队列<br>wait之后<br><br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/3d/51/9723276c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">邋遢的流浪剑客</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">10</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait会释放当前占有的锁，sleep不会释放锁</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/37/8e/cf0b4575.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">郑晨Cc</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">9</span></a></div>
+                            </div>
+                            <div class="bd comment-content">王老师 ABCD 那个例子真没看懂 线程1释放锁为啥会通知线程4？1和3才是互斥的啊 2和4互斥 按我的理解 3和4 不应该是在同一个等待队列里啊 因为不是通一把锁（准确来时不是同样的两把锁）<br>就着这个例子 我还有个关互斥锁的等待队列的问题 假设还是资源ABCD 线程5 获取AB 线程6获取CD 线程7试图获取AB 线程8试图获取BC 线程9试图获取CD 那线程 7，8，9 到底是不是在一个等待队列里面，<br>JVM在实现 wait notify机制是时候到底存不存在真实的队列？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">都是this这一把锁: synchronized void apply(){}<br>所以是一个等待队列<br><br>就是500个线程，也是同一个等待队列，因为锁的都是this<br><br>队列一定是存在的</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_e726b7</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">9</span></a></div>
+                            </div>
+                            <div class="bd comment-content">应该是!als.contains(from) || !als.contains(to)才wait()吧</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/c7/4a/1c5627ef.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈志凯</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">7</span></a></div>
+                            </div>
+                            <div class="bd comment-content">public class Allocator {<br>	private final List&lt;Account&gt; als=new LinkedList&lt;Account&gt;();<br>	// 一次性申请所有资源<br>	public synchronized void apply(Account from, Account to) {<br>		// 经典写法<br>		while (als.contains(from) || als.contains(to)) {<br>			try {<br>				System.out.println("等待用户 -&gt; "+from.getId()+"_"+to.getId());<br>				wait();<br>			} catch (Exception e) {<br>				//notify + notifyAll 不会来这里<br>				System.out.println("异常用户 -&gt; "+from.getId()+"_"+to.getId());<br>				e.printStackTrace();<br>			}<br>		}<br>		als.add(from);<br>		als.add(to);<br>	}<br>	// 归还资源<br>	public synchronized void free(Account from, Account to) {<br>		System.out.println("唤醒用户 -&gt; "+from.getId()+"_"+to.getId());<br>		als.remove(from);<br>		als.remove(to);<br>		notifyAll();<br>	}<br>}<br><br>public class Account {<br>	// actr 应该为单例<br>	private final Allocator actr;<br>	//唯一账号<br>	private final long id;<br>	//余额<br>	private int balance;<br>	public Account(Allocator actr,long id,int balance){<br>		this.actr=actr;<br>		this.id=id;<br>		this.balance=balance;<br>	}<br>	// 转账<br>	public void transfer(Account target, int amt) {<br>		// 一次性申请转出账户和转入账户，直到成功<br>		actr.apply(this, target);<br>		try {<br>			//TODO 有了资源管理器，这里的synchronized锁就不需要了吧？！<br>					if (this.balance &gt; amt) {<br>						this.balance -= amt;<br>						target.balance += amt;<br>					}<br>					//模拟数据库操作时间<br>					try {<br>						Thread.sleep(new Random().nextInt(2000));<br>					} catch (InterruptedException e) {<br>						e.printStackTrace();<br>					}<br>		} finally {<br>			actr.free(this, target);<br>		}<br>	}<br>	@Override<br>	public int hashCode() {<br>		final int prime = 31;<br>		int result = 1;<br>		result = prime * result + (int) (id ^ (id &gt;&gt;&gt; 32));<br>		return result;<br>	}<br>	/**<br>	 * 用于判断两个用户是否一致<br>	 */<br>	@Override<br>	public boolean equals(Object obj) {<br>		if (this == obj)<br>			return true;<br>		if (obj == null)<br>			return false;<br>		if (getClass() != obj.getClass())<br>			return false;<br>		Account other = (Account) obj;<br>		if (id != other.id)<br>			return false;<br>		return true;<br>	}<br>	public long getId() {<br>		return id;<br>	}<br>}<br>老师，以上代码是我补的，有个疑问，以上有了Allocator管理器（见TODO部分），transfer方法的this跟target都不再需要加synchronized锁了吧？！</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果只是这个例子就不需要了，<br>送你俩字！优秀！！！！！</p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/03/f7/3a493bec.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">老杨同志</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">6</span></a></div>
+                            </div>
+                            <div class="bd comment-content">点赞@姜戈 补充一下：wait与sleep区别在于：<br>1. wait会释放所有锁而sleep不会释放锁资源.<br>2. wait只能在同步方法和同步块中使用，而sleep任何地方都可以.<br>3. wait无需捕捉异常，而sleep需要.（都抛出InterruptedException ，wait也需要捕获异常）<br>4. wait()无参数需要唤醒，线程状态WAITING；wait(1000L);到时间自己醒过来或者到时间之前被其他线程唤醒，状态和sleep都是TIME_WAITING<br>两者相同点：都会让渡CPU执行时间，等待再次调度！</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">👍<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/T20hJrvWdrfxL0u5grbbX9eHQgVWtP1okkibs31HUgKUkmdAbCtmw8QUVGtQRPjaVicrIwCAxGGjPY4tKMxNLZvg/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">我是卖报小行家</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">6</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait和sleep区别<br>1：wait释放资源，sleep不释放资源<br>2：wait需要被唤醒，sleep不需要<br>3：wait需要获取到监视器，否则抛异常，sleep不需要<br>4：wait是object顶级父类的方法，sleep则是Thread的方法</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">全面👍<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/c7/4a/1c5627ef.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈志凯</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">5</span></a></div>
+                            </div>
+                            <div class="bd comment-content">强烈建议老师每个章节配上完整的demo，包括模拟多线程多个客户操作的代码，这样看效果才是最佳的，我们自己也能根据代码实际好好观察！</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">对于水平高的，完整的代码没必要。对于水平低的，完整的代码只能增加惰性。我就很讨厌粘贴一些无关的代码😃</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKwvj3wcI41yVmRjbiat3HmIwF73ib7UlKzSHeQuLeXcVYChHRO7gWtJ8kvpjpiaiciaFuQaZfsV9he4Iw/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">aksonic</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">4</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，我昨天问了你问题后，带着疑问又去学习了下，是不是文章中的左边和右边的两个队列应该改一改名字，不应该都叫等待队列，这样对新手很容易产生误解。如果左边的叫做同步队列，右边的叫做等待队列可能更好。左边的队列是用来争夺锁的，右边的队列是等待队列，是必须被notify的，当被notify之后，就会被放入左边的队列去争夺锁。老师，你觉得呢？</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你这个建议挺好，在管程里面，会重新讲这俩队列。现在就知道有俩等待队列就可以了<br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/ea/d6/1f98594e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">lau</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">4</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看评论也能学到很多干货</div>
+                            <span class="time">2019-03-14</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/01/37/58650ade.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">高源</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">4</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师最好讲解每一章的时候配合完整的例子源代码，这样再加调试源代码，印象更深刻了</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">大家水平不一样，有些高水平的可能只想看到核心的代码，我怕贴多了，有人说浪费流量。自己补上剩余代码也是个不错的提高机会吧😂</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/d2/ad/53517f01.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">郭瑞娟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">之前老师答复问题时，提到wait和notify是一一对应的，如果浪费了一个notify，就必然有一个wait永远没机会被唤醒。这句话怎么理解呢？<br>例子里面 假设之后线程 1 归还了资源 AB，使用 notify() 来通知等待队列中的线程4 申请的是 CD，程 4 还是会继续等待，此时会执行wait()吗？如果执行了，wait和notify还是一一对应的呀。如果没有执行，线程4会怎么执行呢？我看了几次文章了，还是没有理解此处，请老师帮忙，谢谢。<br></div>
+                            <span class="time">2019-04-02</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">因为不对应了，所以就死等下去了，有借有还才行，还错了人就出问题了<br></p>
+                                <p class="reply-time">2019-04-02</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/87/ff/d7722f90.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">亮</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">3怎么可能永远通知不到呢？就算4通知到了不满足条件等待，2走完还是会通知3或者4，就算通知到4了还是会点用notify方法</div>
+                            <span class="time">2019-03-24</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">一个notify对应一个wait，浪费一个wait，自然有一个永远失去机会<br></p>
+                                <p class="reply-time">2019-03-24</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/ff/d1/238d9da3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">San D Ji</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">学习这几章以后，我一直有一个问题，Javaweb端在什么样的业务场景下需要多线程的技术实现？<br>一直以为Javaweb端都是接收到一个请求服务器端开启一条线程独立作业，完了之后就返回一个应答。<br>不知道老师能否回答一下我的疑问？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">比如你要做个数据库连接池，做个httpclient，做个rpc框架，用批处理处理上千万数据，一个简单的crud真的用不上<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/9a/01/1489f98d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">^_^</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，while(als.contains(from) || als.contains(to)) 这句对吗</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">我确认了一下，应该是对的<br>只要有一个，就说明曾经被分配过<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJUzv6S9wroydkGP6m3OsQ8QuI4jAibv21tNkm7KVGPffJibj8Y29yIdKl4qkDGd3iaGJCSGVarfxoibQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">狂战俄洛伊</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Sleep是睡一段时间就自己起来了，wait的话得等到别人叫醒他。个人感觉sleep除了增加程序运行时间以外，没别的意义呀</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">有用，例如别让程序跑的太快</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/f8/ba/14e05601.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">约书亚</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">置顶回答是不是有问题，wait一样需要捕获InterruptedException异常呀？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你是对的</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/59/ee/92b7c27c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Pwhxbdk</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师 那自旋锁是不是效率更高？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">看场景，并发量大的时候长时间拿不到锁会浪费cpu，并发量小的时候效率高</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/PiajxSqBRaELZPnUAiajaR5C25EDLWeJURggyiaOP5GGPe2qlwpQcm5e3ybib8OsP4tvddFDLVRSNNGL5I3SFPJHsA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">null</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">哈哈哈，看了 @wang 的评论代码，好熟悉的感觉。去年的某个项目，也是使用 countdownlatch 来协调线程之间的交互。当时的需求：必须等待这一批次的所有线程完成后，才能启动下一批次的线程。<br>不过，这段代码，apply 成功后，还是需要给 src 和 target 上锁，同时 Account 类的 3 个方法，get/set/transaction 都要用 synchronized 修饰，否则还是存在线程安全问题。<br><br>----------<br><br>@郑晨Cc童鞋应该是将 Allocator 的锁，和对象资源的锁混淆了。老师在文章提到了等待-通知要考虑的 4 个要素：<br>1. 锁谁，Allocator<br>2. 要什么资源，ABCD<br>3. 什么时候等待<br>4. 什么时候唤醒<br><br>是由资源分配者 Allocator 来统一分配资源 A/B/C/D，能不能申请资源成功，锁的是 Allocator，apply 成功返回，说明 A/B/C/D 资源都被当前线程拿到了，后面就可以拿着这些资源去进行业务处理了。不过还是要考虑资源对象 A/B/C/D 共享变量的线程安全问题。<br><br>如有理解有误，还望老师指正，谢谢！</div>
+                            <span class="time">2019-04-19</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/d4/f3/b73d8abf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">三木子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">这就是生产者-消费者模式吧</div>
+                            <span class="time">2019-04-18</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/30/bf/c635b6b1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">kaizhi</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">感觉老师讲解的节奏非常好，能把并发讲解的这么浅显易懂绝非一日之功。老师在用一种由浅入深，逐层深入的方法来讲解java并发的这些知识点，而不是一股脑的把所有的知识点都罗列出来，有助于我们的吸收，也能引发我们的进一步思考，譬如这节的wait方法，就是在改进上一节的while循环等待（上一节的while在评论区就引发了各路高手的强烈不满，哈哈），这样有助于我们理解当年java的开发者在设计wait方法时的出发点在哪里，另外也让我们理解了为什么wait，notify，notifyAll这些方法会作为Object类的方法。用现实生活做类比这一点也很赞，之前有艺术来源于生活而又高于生活，现在可以说技术来源于生活而又高于生活了，哈哈~</div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">感谢你这么懂我😂<br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/7b/57/a9b04544.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">QQ怪</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看完老师的文章再看评论，感觉学习到了更多东西！</div>
+                            <span class="time">2019-03-14</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKtS26SJpSF7JLu9pusGsy1Qln0NdQg1eV2YKOJxpX2QXaBuuyXMqZY3fm0rhzKwsqN5aa6CVNOQQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈华</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师扩张一下，如果程序 部署了好几份。 保证不了 Allocator 的单例性。<br>转账这个操作该怎么多线程呢？ 只能依靠数据库了吗？，</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">分布式情况下，要用分布式锁。可以用zk,redis,db来实现<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKwvj3wcI41yVmRjbiat3HmIwF73ib7UlKzSHeQuLeXcVYChHRO7gWtJ8kvpjpiaiciaFuQaZfsV9he4Iw/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">aksonic</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，对于郑晨Cc的问题，我和他想法一样，我也觉得不太对。<br>根据老师的回答是this这一把锁: synchronized void apply(){}<br>所以是一个等待队列，就是500个线程，也是同一个等待队列，因为锁的都是this，这个我可以理解，但是如果都是一把锁，为什么会有文章中的线程 1 申请到了 AB，线程 2 申请到了 CD？线程2不是应该会被线程1阻塞吗？线程2直接进入this锁的等待队列才对。。。望老师可以详细分析下，这里没有看懂。<br></div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">两个队列，左边一个，右边一个。500线程也是这两个。后面讲管程还会系统的讲。</p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKwvj3wcI41yVmRjbiat3HmIwF73ib7UlKzSHeQuLeXcVYChHRO7gWtJ8kvpjpiaiciaFuQaZfsV9he4Iw/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">aksonic</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师请问，如果有线程A，线程B，线程C，同时想进入synchronized（this）代码块<br>1. 如果只有线程C进入了，线程A和线程B是不是都进入了this锁的等待队列？<br>2. 如果线程C进入后，又调用了wait();， 则是不是线程C不但释放了锁，也进入了this锁的等待队列？<br>3.  如果线程C进入后，又调用了wait(); 则是不是有一个隐含操作是notify了线程B或者线程C，否则他们两个如何从等待队列中出来，重新争夺锁呢？<br>对于这个完整的流程希望老师可以帮忙解答，谢谢</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">1.是<br>2.不是，会进入图里右边的队列<br>3.有通知机制，但不是notify<br>后面讲管程会再详细讲<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/17/7a/ab9bb6df.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">我劝你善良</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，假设我们有资源 A、B、C、D，线程 1 申请到了 AB，线程2申请CD的这个例子，线程3，4分别请求锁定AB，CD从而等待的话。线程1归还了AB，那么使用notify来通知等待中线程的话，是随机通知3，4中的任意一个，有可能3永远通知不到对吧？那么notifyAll来通知的话，我理解的是同时通知等待中的3，4吗？然后3，4再去竞争他们需要的锁资源，是等待队列中的所有线程3，4都会被唤醒，他们都会去争取他们需要的锁资源吗？</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">他们都需要重新竞争锁，所以需要每次都notifyall，要不然就有线程可能永远醒不了了<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/a9/36/972f7abf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">木刻</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我猜老师讲Lock的时候会把例子中的wait和notify换成Condition的await和signal😊</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果还用这么简单的例子，多low啊<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/f0/21/64e8d291.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">JStFs</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">王老师：<br><br>我记得账本Allocator是单例吧？如果是的话，apply（）方法不存在线程1抢到A和B，线程2同时又抢到了C和D吧？</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你把转账的执行时间想的长一点，比如一年，再想想<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/2b/45/e8f64725.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Smile</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看到评论里面说while的地方，当包含其中一个的话就表明已经被分配过,当前线程无法获取两个资源，就需要等待其他线程释放掉资源，自己才可以获取到。望老师指正，第一次跟着看下来，结合并发艺术一起看，老师讲课很新颖，赞一个👍</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">并发艺术侧重讲实现，正好互补。感谢盛赞啊😄<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/5a/95/866bccb7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">helloWorld</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">看到很多同学说把代码贴出来，但是代码贴在文中占篇幅，而且不是每位同学都需要，建议老师考虑一下有些老师的做法，把Demo放在github上，然后在文中给出链接，供需要的同学学习</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/mFkjLNhwXxEpxnt1w7qRic5NGP0WjOWZSUgGXnyaZWicq8Z8jztP7M9NGZ42F27XqabrVuYZwkHrAh6VfrnYCT0Q/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">walkingonair</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">这篇写的挺好，把等待和通知比较抽象的东西通过现实案例通俗易懂地讲解出来。不过，要是能讲讲除了同步关键字之外的实现就好了，给思路也行😊</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个专栏还是聚焦让大家会写并发程序，水平高的可以去看并发包里锁的实现。后面介绍管程会更全面一些<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83erYNBIwAj3KdIXaXbeMBUjTMz31zAToHIJSdo7oQk8bfsibwViaLobVQ8miatwBlC5spLS9kVCzHMjUA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">苏柏</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">你好老师，为什么用While呢，if不就可以吗 </div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不可以，有可能这个线程点背，一直一直都满足不了条件</p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/dd/e9/c939283c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">老王</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">一开始也是觉得while条件写反了，后来理解了。Allocator 是管理员分配者，而不是申请者</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/f9/aa/98d9c41c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">龙猫</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">tomcat处理请求是如何处理并发问题的</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">简单讲就是，为每一个请求分配一个独立的线程，网络处理支持bio和nio，servlet支持同步和异步，建议找本书专门看看</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/c2/cf/573a0fdc.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">___</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait会释放锁资源，sleep不会释放<br>wait可以通过notify，notifyAll来通知唤醒</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/8d/99/f886543d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">渔夫</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">如果所有线程的等待条件都是一样的话，就可以使用 notify 来进行通知，对吗？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">比较全面的说法是有三个条件，后面介绍管程的时候会说明这个问题。不过你说的这个最关键！👍<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">张学磊</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">非常棒的课程，通俗易懂！</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">就喜欢你这样的读者了<br>😃</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/1d/13/31ea1b0b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">峰</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait会释放当前调用对象的锁，这也就意味着调用之前的持有这把锁,否着会抛出异常。<br>wait是object方法，sleep是Thread的静态方法。</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/54/64/8f3d000a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">阿辉</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wang 的那个例子里面应该是notify 而不是notifyAll</div>
+                            <span class="time">2019-05-15</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/e5/a5/fae40ac3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">倚梦流</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问老师，现在的这个apply方法好像还是只能串行化地请求转出转入账号啊。使用单例就是为了保证“中心化的账本管理中心”只有一个，所以这时候不管是锁this，还是锁class对象，效果都是一样的。那有什么方法可以改进，使得能并行请求账号吗？</div>
+                            <span class="time">2019-05-14</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/fb/6a/be4956a3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">劉小强</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content"> // 经典写法<br>    while(als.contains(from) ||<br>         als.contains(to)){<br>      try{<br>        wait();<br>      }catch(Exception e){<br>      }   <br>    }<br><br>为什么这么写 如果同时满足from和to 也进行等待么？</div>
+                            <span class="time">2019-04-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/09/d6/83a02223.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">码农Kevin亮</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请教老师，无锁</div>
+                            <span class="time">2019-04-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/71/f0/be872719.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">炎炎</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师讲得很棒！</div>
+                            <span class="time">2019-04-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/15/03/c0fe1dbf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">赤城</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">线程从阻塞队列中被唤醒，是从头开始重新执行吗？</div>
+                            <span class="time">2019-04-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLz3icr3mGs5ib8FbSPQZ2ic3ib90mHkd1btQrmGacZjJxfYXrerIdaTxglKyCicFzLcEAb6deC2cWjE5Q/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">the geek</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">再换个角度，假设用notify()，出现了通知丢失，那么最终的情况一定是，倒数第二个线程运行结束了，并且没有通知到等待队列中的唯一的线程，我想知道，notify()方法会出现最后一个线程无法通知的情况吗？如果不会，那最后一个线程也一定会执行完毕。</div>
+                            <span class="time">2019-04-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLz3icr3mGs5ib8FbSPQZ2ic3ib90mHkd1btQrmGacZjJxfYXrerIdaTxglKyCicFzLcEAb6deC2cWjE5Q/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">the geek</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我举个更简单的例子证明，notify不丢失。假设一开始有10个线程争抢一个资源，其中9个都处于wait状态，只有一个运行，只要这个运行的线程运行结束了，那他会随机通知一个线程，然后就会像链式一样的接连通知，直至全部运行完成。</div>
+                            <span class="time">2019-04-22</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">假设一开始有10个线程争抢一个资源，其中9个都处于wait状态，只有一个运行，只要这个运行的线程运行结束了，那他会随机通知一个线程，结果这个线程发现自己条件还不成熟，于是继续wait。那你觉得10这个等待的还有机会被唤醒吗？至于被唤醒的为什么会等待，你需要自己琢磨一下文中的例子，为什么例子中是等待两个条件。<br>这些东西都是专家们搞出来的，不会错的，如果想不通，就换个角度。</p>
+                                <p class="reply-time">2019-04-22</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLz3icr3mGs5ib8FbSPQZ2ic3ib90mHkd1btQrmGacZjJxfYXrerIdaTxglKyCicFzLcEAb6deC2cWjE5Q/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">the geek</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我仔细思考了一下老师举得线程1\2\3\4争夺A\B\C\D的例子，如果使用notify的话，是不会出现线程3永远无法唤醒的情况的，因为这里其实是一个链式结构，notify不会丢失的。我举个例子<br>1. 线程1和2获得AB\CD资源运行，线程3和4wait<br>2.线程1notify线程4，结果是线程2运行，线程3和4wait<br>3.线程2运行完notify线程3，线程3运行，线程4wait<br>4.线程3运行完notify线程4，线程4运行。全部运行完成<br></div>
+                            <span class="time">2019-04-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/af/76/feaffdea.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">彻头撤尾</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">案例中 有两类锁 第一类 就是Allocator实例(账本管理者) ,保证能同时提供转出账户和转入账户时通知所有转帐的业务窗口来取账本(至于是不是业务窗口需要的账户就不管了--对应的唤醒机会浪费)并且当业务窗口来取账本时发现需要的账本其中任意一本正在被其他业务窗口占用时让该业务窗口回去等通知(wait()),这里的集合则是记录着被拿走的账户账本,用来记录哪些账本是借出状态.<br>另一类锁就是转出账户和转入账户对应的实例了,这个是为了保证在进行转账过程中,避免查询操作查询到错误结果(类似数据库中的脏读).<br>至于有的同学说的,Allocator是单例的不可能出现 线程1持有AB,线程2持有CD的情况,正是由于Allocator是单例的,所以才需要被所有线程共享,单例保证的是所有线程竞争的是同一份资源,但是Allocator实例所对象锁的却是这份资源中的其中两个,其他线程获取其他线程并不冲突,因为只要执行完apply()或者free()单例所对象都会释放,其他线程(业务窗口)可以有机会拿到集合里没有的(还没借出)其他资源(账户账本);<br>个人理解,希望能有点帮助,如有错误,烦请指正.</div>
+                            <span class="time">2019-04-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/ae/00/025f37e7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">xuery</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">文中已经说了，wait的时候，线程会释放锁，对于范式while(条件不满足时){wait();}, 某个线程条件不满足时执行wait()并释放锁，只能等待其他线程notify/notifyAll唤醒，唤醒之后要重新获得锁且条件满足时才会往下执行。<br>sleep则只是休眠一段时间，不释放锁</div>
+                            <span class="time">2019-04-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/oiboHpgukqib2ASXeU0H7W1ibgRMqyrNE5KaWicicPEDy0ia8YdoneZAtvW0EFIiaqZJp2OS4dnweOgXaJ5EjJicicEqic5A/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">覃钰栋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait()释放CPU,释放锁；sleep只释放CPU，不释放锁</div>
+                            <span class="time">2019-04-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e8/dc/32e78f02.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">乐凡</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，对于notify()唤醒线程比较的例子，线程1释放AB后， 通知了线程4，此时的情况是，线程1释放掉了AB资源，线程2持有CD资源，线程3申请AB进入等待队列，线程4申请CD处于进入队列，最后结果您说线程3再也没有机会被唤醒了，可以如果线程2释放了CD资源，但是通知的是线程3，此时资源AB是在之前就被线程1释放的，那么线程3被通知了，而且资源AB存在，不是应该被唤醒吗？</div>
+                            <span class="time">2019-04-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">一个萝卜一个坑，浪费了一个坑，总会有一个萝卜找不到位置。</p>
+                                <p class="reply-time">2019-04-16</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/af/d8/0f85fc8f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">肖邦的学徒</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">评论里面老师说notifyall和wait是成对<br>如果有好多持有1，2或是2，4的锁释放掉之后，被申请2，3的线程抢到了，但是他们条件不满足，<br>通知机会被浪费了 ，后面不是有好多wait没法获得通知吗</div>
+                            <span class="time">2019-04-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">浪费总比错误强多了，没有正确性，其他的都没意义</p>
+                                <p class="reply-time">2019-04-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e7/50/d476ed6c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Mr.Panda</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师您好，我刚提的问题是不是这样解答就对了：<br>答：两个等待队列是不同的，这里涉及两个等待队列概念。<br>#锁对象的锁标志等待队列<br>进入的线程：1.执行互斥锁导致阻塞的线程， 2.被notify,notifyAll唤醒的线程<br>唤醒条件：锁对象标志已清除，即该锁对象未被其他线程加锁(或其他线程临界区执行完毕自动释放锁)<br>唤醒后执行特征：竞争给锁对象加锁标志，未加锁成功的线程再次回到该等待队列<br>#锁对象等待队列<br>进入的线程： 临界区中主动执行锁对象的wait()方法的线程<br>唤醒条件：其他线程执行了锁对象的notify,notifyAll方法<br>唤醒后执行特征：被唤醒的线程会进入锁对象的锁标志等待队列</div>
+                            <span class="time">2019-04-10</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以看和08管程那一篇结合着看</p>
+                                <p class="reply-time">2019-04-10</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e7/50/d476ed6c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Mr.Panda</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师您好，请指导几个问题：<br>1. 两个等待队列有区别吗？<br>1.1上文提到的左边等待队列由于互斥锁synchronized导致线程阻塞所聚集的概念，需要临界区执行完毕，自动释放锁，该队列中的线程才会全部唤醒去竞争给锁对象加锁。<br>1.2 上文提到的右边等待队列是由于获取锁的执行线程，条件不满足时主动调用wait释放互斥锁且自身进入阻塞所聚集的概念，需要调用对应锁对象的notify,notifyAll才会唤醒该等待队列中的线程去竞争锁。<br>也就是说若没调用notify,notifyAll 那么这个阻塞队列中的线程永远不会被唤醒？<br></div>
+                            <span class="time">2019-04-10</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/52/37/13b4c8aa.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Vincent</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">重点区分下那个方法是Object类提供的，那个方法是Thread提供的。</div>
+                            <span class="time">2019-04-03</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/c6/51/4f0e0577.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">劉阳河</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，我有几个问题。<br>1,调用wait的线程，释放对象锁进入右侧队列，当调用notify唤醒的时候和左侧队列中的线程竞争锁是公平的吗？<br>2，wait的线程唤醒后是从wait的呢行代码执行吗？</div>
+                            <span class="time">2019-04-03</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">1.没有公平性保证<br>2.在哪里跌倒只能在哪里爬起来，单线程wait的下一条语句是什么就执行什么</p>
+                                <p class="reply-time">2019-04-03</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/a3/8b/080d337e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">燕青兄弟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait是进入临界区等待，也就是this object's monitor.<br>sleep是线程的方法，它的功能，等一会，sleep方法不会导致自己（thread）丢掉互斥锁的拥有权。</div>
+                            <span class="time">2019-04-01</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/cd/ff/b7690816.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">云里雾花</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师你好，我想问的是，在尽量使用notifyAll()这里，例子里面线程3，对“再也没有机会被唤醒”的原因是因为线程太多导致一直随机不到该线程，还是其他原因，我没有搞懂，请老师提点。</div>
+                            <span class="time">2019-04-01</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">wait和notify是一一对应的，如果浪费了一个notify，就必然有一个wait永远没机会被唤醒<br></p>
+                                <p class="reply-time">2019-04-01</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/8a/4b/9863a07b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">timgise</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">//sleep<br>synchronized(LOCK) {<br>    TimeUnit.SECONDS.sleep(3); //LOCK持有锁<br>}<br>//wait<br>synchronized(LOCK){<br>    LOCK.wait(); //LOCK已不持有锁<br>}<br><br><br></div>
+                            <span class="time">2019-03-27</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/6b/53/a102d6a5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">朱江涛</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">记住两个队列，并且右边的队列在被唤醒后会移到左边的队列，在讲管程的时候我们也要把这个具体的弄懂。不过，在notifyall的时候，线程是如何争取自己被唤醒的呢，这里面有没有什么机制</div>
+                            <span class="time">2019-03-24</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">没权利争取，完全被动的</p>
+                                <p class="reply-time">2019-03-24</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e0/24/4529f2a4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WP</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">此处的锁对象是this，我们利用条件控制假定A和B同时满足与否引入wait和notify 机制实现等待通知机制以替代循环等待机制，所以队列跟锁有关，一个锁一个队列，不论多少线程，只要synchronized处锁隐式还是显示声明的锁是这些线程需要争抢的，那么就在同一个线程等待队列中？还是说与wait和notify的对象有关？比如this.notify this.wait说明其等待队列与this有关，另外在synchronized声明的锁对象与其内部调用wait和notify对象是否必须一个对象呢</div>
+                            <span class="time">2019-03-22</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">synchronized声明的锁对象与其内部调用wait和notify对象必须一个对象</p>
+                                <p class="reply-time">2019-03-22</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/e8/3c/e8c80390.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">刘海（steven）</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while方式为啥说是经典范式呢？换成if判断不可以么？</div>
+                            <span class="time">2019-03-21</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">code1；<br>if (条件不满足)<br>  wait()<br>code2；<br><br>当调用wait()时，阻塞。被唤醒时，就直接执行code2了，没机会重新判断。</p>
+                                <p class="reply-time">2019-03-22</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/58/15/56f4e62a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">antz</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">@郑晨Cc：针对你的疑惑，我觉得可以参考下每个对象都有个monitorobject来理解，它里面有waitset队列，执行wait后，线程就会放进去，notify后，会去重新争抢锁，抢到锁后monitorobject对象里有currentthread字段存储当前线程id，然后还要明白一个事，线程互斥应该是对同一个锁定资源争抢，所以肯定是同一个对象，就是同一个monitorobject</div>
+                            <span class="time">2019-03-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/6e/bd/b83ad32d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">shangyu</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问老师 为什么wait和notify必须要在获得锁的情况下才能调用呢</div>
+                            <span class="time">2019-03-21</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">保证互斥性，不允许两个线程同时进入管程</p>
+                                <p class="reply-time">2019-03-22</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/15/69/fc60d1f4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">陈华应</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">是不是可以从相同和不同点来猜测一下设计目标？sleep只是让当前线程让出当前CPU资源，并且指定时间内不参与CPU资源的抢夺，雨露均沾，让其他线程也有机会得到执行。而wait是等待-通知机制中的一个不可或缺的环节，只是wait的一个功能表现是当前线程让出CPU，所以来一直拿来和sleep做对比。</div>
+                            <span class="time">2019-03-19</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/1c/d5/248a9c38.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">你只是看起来很努力</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">线程执行wait()方法后，会释放其占有的所有资源，而且不会自动唤醒，必须通过notify()或notifyAll()方法才能被唤醒再次进入就绪队列。<br>执行sleep()方法，会使线程让出cpu的执行权，给其它线程执行的机会，不管其它线程的优先级高低，但不释放锁。<br>老师，那么两个线程访问一组共享资源的时候，在同步代码块里执行sleep()是没有意义的，因为你只是让出了cpu，没有释放锁，另一个线程还是不能执行，这么理解有问题吗?</div>
+                            <span class="time">2019-03-19</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">没问题<br></p>
+                                <p class="reply-time">2019-03-19</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/e9/0b/1171ac71.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WL</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">为什么while的判断条件是这样的, while(als.contains(from) || als.contains(to)) , 不应该是不包含吗?<br></div>
+                            <span class="time">2019-03-18</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">包含说明曾经被分配过<br></p>
+                                <p class="reply-time">2019-03-18</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e2/58/2468a5e9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">JGOS</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，这个账本管理员的锁粒度好像有点粗，所有的账本都由这一个人来管，应该有更细粒度的实现方式吧</div>
+                            <span class="time">2019-03-18</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以有，按照营业厅分啊<br></p>
+                                <p class="reply-time">2019-03-18</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/0a/55/a1c8954d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">再见，孙悟空</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">强烈要求老师给个github链接，能有完整的代码参考，想本地自己运行一下。</div>
+                            <span class="time">2019-03-16</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">已经有同学在评论区给了，你可以参考一下</p>
+                                <p class="reply-time">2019-03-16</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/0c/e7/863f5eef.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">残风</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">左边的是enter~set右边的才是wait~set，enter~set管理的是等待当前对象锁资源的线程，而wait~set管理的是调用了wait方法的线程</div>
+                            <span class="time">2019-03-16</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个在管程那一章详细介绍<br></p>
+                                <p class="reply-time">2019-03-16</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/8c/4e/b81969fa.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">南北少卿</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while(als.contains(from) || als.contains(to))这个判断条件是不是有点问题？</div>
+                            <span class="time">2019-03-15</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">没问题，只要有一个存在，就说明曾经被分配过<br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/34/80/6c55f84a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">道</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">notify有风险，notifyall就能保证没有风险吗。结果是都唤醒了一个线程。该例子中如果用notifyall也有可能唤醒线程4<br><br>既然锁的是this，线程2是持有cd资源的，那么线程2释放资源时调notify是可能唤醒线程3的。<br>限于水平，感觉这一段没明白</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可能这个几率不行，必须是一定能唤醒。要不3就死在那里了<br><br></p>
+                                <p class="reply-time">2019-03-15</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/50/99/44378317.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李皮皮皮皮皮</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">那就是说notify和notifyAll不会阻塞咯，就是通知完其他线程，该线程继续执行。是这样没错吧😄</div>
+                            <span class="time">2019-03-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是这样<br></p>
+                                <p class="reply-time">2019-03-14</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/qW71Fibw72gGibibNbO80UH9GQryJUZHdEDmkic2nZ5Rp6Nexnia8OmMoD5G9SY5DZrKXL1vvbnMZtRWd4pVV7hiaeMA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Aiome</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，有点问题望解答<br>1.wait notify notifyall  都是对sync 锁的等待队列操作这个对接叫A，wait操作会把线程放到wait等待队列B。<br>那么当B队列的线程什么时候会被唤醒呢？当B队列的线程数被唤醒重新获取sync锁失败了，那这个线程回到A队列还是B队列呢？<br><br>2.这种等待通知的模式，是不是为了解决上一章while循环资源的情况，但是这个模式只是把while方到了管理员的代码里，是我对while（）｛wait（）｝这个写法有误解吗？<br><br>水平低，希望老师能给解答，谢谢🙏</div>
+                            <span class="time">2019-03-13</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">notify之后，从b到a，什么时候唤醒，要看sync锁什么时候释放<br>这个while和上一章没关系<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/eb/9f/125ed81c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">独立自主</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，一个线程在访问临界区资源时，拿到资源A却那不到资源B，可能资源B在临界区根本不存在，这就在调用wait（）方法的时候，放弃互斥锁，把线程放到阻塞队列中，然后当某个线程调用notify（）方法时，这个线程始终都会在阻塞队列中。这种情况该怎么处理呢？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">还是没看明白😂<br></p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/eb/9f/125ed81c.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">独立自主</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，当一个线程访问临界区的时候，查询资源的时候，只拿到转出账号却拿不到转入账号（资源）。然后这个线程一直在阻塞队列。这种情况该如何处理呢？</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/64/86/6b593cb9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zach_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">等待队列 代码里看不到 那就是在JVM里面了吧？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">是的</p>
+                                <p class="reply-time">2019-03-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/14/50/c23cf47d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">代码里，两个包含是不是写反了？？条件不满足才等待，那应该是不包含吧</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">只要有一个包含，就是曾经被分配过，也就是条件不满足<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/0e/e8/5d2c3e08.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">何方妖孽</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">例子里的wait()上边的条件不对吧？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">应该是对的</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/4c/5b/5499d6e6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">墨名次</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait()是等待，sleep()是休眠，等待在不确定的某个时间点完成，休眠必须在设定好的时间点完成。wait()跟老师讲的就医流程相似，sleep()则跟我们相似，要定闹钟，每天早上准时8点起床上班。它们的应用场景也不一样，wait()用来解决等待执行任务，提高效率；sleep()用来解决延迟执行任务，wait()适用于老师所讲的并发编程，而sleep()在UI编程中比较常用，用来忽悠用户，比如：扫描一个盘里面所有文件的进度条(1%,2%...90%,100%)或“请稍后...”之类的提示。</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">经常被大家忽视的是，锁会不会释放。原来大家都这么忽悠用户😂<br><br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/50/99/44378317.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李皮皮皮皮皮</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">notify和notifyAll是在同步方法或同步代码块中被调用的，那么调用这两个方法应该会释放锁吧？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不会，同步代码块执行完才会释放<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/06/df/60126ff3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">0bug</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师您好，有个问题请教一下，文章中说的，调用wait()后，线程会进入等待队列，这个等待队列的数据结构是什么样的？应该不是标准的先进先出队列吧？ </div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">不是先进先出，数据结构啥样的我也没深究过<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/d7/df/fc0a6709.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WolvesLeader</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">网上一般说2方面区别 <br>1.锁的释放还是不释放<br>2.cpu执行权，我的困惑是一直没办法验证对cpu执行权的影响，为了这个问题也看过jvm的源码，没看出啥道道来，老师有啥demo或者其他的方式能看出2方法对执行权的影响吗？谢谢谢谢</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">cpu执行权怎么理解？<br>去操作系统里查看线程状态就可以了，线程都阻塞了，没法验证，也可以看线程的cpu使用率<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/03/57/31595f22.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Lrwin</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有两个队列:等待获取锁的队列(简称A队列)和调用wait 方法的队列(简称B队列)<br><br>问题1.调用notify 后，一定是B队列的线程可以获取锁吗？<br>问题2:在synchronized 代码块中，如果notify 后边还有代码，是执行后面所有的代码才释放锁吗？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">1.不能<br>2.是<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/65/24/b975a485.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">李广</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，请问synchronized和里面的wait共用同一个等待队列吗，一个synchronized里有多个wait他们也共用同一个等待队列吗？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">多个wait共享一个，synch锁是另外一个。这个会在管程里面重新讲<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTJupkAwlMPemsyBhOT2BWJPnyicAqQhH731C7uV5fXjz9DicxO0eySia1JLqeMXAkQlFZZ41uXsw1I7g/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">yang</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">线程3和4在同一个等待队列？他们申请的资源都不一样，应该也不是一个锁吧</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">他们锁的都是this这个对象，所以等待队列是一个<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/06/df/60126ff3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">0bug</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">// 一次性申请转出账户和转入账户，直到成功<br>while(!actr.apply(this, target))<br>  ；<br>这段代码的while可以去掉了吧？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">可以去掉了<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/60/23/efd87e29.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">张先生丶</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1、wait释放持有的锁，sleep不会<br>2、sleep设置挂起时间，wait如果不调用notify或者notifyall，一直挂起<br>3、wait是Object方法，sleep是Thread方法</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/bb/93/6e1498d6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">哲民</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">分布式系统中对应wait和notify有哪些方式呢？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">貌似没听说有分布式的管程</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/79/69/5960a2af.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">王智</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait会主动释放锁,sleep不会;<br><br>wait()中指定毫秒值,时间到了需要使用notify()/notifyAll()唤醒; sleep()中指定毫秒值是睡眠一定时间自动唤醒.<br><br>大学操作系统学的,不知道记得对不对!!!<br></div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这个一定是别人家的大学<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/da/ec/779c1a78.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">往事随风，顺其自然</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">while 条件中不是与操作？怎么是或运算</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">只要包含一个就说明被分配过</p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/64/86/6b593cb9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zach_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，怎么查看synchronized(A.class)阻塞后进入的等待队列？  就是，等待队列，对应的现实代码，在哪里能看到啊？</div>
+                            <span class="time">2019-03-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">java里看不到<br></p>
+                                <p class="reply-time">2019-03-12</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/d6/4f/98cecddc.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">哈呼呼</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">wait让线程挂起的时候，会释放自己持有的锁资源，而sleep还会继续持有锁资源。</div>
+                            <span class="time">2019-03-12</span>
+                            
+                        </div>
+                    </li></ul>
+            </div>
+        </div> <!----> <!----></div>
+</div>
+<link rel="dns-prefetch" href="//cdn.mathjax.org">
+<script type="text/x-mathjax-config">MathJax.Hub.Config({
+        showProcessingMessages: false,
+        messageStyle: "none",
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a']
+        }
+      });
+      MathJax.Hub.Register.MessageHook("End Process", function (message) {
+        var eve = new Event('mathjaxfini')
+        window.dispatchEvent(eve)
+      })
+
+
+
+
+</script>
+
+</body>
