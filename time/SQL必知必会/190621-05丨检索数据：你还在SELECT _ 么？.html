@@ -1,0 +1,2410 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="Keywords" content="极客时间,极客邦,极客邦科技,极客邦控股,极客时间App,专栏订阅,极客新闻,二叉树,极客Live,QCon,左耳听风,AI技术内参,大航海时代,陈皓,徐飞,洪亮劼,霍泰稳,池建强,Selina,Gary,InfoQ,极客搜索">
+    <meta name="description" content="极客时间是极客邦科技出品的一款 IT 内容知识服务 App，内容包含专栏订阅、极客新闻、热点专题、直播、视频和音频等多形式的知识内容，并设有陈皓专栏、徐飞专栏、洪亮劼专栏等专栏供订阅。">
+    <link rel="apple-touch-icon" sizes="180x180" href="//static001.geekbang.org/static/icon/time/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="//static001.geekbang.org/static/icon/time/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="//static001.geekbang.org/static/icon/time/favicon-16x16.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>05丨检索数据：你还在SELECT * 么？</title>
+
+    <link href="https://static001.geekbang.org/static/time/css/app.3e04e644962ca8c2f97ec7731bb7710c.css" rel="stylesheet">
+    <style type="text/css">.hljs-ln {
+        border-collapse: collapse
+    }
+
+    .hljs-ln td {
+        padding: 0
+    }
+
+    .hljs-ln-n:before {
+        content: attr(data-line-number)
+    }</style>
+    <style type="text/css">#iv-container {
+        position: fixed;
+        background: #0d0d0d;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        display: none;
+        z-index: 1000
+    }
+
+    .iv-container {
+        overflow: hidden
+    }
+
+    .iv-close {
+        width: 26px;
+        height: 26px;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        cursor: pointer;
+        text-align: center;
+        overflow: hidden;
+        text-shadow: 0 0 3px #6d6d6d;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all ease .2s;
+        -o-transition: all ease .2s;
+        transition: all .2s ease
+    }
+
+    .iv-close:after, .iv-close:before {
+        content: "";
+        height: 2px;
+        width: 26px;
+        background: #fff;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        margin-top: -2px;
+        border-radius: 2px
+    }
+
+    .iv-close:before {
+        -webkit-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        transform: rotate(45deg)
+    }
+
+    .iv-close:after {
+        -webkit-transform: rotate(-45deg);
+        -moz-transform: rotate(-45deg);
+        -ms-transform: rotate(-45deg);
+        -o-transform: rotate(-45deg);
+        transform: rotate(-45deg)
+    }
+
+    .iv-close:hover {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .iv-image-view {
+        position: absolute;
+        height: 100%;
+        width: 100%
+    }
+
+    .iv-image-wrap {
+        display: inline-block
+    }
+
+    .iv-image-wrap:active {
+        cursor: move
+    }
+
+    .iv-large-image {
+        cursor: move;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: #ececec;
+        -moz-transform: translateZ(0);
+        -o-transform: translateZ(0)
+    }
+
+    .iv-large-image, .iv-loader {
+        position: absolute;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0)
+    }
+
+    .iv-loader {
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        z-index: 100;
+        margin-top: -16px;
+        margin-left: -16px;
+        font-size: 5px;
+        text-indent: -9999em;
+        border-top: 1em solid hsla(0, 0%, 100%, .2);
+        border-right: 1em solid hsla(0, 0%, 100%, .2);
+        border-bottom: 1em solid hsla(0, 0%, 100%, .2);
+        border-left: 1em solid #fff;
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear
+    }
+
+    .iv-loader:after {
+        width: 10em;
+        height: 10em;
+        border-radius: 50%
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }</style>
+    <style type="text/css">.vue-pull-to-wrapper[data-v-12abd9fb] {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .scroll-container[data-v-12abd9fb] {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .vue-pull-to-wrapper .action-block[data-v-12abd9fb] {
+        position: relative;
+        width: 100%
+    }
+
+    .default-text[data-v-12abd9fb] {
+        height: 100%;
+        line-height: 50px;
+        text-align: center
+    }</style>
+    <style type="text/css">.button-cancel[data-v-87ffcada] {
+        color: #888;
+        border: 1px solid #888;
+        border-radius: 3px;
+        margin-right: 12px
+    }
+
+    .button-cancel[data-v-87ffcada], .button-primary[data-v-87ffcada] {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        height: 35px;
+        display: inline-block;
+        font-size: 15px;
+        text-align: center;
+        line-height: 36px
+    }
+
+    .button-primary[data-v-87ffcada] {
+        color: #fff;
+        background-color: #ff5a05;
+        border-radius: 3px
+    }
+
+    .pd[data-v-87ffcada] {
+        padding-left: 1.375rem;
+        padding-right: 1.375rem
+    }
+
+    .article[data-v-87ffcada] {
+        max-width: 46.25rem;
+        margin: 0 auto
+    }
+
+    .article .article-unavailable[data-v-87ffcada] {
+        color: #fa8919;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 24px;
+        border-radius: 5px;
+        padding: 12px;
+        background-color: #f6f7fb;
+        margin-top: 20px
+    }
+
+    .article .article-unavailable .iconfont[data-v-87ffcada] {
+        font-size: 12px
+    }
+
+    .article .main[data-v-87ffcada] {
+        padding: 1.25rem 0;
+        margin-bottom: 52px
+    }
+
+    .article-title[data-v-87ffcada] {
+        color: #353535;
+        font-weight: 400;
+        line-height: 1.65rem;
+        font-size: 1.34375rem
+    }
+
+    .article-info[data-v-87ffcada] {
+        color: #888;
+        font-size: .9375rem;
+        margin-top: 1.0625rem
+    }
+
+    .article-content[data-v-87ffcada] {
+        margin-top: 1.0625rem
+    }
+
+    .article-content.android video[data-v-87ffcada]::-webkit-media-controls-fullscreen-button {
+        display: none
+    }
+
+    .copyright[data-v-87ffcada] {
+        color: #b2b2b2;
+        padding-bottom: 20px;
+        margin-top: 20px;
+        font-size: 13px
+    }
+
+    .audio-player[data-v-87ffcada] {
+        width: 100%;
+        margin: 20px 0
+    }
+
+    .to-comment[data-v-87ffcada] {
+        overflow: hidden;
+        padding-top: 10px;
+        margin-bottom: -30px
+    }
+
+    .to-comment a.button-primary[data-v-87ffcada] {
+        float: right;
+        height: 20px;
+        font-size: 12px;
+        line-height: 20px;
+        padding: 4px 8px;
+        cursor: pointer
+    }
+
+    .article-comments[data-v-87ffcada] {
+        margin-top: 2rem
+    }
+
+    .article-comments h2[data-v-87ffcada] {
+        text-align: center;
+        color: #888;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1rem
+    }
+
+    .article-comments h2[data-v-87ffcada]:before {
+        border-top: 1px dotted #888;
+        content: "";
+        position: absolute;
+        top: 56%;
+        left: 0;
+        width: 100%;
+        z-index: -1
+    }
+
+    .article-comments h2 span[data-v-87ffcada] {
+        font-size: 15.25px;
+        font-weight: 400;
+        padding: 0 1rem;
+        background: #fff;
+        display: inline-block
+    }
+
+    .article-sub-bottom[data-v-87ffcada] {
+        z-index: 10;
+        cursor: pointer
+    }
+
+    .switch-btns[data-v-87ffcada] {
+        height: 76px;
+        cursor: pointer;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        border-bottom: 10px solid #f6f7fb;
+        position: relative
+    }
+
+    .switch-btns[data-v-87ffcada]:before {
+        content: " ";
+        height: 1px;
+        background: #e8e8e8;
+        position: absolute;
+        top: 0;
+        left: 0;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        left: 1.375rem;
+        right: 1.375rem
+    }
+
+    .switch-btns .btn[data-v-87ffcada] {
+        height: 38px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .switch-btns .btn .tag[data-v-87ffcada] {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 62px;
+        flex: 0 0 62px;
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        border-radius: 10px;
+        height: 22px;
+        line-height: 22px;
+        background: #f6f7fb;
+        font-weight: 400
+    }
+
+    .switch-btns .btn .txt[data-v-87ffcada] {
+        margin-left: 10px;
+        -webkit-box-flex: 1;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        color: #888;
+        font-size: 15px;
+        height: 22px;
+        line-height: 22px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 400
+    }
+
+    @media (max-width: 769px) {
+        .article .breadcrumb[data-v-87ffcada] {
+            padding-top: 10px;
+            padding-bottom: 10px
+        }
+    }</style>
+    <style type="text/css">.empty {
+        height: 51px
+    }
+
+    .mobile-tips {
+        width: 100%;
+        height: 51px;
+        background: rgba(0, 0, 0, .8);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 0 12px;
+        -webkit-transition: opacity .35s;
+        transition: opacity .35s;
+        opacity: 0;
+        pointer-events: none
+    }
+
+    .mobile-tips.istop {
+        opacity: 1;
+        pointer-events: auto
+    }
+
+    .mobile-tips .mobile-tips-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: start;
+        -ms-flex-pack: start;
+        justify-content: flex-start
+    }
+
+    .mobile-tips .mobile-tips-info i {
+        width: 36px;
+        height: 36px;
+        background-image: url(data:image/png;base64,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);
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        background-size: contain;
+        border-radius: 7px
+    }
+
+    .mobile-tips .mobile-tips-info h2 {
+        font-size: 15px;
+        color: #fff;
+        font-weight: 400;
+        margin-left: 6px
+    }
+
+    .mobile-tips .mobile-tips-info h2 span {
+        font-size: 11px
+    }
+
+    .mobile-tips a {
+        width: 72px;
+        height: 31px;
+        text-align: center;
+        border: 1px solid #fa8919;
+        border-radius: 3px;
+        font-size: 13px;
+        color: #fa8919;
+        line-height: 31px
+    }</style>
+    <style type="text/css">.share-poster-wrapper {
+        position: fixed;
+        background-color: #fff;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -moz-user-select: -moz-none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .share-poster-wrapper .poster-bottom, .share-poster-wrapper .poster-middle, .share-poster-wrapper .poster-top {
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle {
+        padding: 16px 32px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-bottom: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo .poster-avatar {
+        min-width: 45px;
+        min-height: 45px;
+        width: 7vw;
+        height: 7vw;
+        border-radius: 50%;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle .nickname {
+        font-size: 5vw;
+        font-weight: 400;
+        margin-left: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .time {
+        font-size: 3.2vw
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content {
+        font-size: 4vw;
+        font-weight: 400;
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+        letter-spacing: 1px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content {
+        font-size: 3.7vw;
+        padding: 32px 0
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info {
+        border-left: 1px solid #000;
+        padding-left: 10px;
+        margin-top: 38px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info p {
+        font-size: 3.2vw;
+        line-height: 1.5
+    }
+
+    .share-poster-wrapper.theme0 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/top.png") no-repeat 15px 1px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle {
+        width: 100%;
+        padding-left: 56px;
+        padding-right: 56px;
+        background-image: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/middle.png");
+        background-repeat: repeat-y;
+        background-position: 15px 0
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .time {
+        margin-bottom: 45px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .quote-content {
+        border-top: 1px solid #e3e1dc;
+        margin-top: 30px
+    }
+
+    .share-poster-wrapper.theme0 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/bottom.png") no-repeat 15px -10px
+    }
+
+    .share-poster-wrapper.theme1 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/top.png") no-repeat 38px 1px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle {
+        width: 100%;
+        padding: 0 42px 10px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/middle.png") repeat-y 38px 0
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo {
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo .poster-avatar {
+        margin-left: 38px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-wrapper {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        min-height: 260px;
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time {
+        max-width: 65px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        text-align: center;
+        vertical-align: middle;
+        border-right: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time span {
+        white-space: nowrap;
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-content {
+        padding: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-content {
+        font-size: 3.7vw;
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-info {
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .footer {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-right: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/bottom.png") no-repeat 38px -10px
+    }
+
+    .share-poster-wrapper .share-poster {
+        background: #fefdf8;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #9b8d73;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        overflow: auto;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .share-poster-wrapper .share-poster.color0 {
+        background-color: #fefdf8
+    }
+
+    .share-poster-wrapper .share-poster.color1 {
+        background-color: #4d4d4d
+    }
+
+    .share-poster-wrapper .share-poster .footer {
+        margin-top: 2rem;
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: end;
+        -ms-flex-pack: end;
+        justify-content: flex-end;
+        -webkit-box-align: end;
+        -ms-flex-align: end;
+        align-items: flex-end
+    }
+
+    .share-poster-wrapper .share-poster .footer p {
+        margin: 0;
+        line-height: 1.4;
+        margin-left: 20px;
+        text-align: right;
+        padding-right: 20px
+    }
+
+    .share-poster-wrapper .controls {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        width: 100%;
+        padding-top: 5px;
+        -webkit-box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        z-index: 1;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .controls > div {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding: 10px 0
+    }
+
+    .share-poster-wrapper .controls > div span {
+        font-size: .85rem
+    }
+
+    .share-poster-wrapper .controls > div button {
+        width: 100px;
+        height: 24px;
+        background: #eee;
+        margin: 0 10px;
+        border-radius: 5px;
+        border: 2px solid #b2b2b2;
+        outline: none
+    }
+
+    .share-poster-wrapper .controls > div button.on {
+        border: 2px solid #ff5a05
+    }
+
+    .share-poster-wrapper .controls .controls-themes button {
+        color: #b2b2b2;
+        font-size: 12px;
+        background: #fff;
+        text-align: center
+    }
+
+    .share-poster-wrapper .controls .controls-themes button.on {
+        color: #ff5a05
+    }
+
+    .share-poster-wrapper .buttons {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .buttons a {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        text-align: center;
+        color: #000;
+        font-weight: 400;
+        height: 3rem;
+        line-height: 3rem
+    }
+
+    .share-poster-wrapper .buttons a .icon-share-money {
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px
+    }
+
+    .share-poster-wrapper .buttons a:last-child {
+        border-left: 1px solid #f5f5f5
+    }
+
+    .share-poster-wrapper img {
+        max-width: 100%
+    }
+
+    .share-poster-wrapper.android .poster-middle .nickname {
+        font-size: 10vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .time {
+        font-size: 6.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .poster-middle-content {
+        font-size: 8vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-content {
+        font-size: 7.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-info p {
+        font-size: 6.4vw
+    }</style>
+    <style type="text/css">.mini-audio-player {
+        width: 100%;
+        height: 5.25rem;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 1rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        margin: 1rem 0
+    }
+
+    .mini-audio-player > a {
+        border: none;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .mini-audio-player .btn-play {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .btn-pause, .mini-audio-player .btn-play {
+        width: 2.6875rem;
+        height: 2.6875rem;
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none
+    }
+
+    .mini-audio-player .btn-pause {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .audio-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        margin-left: .6875rem;
+        min-width: 0
+    }
+
+    .mini-audio-player .audio-info h3 {
+        color: #353535;
+        font-size: 15.25px;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .mini-audio-player .audio-info p {
+        margin: 0;
+        margin-top: .125rem;
+        font-size: 11px;
+        line-height: 1rem
+    }
+
+    .mini-audio-player .audio-info p span {
+        color: #888
+    }
+
+    .mini-audio-player .btn-download {
+        width: 1.25rem;
+        height: 1.25rem;
+        position: relative;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAA+CAYAAACbQR1vAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAA4hJREFUaIHtm8lOFFEUhr9qCWGHGxcaY1joK2h0YRzAtYmsWbAGGidEXOACbAYRxfgAPoEPoInGxJgg86gsJTHMw86EhS7O7TDk3uqq6qo6HahvQ7pOce7//1U0feve9vr6+lAiD3QC/4AC8FZDRJXGoMB14PWB1yPANPA1bSG5tAc0XLEcu5y6CvQCOGU5pnI3agVQMWQBaAvQJgtAW4A2WQDaArTJAtAWoE0WgLYAbbIAtAVokwWgLUCbLABtAdpkAfjU6oC7wKV0pCTCRcRDnesEVwDNwC/gg/nZHbeyFOgGltj30Gw7yRZALfAOqDavPeA50BO7xOToQTR75nU14qn26Im2AM4DNZbjz4DeePQlSi+i9Sg1iLdD2AJYApYdzbuo7BBeIBptLCPeDmELYA9oBHYdjbqQpaxKowA8ddR2gXuIt0O43gRHgTu4Q+ikskIoIJps7AINwA9b0e/fYJAQ1FZWD9CP2/wOUI/DPJT+IDRqGrhCeGIEaNEPdDhqO8iVH/NrEOST4BgSwo6j3gEMBOgTNwP4m6+nhHkI/lG4VAiPgcGAveJg0IxpYxvROh6kUZi5wLhpvO2oPyKdEF6asWyEMg/hJ0PjyN+VXwhDIXuGYQh46KhtIeYnwjSMMhss3glbjvoDkglhyPS2Eck8RJ8OTyB3gl8IryL2tjGM2/wmYn4ySuNyngdMmIE3HfX7iHDPUQ+CZ3q0O+qbyIWIZB7KfyAyaQS4QmhH7oQoIZQyv0EZV75IHE+EJvG/E9oJfyd4yC6yvKO+gQQ/FaKnlbgeiU0hIWw46nnEUJAQiubbHPV1M1bZ5iHeZ4KlQmgD3uAfgofsGfQz34DsKYyFuLemTSMhfATOWOqtiMk/llrRfIuj9zpwG5gtX+Y+SezNK4bwCXsILdgDaAXOOnomYh6Seyw+gwhed9TPWY75mb9FAuYh2XWBWUS4K4QgrAE3gblYFFlIemFkDjEQJYQ1JMD5WBUdIY2VoXkkhLUQv7NqfidR85De0liYEFaRK7+QqCJDmmuDC0gIqz7nrJhzUjEP6S+O+oWwglz5xTQFaawOLwI3gO8Hjo2ZY6maB72vzPwErgEXkO8MuVaiEkcrgCK/lcfPNkhkAWgL0KYKmZiMIG9Ktn0Bx5G/wDcgXwW8R6avJ41G4HQOufInlas5ZO5+UpnJAU3AFyy7J44xe8BnoOk/JruwYo92bigAAAAASUVORK5CYII=);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none;
+        padding-right: .25rem
+    }
+
+    .mini-audio-player .btn-download .icon-download-done {
+        width: .45rem;
+        height: .45rem;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        display: inline-block;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAYnUlEQVR4Xu2dCbQcVZnH///qqiDIw6CIAm4ZNAFmEJfEBWUIixwIi4ThkdcdwAUEFXVkEUGWiRtxOYgoggKymuoXw4iy6ogsAQnKMooICSicAQ0jI5LwIEaqur45Vf3yyEveUtW13er++hwO0dz7Lf97f9y63be+S+gnVwWkH5vCwvaw7K1BmQpBH2j1AbJF+8/SB4n+dx+IPgABBEMghyDB8L8xBOEQrGAIQfR3q0H/Cbp4JNfg1TioGqRTQI6Bg9V4HWr2NAQyDWT7Hwn/jGkAt07nYYLeIi8AfASQ5QCWR/8Wazme9x7ktViTm98eMqyAdDDY0rD3hmA3AHuADP9t4EeeBPAgBEsB3IFN/Dt5GdYaGKjRISkgkwyPfBAvwQv2eyGYDWI2BLNATjF6VMcMTjwA90bAWHI7XmjdziVYXb08io1YARlDb9kPm2Bq7QCQDQBzAL6k2GEpwJuIgHwACJYiwO1wWrfwSjxVgOdKuVBAhodL+lGDEz46sQ7KXIBbVGokswhW5FcAL4XvDerq0ha05wGR+fZ7IFIH2J/rhjqLCVyYDVkL8EcI5BIM+jcTkMJcG+aoJwGReZiOmv1hgAMAXm/YmJgVjuAJUC6H51/EJXjcrODyj6anAJEBZyYonwNwMMieyj31VBLxAbqwvK9yER5Mba8iBnpikgx/LXsqyD0rMi7mhhlt7nENAn6Jg9495gaaTWRdC4iE+6t67RCAp4CcmY1camW0AnILBAvZ9H/ercp0HSAyGza2qR0BWCeD2KFbB86wvO6FBAsxo3U1FyAwLLZU4XQVINKw94DwIhDbp1JFO3emgOB+BDiai727OzNgXq+uAEQGsC1ofwvkv5kncY9FFO5RwMvge5/lEvxf1bOvNCDR49S29okAzgD40qoPRnfFL6sQ8HTs4F1Q5ceuygIiA/ZusHgRgBndNbG6LJvwsQvyUTb9ZVXMrHKASD9eDcc5B0D4I59+qqBA+9zX5fC8k6v22FUpQKRRmwOhC/JlVZgXGuOGCsgzEMyr0tfClQAkeinpudo3AOsTOukqrkC0icc38KR/Cm+Fb3o2xgMiDbwe4vwExC6mi6nxJVLgXtA7mIvwp0S9Cm5sNCDSqPVDeAnIzQvWRd0VoYDIalAadFs3FOGuEx9GAhK9xfcP5zsgPtxJUtqnagoE52Hz1gm8EOFbj0Z9jAOkfRTduUa/vjVqnuQfjOC3oHcIXTyav7P4HowCRAbs2bBwnf7oF38Au6ulPIuA+3DQ+5UpeRkDiAzU9ofFqwE6poijcZSggMjfARzApn9zCd43cmkEINKoHRm9Cw1aJoiiMZStgHgI5FAOtsJH7VI/pQMidTt8X2NhqSqocwMVkAAiR7PZurTM4EoFRBq1b+uPf2UOfyV8f5qud25ZkZYCSPttP+dSEB8oK3H1WyEFRL7Mpn96GRGXA0jd/hHIuWUkrD6rqkBwAd3Wx4uOvnBApO644fpRdKLqrxsUkC/R9c8oMpNCAZG6fRbIU4tMUH11mQKC49j0zi8qq8IAkbpzLIjvFpWY+ulSBcLTwCKHcbB1VREZFgKINGqHQHiVFmsrYkh7wEdYxI7Yh65/S97Z5g6I1O3dAdwE0s47GbXfSwrI84D/Xrr4TZ5Z5wqI1PFm0F4GcLM8k1DbvaqAPA3478jzgGNugEg/psGx7wb4il4dPs27EAUeR82bldfdJrkAEl1c6Tj3A3hjIRKpkx5XQH4N139XHtc05ANI3VkM4rAeHzVNv1AF5Cy6/mlZu8wcEBmofQSWdWHWgao9VWBCBdrFIPbO+ph8poDIPOyImn1fV97pp/PTfAVE/grH34FX4Omsgs0MEN13ZDUkaiedAvILuv7e6Wy82Ds7QHTfkdWYqJ20Coicyqb/lbRmwv6ZACKN2lGAdXEWAakNVSC1AuEv7QF3zeIahtSADFchWZE6KTWgCmSrwONY4+3CH2NVGrPpAWnYNwPcI00Q2lcVyEmB79P1jk5jOxUgUeVDWD9ME4D2VQVyVSDArDSXjXYMSLv6of0YyFfnmqAaVwXSKCC4n02v47rOnQPSsL8C8LNpYte+qkAhCkjwETZbHX2J1BEgwwcRV2iRt0KGV52kVkBWwfPfwCVYndRUZ4Doxjypztq+dAWC79BtJb5fJjEgujEvfaQ1gE4UCM9qWf4uXITfJemeCBDdmCeRVtuap4DcTdd/R5K4kgGiZUKTaKttTVQgCN6fpOZvbECiewKH7JUgtzIxb41JFYilgMg9bPqzYrVNchZLBpzjYOG8uIa1nSpgrgLyPrr+TXHii7WCSD9qcJw/Anh9HKPaRhUwWgGRW9n0Yx2PigdIo3YEYF1hdNIanCqQTIGZdL17J+sSD5C68yCIHSczpn+vCkQKiNwJYt01av8McAcArzNKHZHr2fQPmCymSQGRRu39gPXjyQzp3/e4AiL3APgUm/6ysZSQOnYAnEGz7rv33jpZ4bkYgDjhMvS2Hh9+TX88BURaIBZipf953gp/IqGGvwkN3/Q73pAytEvoehNW35kQkPats8y9/qnOvqoqIGsQYH8O+rcmyUAG7NNh8YtJ+uTWtuXN4GI8PJ79iQFpOOHG/IjcglPDFVZA1kQFpBf5v+wkCWnYNwHcq5O+mfYR+Tqb/smJAZH9sAm2tFdpCZ9Mh6NLjKWDI9rHH4lXwLOXl/7Ds8hf2PTHfadp3BVEBmoNWNaiLhlRTSMzBdLDsS4UqdtfApl5NcTkqcqe412lMD4gDfsGgPsld6Y9uleB7OCIVpGB2v6wrOtK10twCZveUWPFMSYg0o9XwrafBFkrPXgNwBAFsoUjAuQg9GFz59nyE5QhrPRfPta3cGMD0nA+BaC0u6nLF0wjGK1A9nBEgCyAhYedlhFqB0H/WNe6jQOI/WuAsU88GpGgBpGTAvnAEQFyOGYgcJbnFHgysyI/ZtPf6GryjQBpv2/uPJrMurbuTgXyg8OoPUg0eOJhjb/1hoXmNgakYX8BYKF3UXfn5Kp6VvnCEU3JunM5iCMNUupYut6oqzs2BqTu/Mas8zIGydczoRQAxzxMR81+CKBljKxjHGAcBYg0sCXg/M2YgDWQEhTIH4726mH/BORBJSQ4vkuR59D0t1j/KrfRgNRrB4PW1UYFrcEUqICsgWAOm/5teTqVhr03wJ/n6aNj2xuUKt0AEPubIP+9Y+PasboKiPwdxL50/aV5JiH92A6OfRfA1+Tpp2PbIiez6X99Xf8NANH9R8fCVrpjQY9VA9gWlnOn2a9uy410/TkbAaL7j0rP8BTBFwRHP14HxwlXJ7PrGmywDxlZQUT3HykmWVW7FgiHbd8JcrtKKBXgXRz0oleG1wNE9x+VGLzMglQ4xpVyvTsO1wNE9x+ZzT3jDSkcEw+R/Iyuv+/ICmLOqUrjZ1b1Awy/rQL2y/2r3PDIkm3fAXLb6okmz9D1X/4iIA3n7QDCqhT66WoFdOWIPby2txWvwNPRI5bUa3XQcmN31oYVVEDhSDRogbyHg/6dbUAa9gKA/5HIgDaukAIKR+LBkuDDbLYuHV5BHBdEPbER7VABBRSOzgZJvkrXP2V4BdHicJ2JaHovhaPjERp+gWrdI9azAPs6NlZGR8FDUf1XwV0I5DFYnAEG0yHcGeTuZYRkls+oqNu+HPRvzzMuGcAbwOjbqmr8CBhXDMFDbHo7UQ7HNgiclXH7ld5O8AjoHTZRTVUZqM2FxUsATi093lIC0JUjtexhSdUZ/hRK3d4dZKLSkamdd2pAgvPxXOszvBZrJjMRnRq17UW9t5royjHZ3Ij99y3vjZSGcwyA78XuVFrD4Dy6rU8mcT9cLPkakNGvot3/kbUg9u60HGhcfSQ8eFils1VxE9uwHYMDWZGveB/FM95OvBH/SJpr70AiawHMGa9CYFLdxmsfFfWw7du7bs8xdsLHho9YZ4M8ISsBs7cjAQJ/Jgfx353a7n5ICoVjGchXdToWleoncmL4iBU+XoWPWWZ+RO5g098tbXDdC4nCkXZujN9fFlDqhv9IKMH5bLaOy0KE7oNE4chiXoxrQ+TscA9yLcBJ72rLNZCJjW9UqyhNLN0DicKRZh7E7HthCMjNAGNdiRvTaLbNJJjLZivzOxKlbl8PcuTd42yDLsCayF5s+jfn6UkaeBNg3wZwmzz9GGzbDfcght9BKKfR9c/KWsTqriS6cmQ9FyZ4xLo23IOsADG9MKfJHbl0vfnJu03eo3qQKByTj2qGLURuDR+xVhq9hAruZ9PbJcO0R5mqDiQKR15zYAK794a/gwyB3LwE5/FcigiI2XkWNDMfEoUj3mTJuJXg4XAFWQ1wi4xNZ2xOnsQaf6cNS9Nn6cRcSBSOLMc5kS3BI+EK8udqvFj/YqWJREkmbCx1+0ajzm4V8W1VdJGNvRTg1gnl6vbm91Vhk/7iIIhcA98/hEuQ27Vd5qwkunKUT58srcDXvBvI1BOQKBzlwxEWa5Drw0esWyv3zkRxkPwU5J7FDlZBcIQX2Fj20p45eNjZIA6GgFwHcv/O+pfYqwhI9sMmmGrfUBwkhcLxS5BblTiC5rsWXBw+Yg0CmGd+tGNE2FWQKBzmzUE5JwTkYgBHmRdczIhCSGb4c7kAQcweiZtJ7iuJwpF4UIroIPKF8BHrHJCfLsJfbj5ErsIMf141IVE4cpsXaQ2Ht01Jw/4iwNPT2iq9fyUhUThKnzcTBRDgY+Ej1scAnG90oHGDqxQkCkfcYS2tXRC8nzJg7wWLN5UWRNaOKwGJwpH1sOdiT7wdKfPxGojzRC4OyjJqNCQKR1nTIpHfdYXjwk5St9eC3CSRAdMbGwmJwmH6tBmJLzyo2PSmryteHZbUeUtlgo8baAhJ0z+MgMTtkrRd/K+AFY6k2pbbXq6j6x+4DpDq/lg4uYqL4HpHlAuJwjH5MBnWQuQbbPonDt8PYn8e5JmGhZhlOCVConBkOZAF2oqq6bQBGag1YFmLCnRehqsSIFE4yhjoTHyKzA4vOh0GxJkJC3dnYthsIwVCgl0LqZXbPpWrBw+znneetw2X4H/bgByIzdDnPJ+1DyPtCa5g0/tAnrFJPzZFzXkzB71f5epnPnZGYP8C5Cvz9NN7tmUVXX/LMO8IkAgS4+tjZTpMua8kmUY7hjGZj50g9h0Ao4HUT4YKiNzAph+9AvIiIMZXec9QgLapRXS9wzO3WoBBhSNnkcNDik3/6xsAUjsQtK7J2bVZ5gWXsOlV6qi/wlHAFAowi4PePaMB6cfmcKISQFYBIZjjokKQKBxFTBt5nq4/Uidu5BGrB/chL6pdAUgUjiLgiCiIfkFf5200IL23D6kEJApHUXBElUxOYtM/exxAenAfsr72Bq4kCkeBcLRdzaTrhTceRJ/RK0iv7kMMhUThKBqO0fuPjQDp6X2IYZAoHEXDET1eXcumf9D6nketIG1A7P8AuKCE8MxyWeLjlsJR0lSQ4CNstsIqPyOfjQGZh+1Rc/5QUoiGuQ0uoNv6eJFBKRxFqj3qscFDzd+SV2LUkauNABleRZYBfFdZoZrltzhIFI4SR17kP9n0D90wgnEAcT4B4NslhmuY6/whUThKHvIgOISDravjAXIwpmJT+68gayWHbZD7/CCRedgFNfsWPXhY1nDLM1jpb81b4ccCJHrMqmpR61w1zh6SYTjCy2sMv+UrV2HLNn4hXe/YsYIY8xGrDUitDlpu2ZGb5z87SBQOU0ZXdh/vDszxAfkgXoIX7KcA9pmShjlxpIdE4TBlNOVPdP3XjhfNuIC0VxHnchBHmpKKUXGIfJNN//hOYlI4OlEtpz4iC9n0P9cZIAP2brC4NKfQqm+2A0hknjMLNfkvgFOrL0AXZNDyZnAxHu4IkOHN+t0gZ3aBFPmkIHInfP9wLsFjEzmQBbCw3P4cLJwJ0MknGLWaSAGRq9n0D5moz4SPWBEg82sHQKxrEznutcYiz4E8MayjNFbq0j6dsBjA23tNGqPzDby3cRBhVdFxP5MCEkHScO4HsLPRyZoQnMhqAL8HuByQZwDsCHAnEG8wITyNYT0FRH7Opr/PZJrEA6Q3CstNppX+fVcpIHvS9W+ZLKV4gITvjdSdR/W/hJPJqX9fEQXuo+vFetyNBUj0mDXgfBQWLqiIABqmKjC+AuHNUYOtWBV84gNyDBwM2X/WKn468yqtwPC9H3FziA1ItIrU7ZNBfjWucW2nChingARHsNn6Qdy4kgES1px17D8C3CauA22nChikwO/oem9OEk8iQNp7kdqhsKwlSZxoW1XAEAVGVSyJE1NiQCJIGvZNAPeK40DbqAKGKHAZXe9DSWPpDJB+TINjr9AjE0nl1vblKCBDsP1pvAJPJ/XfESDDG/aFIE9J6lDbqwIlKPBJut55nfjtHBDdsHeit/YpXoHfYbr3Fi5A0InrjgFp70Vq/YD1w04cax9VoCAFEm/M148rFSC6YS9oiNVNZwoILmfT+2Bnndu90gMSXiJZc1akCUL7qgKZKxCerLb96bwST6WxnRqQ4UetowBrVMnGNEFpX1UgvQKyL13/Z2ntZAJIGxKnCWAgbUDaXxVIr4CcQ9c/Ib2dDB6x1gURXX1sOw/qkfgshkVtdKyA4LfwvbdzCVod21ivY2YrSLSKhBUCLfvXIKdkEZzaUAWSKSBDgL8zXfxPsn7jt84UkAiSuvNJEN/KKkC1owrEViDBex5xbWYOSBsS+3qQc+IGoe1UgfQKpC/mN1YM+QDSj5fBsR8A+Jr0iasFVWBSBR7ESm+XsYpPT9pzkga5ADK8H/kX1Oy7AL40bZDaXxUYVwGRv0D8WRzEE3molBsgESQD9l6wcKOe+s1j6NQmIM9D/HeyGZZayueTKyDt/UjtMNAKi6bpRxXITgERH8Q+cUr3pHGaOyDDm/ZTQZ6VJlDtqwqMUiAI+jnYuipvVQoBJIKk4XwPwDF5J6T2e0ABkdPZ9L9cRKbFARIVn7Ov069/ixjWrvbxfbre0UVlWBgg0SrSvpQnvItPb9AtaoS7yY/IT9H05xCQotIqFJAIkn68HLazDMT0opJUP12ggMg98P1/5RL8vchsCgdkPUhuAvHWIpNVXxVVQOQ2+P5+RcMRqlUKIBEkB2Iz9NlXA5y0BH1Fh1XDzkQB+QlW+ofm8St5nPBKA2R4JanBccIykPoeSZzR6rk2+ZyvSiJjqYCsC1QatW8D1ieSBK5tu10BOY2uX/pvZ0YAEq0mDfskCL4G0piYun0KmpmfBAjkCA62XBPiM2oyykBtHsgfgLRNEEdjKFoBWQvBXDb9nxbteTx/RgESrSR1+90AfgTy1aaIpHEUosBjaHkHcTEeKMRbTCfGAdKGBFsB9lUgd4+ZhzarsgIi18D353MJnjMtDSMBiSAJ7xV/2D4TwBkALdOE03iyUEA8gJ+h652bhbU8bBgLyMg3XOE7JURTr37LY/hLtfk4WjiUi727S41iEufGAzL8yPUqwA73JbuaLKbGFlcBuRH0B7gIz8btUVa7SgASQdKPGmx7IYCT9KvgsqZLSr/tl5xOp+tX5p7LygAy8shVt98H8rsA/inlcGn3YhUIiwoexUXeXcW6TeetcoAMryZT4NgnATgN4GbpJNDeuSoQFpEmz8R077xO7+jINb5u2IOMl4MM4LWw7G8CPKRMEdX3GAqICMArAO8kNvHXqmpUyRVkQ7GlYe8B4UUgtq/qQHRV3ILfI/CO5GLcV/W8ugKQkccu2z4BjH430ceuUmamPIOAZ2AH74IqPk6NJVnXADKyie/HK2HbnwHwMZCblzJPes2pyN8AnAvfP5dLsLqb0u86QEZAORhTsal9PIhPAZzaTYNmTC5hVUPgbNj++bwSzxsTV4aBdC0gI6AchD681D4OxPEAt85Qu941JXgCxNcwxbuYl2FtNwvR9YCMgBJVVHGOgcjJILfr5kHNMbc/AMFXsLJ1eVmvwOaY25imewaQ9bOXunMsIB8C+c6iBa+kv7BoAuX7dFtXVjL+FEH3JCDrbeinwbaPADhfyxBtMIsE9wOyCOL/gINYmWKOVbprTwMyalWZ58xCTQ5vF5Do0b1KuLeANBH4l3ExHqr0zM4oeAVkw/9whociHXtvCA8HZW73328iqyC8CiKLMOjfVmTVwozmcK5mFJAJ5JV+TMEU520IJDxmH74K/O4u2OA/BmDZyD+e95usboTNdaaWZFwBSSh8dP6LtXcD3BWMoHmruRcERUUQ7olgEFkGp/VLXomnEqbc080VkJTDL7Nh41V4E6zaDIA7RP9QZgAI/1zMD5Qi4WHA5SBXALIcIivA1nJ4eFRXh3QDrICk02/C3lJH+CbkOmi2g8hU0OqDSB+IPgg2iyAitgCkD+CWbYPyNIRDIIYgsgrEGgiGgPD/kyEIVoHyOMjleMF/oNuOd+Q4JIlN/z8uDC5fplz44QAAAABJRU5ErkJggg==);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain
+    }</style>
+    <style type="text/css">.MathJax_Display {
+        overflow: auto
+    }
+
+    .poster {
+        position: fixed;
+        left: -10000px;
+        top: -10000px;
+        overflow: hidden;
+        padding: 1rem;
+        background: #ececec
+    }
+
+    .richcontent-pre-copy {
+        font-size: 13px;
+        color: #888;
+        position: absolute;
+        right: 1em;
+        top: .2em;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .richcontent-pre-copy .iconfont {
+        font-size: 12px;
+        margin-right: .2em
+    }</style>
+    <style type="text/css">.breadcrumb {
+        padding: 30px 0;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        background: #fff
+    }
+
+    .breadcrumb a.title {
+        color: #e57c39;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb span.title {
+        color: #888;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb .split {
+        color: #ccc;
+        font-size: 10px;
+        margin-right: 5px
+    }</style>
+    <style type="text/css">.comment-item {
+        list-style-position: inside;
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-bottom: 1rem
+    }
+
+    .comment-item a {
+        border-bottom: none
+    }
+
+    .comment-item .avatar {
+        width: 2.625rem;
+        height: 2.625rem;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+        border-radius: 50%
+    }
+
+    .comment-item .info {
+        margin-left: .5rem;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1
+    }
+
+    .comment-item .info .hd {
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .username {
+        color: #888;
+        font-size: 15.25px;
+        font-weight: 400;
+        line-height: 1.2
+    }
+
+    .comment-item .info .hd .control {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .control .btn-share {
+        color: #888;
+        font-size: .75rem;
+        margin-right: 1rem
+    }
+
+    .comment-item .info .hd .control .btn-praise {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        font-size: 15.25px;
+        text-decoration: none
+    }
+
+    .comment-item .info .hd .control .btn-praise i {
+        color: #888;
+        display: inline-block;
+        font-size: .75rem;
+        margin-right: .3rem;
+        margin-top: -.01rem
+    }
+
+    .comment-item .info .hd .control .btn-praise i.on, .comment-item .info .hd .control .btn-praise span {
+        color: #fa8919
+    }
+
+    .comment-item .info .bd {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.6
+    }
+
+    .comment-item .info .time {
+        color: #888;
+        font-size: 9px;
+        line-height: 1
+    }
+
+    .comment-item .info .reply .reply-hd {
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-hd span {
+        margin-left: -12px;
+        color: #888;
+        font-weight: 400
+    }
+
+    .comment-item .info .reply .reply-hd i {
+        color: #fa8919;
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-content {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all
+    }
+
+    .comment-item .info .reply .reply-time {
+        color: #888;
+        font-size: 9px
+    }
+
+    .comment-template {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div data-v-87ffcada="" class="article"><!---->
+        <div data-v-87ffcada="" class="main main-app">
+            <h1 data-v-87ffcada="" class="article-title pd">
+                05丨检索数据：你还在SELECT * 么？
+            </h1>
+            <div data-v-87ffcada="" class="article-info pd"><span data-v-87ffcada="">2019-06-21</span> <span data-v-87ffcada="">陈旸</span></div>
+            <div data-v-87ffcada="" style="display:${article_display}" class="article-content typo common-content pd">
+                <img data-v-87ffcada="" src="https://static001.geekbang.org/resource/image/53/52/537dd8d940bc6a43495680840b80c052.jpg">
+                <!---->
+                <div data-v-87ffcada="" class="mini-audio-player">
+                    <div class="audio-info">
+                        <p><span>朗读人：陈旸&nbsp;&nbsp;&nbsp;</span>
+                        </p></div> <!---->
+                    <audio title="" src="https://static001.geekbang.org/resource/audio/ed/80/ed8254f88dba7a70d210713610061380.mp3" controls="controls"></audio>
+                </div>
+                <div data-v-87ffcada="" id="article-content" class="">
+                    <div class="text"><p>今天我们主要学习如何使用SQL检索数据。如果你已经有了一定的SQL基础，这节课可以跳过，也可以把它当做是个快速的复习。</p><p>SELECT可以说是SQL中最常用的语句了。你可以把SQL语句看作是英语语句，SELECT就是SQL中的关键字之一，除了SELECT之外，还有INSERT、DELETE、UPDATE等关键字，这些关键字是SQL的保留字，这样可以很方便地帮助我们分析理解SQL语句。我们在定义数据库表名、字段名和变量名时，要尽量避免使用这些保留字。</p><p>SELECT的作用是从一个表或多个表中检索出想要的数据行。今天我主要讲解SELECT的基础查询，后面我会讲解如何通过多个表的连接操作进行复杂的查询。</p><p>在这篇文章中，你需要重点掌握以下几方面的内容：</p><ol>
+<li>SELECT查询的基础语法；</li>
+<li>如何排序检索数据；</li>
+<li>什么情况下用<code>SELECT*</code>，如何提升SELECT查询效率？</li>
+</ol><h2>SELECT查询的基础语法</h2><p>SELECT可以帮助我们从一个表或多个表中进行数据查询。我们知道一个数据表是由列（字段名）和行（数据行）组成的，我们要返回满足条件的数据行，就需要在SELECT后面加上我们想要查询的列名，可以是一列，也可以是多个列。如果你不知道所有列名都有什么，也可以检索所有列。</p><!-- [[[read_end]]] --><p>我创建了一个王者荣耀英雄数据表，这张表里一共有69个英雄，23个属性值（不包括英雄名name）。SQL文件见<a href="https://github.com/cystanford/sql_heros_data">Github地址</a>。</p><p><img src="https://static001.geekbang.org/resource/image/00/38/002726e066b15cb91e96828c82825f38.png" alt=""></p><p>数据表中这24个字段（除了id以外），分别代表的含义见下图。</p><p><img src="https://static001.geekbang.org/resource/image/50/44/50284b67a5c5d3f6ecc541f8dbb5ea44.png" alt=""></p><h3>查询列</h3><p>如果我们想要对数据表中的某一列进行检索，在SELECT后面加上这个列的字段名即可。比如我们想要检索数据表中都有哪些英雄。</p><pre><code>SQL：SELECT name FROM heros
+</code></pre><p>运行结果（69条记录）见下图，你可以看到这样就等于单独输出了name这一列。</p><p><img src="https://static001.geekbang.org/resource/image/e5/f9/e5e240cbbe9b9309d39d919bb10f93f9.png" alt=""></p><p>我们也可以对多个列进行检索，在列名之间用逗号(,)分割即可。比如我们想要检索有哪些英雄，他们的最大生命、最大法力、最大物攻和最大物防分别是多少。</p><pre><code>SQL：SELECT name, hp_max, mp_max, attack_max, defense_max FROM heros
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/4b/95/4b1e0691f2fbc80fce8d06ff1bdf7a95.png" alt=""></p><p>这个表中一共有25个字段，除了id和英雄名name以外，还存在23个属性值，如果我们记不住所有的字段名称，可以使用SELECT * 帮我们检索出所有的列：</p><pre><code>SQL：SELECT * FROM heros
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/5a/38/5a1d231ada76cf93db734de757810c38.png" alt=""><br>
+我们在做数据探索的时候，<code>SELECT *</code>还是很有用的，这样我们就不需要写很长的SELECT语句了。但是在生产环境时要尽量避免使用<code>SELECT*</code>，具体原因我会在后面讲。</p><h3>起别名</h3><p>我们在使用SELECT查询的时候，还有一些技巧可以使用，比如你可以给列名起别名。我们在进行检索的时候，可以给英雄名、最大生命、最大法力、最大物攻和最大物防等取别名：</p><pre><code>SQL：SELECT name AS n, hp_max AS hm, mp_max AS mm, attack_max AS am, defense_max AS dm FROM heros
+</code></pre><p>运行结果和上面多列检索的运行结果是一样的，只是将列名改成了n、hm、mm、am和dm。当然这里的列别名只是举例，一般来说起别名的作用是对原有名称进行简化，从而让SQL语句看起来更精简。同样我们也可以对表名称起别名，这个在多表连接查询的时候会用到。</p><h3>查询常数</h3><p>SELECT查询还可以对常数进行查询。对的，就是在SELECT查询结果中增加一列固定的常数列。这列的取值是我们指定的，而不是从数据表中动态取出的。你可能会问为什么我们还要对常数进行查询呢？SQL中的SELECT语法的确提供了这个功能，一般来说我们只从一个表中查询数据，通常不需要增加一个固定的常数列，但如果我们想整合不同的数据源，用常数列作为这个表的标记，就需要查询常数。</p><p>比如说，我们想对heros数据表中的英雄名进行查询，同时增加一列字段<code>platform</code>，这个字段固定值为“王者荣耀”，可以这样写：</p><pre><code>SQL：SELECT '王者荣耀' as platform, name FROM heros
+</code></pre><p>运行结果：（69条记录）</p><p><img src="https://static001.geekbang.org/resource/image/19/3d/1975e19d4e21914a7ebee73daf240f3d.png" alt=""><br>
+在这个SQL语句中，我们虚构了一个<code>platform</code>字段，并且把它设置为固定值“王者荣耀”。</p><p>需要说明的是，如果常数是个字符串，那么使用单引号（‘’）就非常重要了，比如‘王者荣耀’。单引号说明引号中的字符串是个常数，否则SQL会把王者荣耀当成列名进行查询，但实际上数据表里没有这个列名，就会引起错误。如果常数是英文字母，比如<code>'WZRY'</code>也需要加引号。如果常数是个数字，就可以直接写数字，不需要单引号，比如：</p><pre><code>SQL：SELECT 123 as platform, name FROM heros
+</code></pre><p>运行结果：（69条记录）</p><p><img src="https://static001.geekbang.org/resource/image/41/99/41ed73cef49e445d64b8cb748a82c299.png" alt=""></p><h3>去除重复行</h3><p>关于单个表的SELECT查询，还有一个非常实用的操作，就是从结果中去掉重复的行。使用的关键字是DISTINCT。比如我们想要看下heros表中关于攻击范围的取值都有哪些：</p><pre><code>SQL：SELECT DISTINCT attack_range FROM heros
+</code></pre><p>这是运行结果（2条记录），这样我们就能直观地看到攻击范围其实只有两个值，那就是近战和远程。</p><p><img src="https://static001.geekbang.org/resource/image/e6/15/e67c0d2f7b977cb0ff87891eb9adf615.png" alt=""><br>
+如果我们带上英雄名称，会是怎样呢：</p><pre><code>SQL：SELECT DISTINCT attack_range, name FROM heros
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/01/2a/0105eb3f0b74d0ed5e6c2fafca38292a.png" alt=""><br>
+这里有两点需要注意：</p><ol>
+<li>DISTINCT需要放到所有列名的前面，如果写成<code>SELECT name, DISTINCT attack_range FROM heros</code>会报错。</li>
+<li>DISTINCT其实是对后面所有列名的组合进行去重，你能看到最后的结果是69条，因为这69个英雄名称不同，都有攻击范围（attack_range）这个属性值。如果你想要看都有哪些不同的攻击范围（attack_range），只需要写<code>DISTINCT attack_range</code>即可，后面不需要再加其他的列名了。</li>
+</ol><h2>如何排序检索数据</h2><p>当我们检索数据的时候，有时候需要按照某种顺序进行结果的返回，比如我们想要查询所有的英雄，按照最大生命从高到底的顺序进行排列，就需要使用ORDER BY子句。使用ORDER BY子句有以下几个点需要掌握：</p><ol>
+<li>排序的列名：ORDER BY后面可以有一个或多个列名，如果是多个列名进行排序，会按照后面第一个列先进行排序，当第一列的值相同的时候，再按照第二列进行排序，以此类推。</li>
+<li>排序的顺序：ORDER BY后面可以注明排序规则，ASC代表递增排序，DESC代表递减排序。如果没有注明排序规则，默认情况下是按照ASC递增排序。我们很容易理解ORDER BY对数值类型字段的排序规则，但如果排序字段类型为文本数据，就需要参考数据库的设置方式了，这样才能判断A是在B之前，还是在B之后。比如使用MySQL在创建字段的时候设置为BINARY属性，就代表区分大小写。</li>
+<li>非选择列排序：ORDER BY可以使用非选择列进行排序，所以即使在SELECT后面没有这个列名，你同样可以放到ORDER BY后面进行排序。</li>
+<li>ORDER BY的位置：ORDER BY通常位于SELECT语句的最后一条子句，否则会报错。</li>
+</ol><p>在了解了ORDER BY的使用语法之后，我们来看下如何对heros数据表进行排序。</p><p>假设我们想要显示英雄名称及最大生命值，按照最大生命值从高到低的方式进行排序：</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY hp_max DESC 
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/67/08/67714aae8a6ac8e9b356f6975324be08.png" alt=""></p><p>如果想要显示英雄名称及最大生命值，按照第一排序最大法力从低到高，当最大法力值相等的时候则按照第二排序进行，即最大生命值从高到低的方式进行排序：</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY mp_max, hp_max DESC  
+</code></pre><p>运行结果：（69条记录）</p><p><img src="https://static001.geekbang.org/resource/image/e6/3e/e622aa87b86051b0512cb36ba7daf43e.png" alt=""></p><h2>约束返回结果的数量</h2><p>另外在查询过程中，我们可以约束返回结果的数量，使用LIMIT关键字。比如我们想返回英雄名称及最大生命值，按照最大生命值从高到低排序，返回5条记录即可。</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY hp_max DESC LIMIT 5
+</code></pre><p>运行结果（5条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/21/b3/21c4f6e69fd3429b796146675389bbb3.png" alt=""><br>
+有一点需要注意，约束返回结果的数量，在不同的DBMS中使用的关键字可能不同。在MySQL、PostgreSQL、MariaDB和SQLite中使用LIMIT关键字，而且需要放到SELECT语句的最后面。如果是SQL Server和Access，需要使用TOP关键字，比如：</p><pre><code>SQL：SELECT TOP 5 name, hp_max FROM heros ORDER BY hp_max DESC
+</code></pre><p>如果是DB2，使用<code>FETCH FIRST 5 ROWS ONLY</code>这样的关键字：</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY hp_max DESC FETCH FIRST 5 ROWS ONLY
+</code></pre><p>如果是Oracle，你需要基于ROWNUM来统计行数：</p><pre><code>SQL：SELECT name, hp_max FROM heros WHERE ROWNUM &lt;=5 ORDER BY hp_max DESC
+</code></pre><p>需要说明的是，这条语句是先取出来前5条数据行，然后再按照hp_max从高到低的顺序进行排序。但这样产生的结果和上述方法的并不一样。我会在后面讲到子查询，你可以使用<code>SELECT name, hp_max FROM (SELECT name, hp_max FROM heros ORDER BY hp_max) WHERE ROWNUM &lt;=5</code>得到与上述方法一致的结果。</p><p>约束返回结果的数量可以减少数据表的网络传输量，也可以提升查询效率。如果我们知道返回结果只有1条，就可以使用<code>LIMIT 1</code>，告诉SELECT语句只需要返回一条记录即可。这样的好处就是SELECT不需要扫描完整的表，只需要检索到一条符合条件的记录即可返回。</p><h2>SELECT的执行顺序</h2><p>查询是RDBMS中最频繁的操作。我们在理解SELECT语法的时候，还需要了解SELECT执行时的底层原理。只有这样，才能让我们对SQL有更深刻的认识。</p><p>其中你需要记住SELECT查询时的两个顺序：</p><p>1.关键字的顺序是不能颠倒的：</p><pre><code>SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ...
+</code></pre><p>2.SELECT语句的执行顺序（在MySQL和Oracle中，SELECT执行顺序基本相同）：</p><pre><code>FROM &gt; WHERE &gt; GROUP BY &gt; HAVING &gt; SELECT的字段 &gt; DISTINCT &gt; ORDER BY &gt; LIMIT
+</code></pre><p>比如你写了一个SQL语句，那么它的关键字顺序和执行顺序是下面这样的：</p><pre><code>SELECT DISTINCT player_id, player_name, count(*) as num #顺序5
+FROM player JOIN team ON player.team_id = team.team_id #顺序1
+WHERE height &gt; 1.80 #顺序2
+GROUP BY player.team_id #顺序3
+HAVING num &gt; 2 #顺序4
+ORDER BY num DESC #顺序6
+LIMIT 2 #顺序7
+</code></pre><p>在SELECT语句执行这些步骤的时候，每个步骤都会产生一个虚拟表，然后将这个虚拟表传入下一个步骤中作为输入。需要注意的是，这些步骤隐含在SQL的执行过程中，对于我们来说是不可见的。</p><p>我来详细解释一下SQL的执行原理。</p><p>首先，你可以注意到，SELECT是先执行FROM这一步的。在这个阶段，如果是多张表联查，还会经历下面的几个步骤：</p><ol>
+<li>首先先通过CROSS JOIN求笛卡尔积，相当于得到虚拟表 vt（virtual table）1-1；</li>
+<li>通过ON进行筛选，在虚拟表vt1-1的基础上进行筛选，得到虚拟表 vt1-2；</li>
+<li>添加外部行。如果我们使用的是左连接、右链接或者全连接，就会涉及到外部行，也就是在虚拟表vt1-2的基础上增加外部行，得到虚拟表vt1-3。</li>
+</ol><p>当然如果我们操作的是两张以上的表，还会重复上面的步骤，直到所有表都被处理完为止。这个过程得到是我们的原始数据。</p><p>当我们拿到了查询数据表的原始数据，也就是最终的虚拟表vt1，就可以在此基础上再进行WHERE阶段。在这个阶段中，会根据vt1表的结果进行筛选过滤，得到虚拟表vt2。</p><p>然后进入第三步和第四步，也就是GROUP和 HAVING阶段。在这个阶段中，实际上是在虚拟表vt2的基础上进行分组和分组过滤，得到中间的虚拟表vt3和vt4。</p><p>当我们完成了条件筛选部分之后，就可以筛选表中提取的字段，也就是进入到SELECT和DISTINCT阶段。</p><p>首先在SELECT阶段会提取想要的字段，然后在DISTINCT阶段过滤掉重复的行，分别得到中间的虚拟表vt5-1和vt5-2。</p><p>当我们提取了想要的字段数据之后，就可以按照指定的字段进行排序，也就是ORDER BY阶段，得到虚拟表vt6。</p><p>最后在vt6的基础上，取出指定行的记录，也就是LIMIT阶段，得到最终的结果，对应的是虚拟表vt7。</p><p>当然我们在写SELECT语句的时候，不一定存在所有的关键字，相应的阶段就会省略。</p><p>同时因为SQL是一门类似英语的结构化查询语言，所以我们在写SELECT语句的时候，还要注意相应的关键字顺序，所谓底层运行的原理，就是我们刚才讲到的执行顺序。</p><h2>什么情况下用SELECT*，如何提升SELECT查询效率？</h2><p>当我们初学SELECT语法的时候，经常会使用<code>SELECT *</code>，因为使用方便。实际上这样也增加了数据库的负担。所以如果我们不需要把所有列都检索出来，还是先指定出所需的列名，因为写清列名，可以减少数据表查询的网络传输量，而且考虑到在实际的工作中，我们往往不需要全部的列名，因此你需要养成良好的习惯，写出所需的列名。</p><p>如果我们只是练习，或者对数据表进行探索，那么是可以使用<code>SELECT *</code>的。它的查询效率和把所有列名都写出来再进行查询的效率相差并不大。这样可以方便你对数据表有个整体的认知。但是在生产环境下，不推荐你直接使用<code>SELECT *</code>进行查询。</p><h2>总结</h2><p>今天我对SELECT的基础语法进行了讲解，SELECT是SQL的基础。但不同阶段看SELECT都会有新的体会。当你第一次学习的时候，关注的往往是如何使用它，或者语法是否正确。再看的时候，可能就会更关注SELECT的查询效率，以及不同DBMS之间的差别。</p><p>在我们的日常工作中，很多人都可以写出SELECT语句，但是执行的效率却相差很大。产生这种情况的原因主要有两个，一个是习惯的培养，比如大部分初学者会经常使用<code>SELECT *</code>，而好的习惯则是只查询所需要的列；另一个对SQL查询的执行顺序及查询效率的关注，比如当你知道只有1条记录的时候，就可以使用<code>LIMIT 1</code>来进行约束，从而提升查询效率。</p><p><img src="https://static001.geekbang.org/resource/image/e1/f5/e114d7caa4c080991bb98f5f91deacf5.png" alt=""></p><p>最后留两道思考题吧，我今天对单表的SELECT查询进行了讲解，你之前可能也有学习使用的经验，可以说下你对SELECT使用的理解吗？另外，我今天使用heros数据表进行了举例，请你编写SQL语句，对英雄名称和最大法力进行查询，按照最大生命从高到低排序，只返回5条记录即可。你可以说明下使用的DBMS及相应的SQL语句。</p><p>欢迎你把这篇文章分享给你的朋友或者同事，与他们一起来分析一下王者荣耀的数据，互相切磋交流。</p><p><img src="https://static001.geekbang.org/resource/image/4f/58/4fd70a3267ad5aeb8c531f0996642f58.jpg" alt=""></p></div>
+                </div> <!---->
+                <div data-v-87ffcada="" class="copyright">
+                    ©版权归极客邦科技所有，未经许可不得转载
+                </div>
+            </div>
+            <div style="display: none">
+                <script src="https://cdn.jsdelivr.net/npm/hls.js"></script>
+                <video id="video" controls="" width="100%">
+                </video>
+                <script>
+                    var video=document.getElementById("video");
+                    if(Hls.isSupported()){
+                        var hls=new Hls();hls.loadSource("${video_url}");
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MANIFEST_PARSED,function(){})
+                    }else{
+                        if(video.canPlayType("application/vnd.apple.mpegurl")){
+                            video.src="${video_url}";video.addEventListener("loadedmetadata",function(){})
+                        }
+                    };
+                </script>
+                <div data-v-87ffcada="" id="article-content" class="">
+                        <div class="text"><p>今天我们主要学习如何使用SQL检索数据。如果你已经有了一定的SQL基础，这节课可以跳过，也可以把它当做是个快速的复习。</p><p>SELECT可以说是SQL中最常用的语句了。你可以把SQL语句看作是英语语句，SELECT就是SQL中的关键字之一，除了SELECT之外，还有INSERT、DELETE、UPDATE等关键字，这些关键字是SQL的保留字，这样可以很方便地帮助我们分析理解SQL语句。我们在定义数据库表名、字段名和变量名时，要尽量避免使用这些保留字。</p><p>SELECT的作用是从一个表或多个表中检索出想要的数据行。今天我主要讲解SELECT的基础查询，后面我会讲解如何通过多个表的连接操作进行复杂的查询。</p><p>在这篇文章中，你需要重点掌握以下几方面的内容：</p><ol>
+<li>SELECT查询的基础语法；</li>
+<li>如何排序检索数据；</li>
+<li>什么情况下用<code>SELECT*</code>，如何提升SELECT查询效率？</li>
+</ol><h2>SELECT查询的基础语法</h2><p>SELECT可以帮助我们从一个表或多个表中进行数据查询。我们知道一个数据表是由列（字段名）和行（数据行）组成的，我们要返回满足条件的数据行，就需要在SELECT后面加上我们想要查询的列名，可以是一列，也可以是多个列。如果你不知道所有列名都有什么，也可以检索所有列。</p><!-- [[[read_end]]] --><p>我创建了一个王者荣耀英雄数据表，这张表里一共有69个英雄，23个属性值（不包括英雄名name）。SQL文件见<a href="https://github.com/cystanford/sql_heros_data">Github地址</a>。</p><p><img src="https://static001.geekbang.org/resource/image/00/38/002726e066b15cb91e96828c82825f38.png" alt=""></p><p>数据表中这24个字段（除了id以外），分别代表的含义见下图。</p><p><img src="https://static001.geekbang.org/resource/image/50/44/50284b67a5c5d3f6ecc541f8dbb5ea44.png" alt=""></p><h3>查询列</h3><p>如果我们想要对数据表中的某一列进行检索，在SELECT后面加上这个列的字段名即可。比如我们想要检索数据表中都有哪些英雄。</p><pre><code>SQL：SELECT name FROM heros
+</code></pre><p>运行结果（69条记录）见下图，你可以看到这样就等于单独输出了name这一列。</p><p><img src="https://static001.geekbang.org/resource/image/e5/f9/e5e240cbbe9b9309d39d919bb10f93f9.png" alt=""></p><p>我们也可以对多个列进行检索，在列名之间用逗号(,)分割即可。比如我们想要检索有哪些英雄，他们的最大生命、最大法力、最大物攻和最大物防分别是多少。</p><pre><code>SQL：SELECT name, hp_max, mp_max, attack_max, defense_max FROM heros
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/4b/95/4b1e0691f2fbc80fce8d06ff1bdf7a95.png" alt=""></p><p>这个表中一共有25个字段，除了id和英雄名name以外，还存在23个属性值，如果我们记不住所有的字段名称，可以使用SELECT * 帮我们检索出所有的列：</p><pre><code>SQL：SELECT * FROM heros
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/5a/38/5a1d231ada76cf93db734de757810c38.png" alt=""><br>
+我们在做数据探索的时候，<code>SELECT *</code>还是很有用的，这样我们就不需要写很长的SELECT语句了。但是在生产环境时要尽量避免使用<code>SELECT*</code>，具体原因我会在后面讲。</p><h3>起别名</h3><p>我们在使用SELECT查询的时候，还有一些技巧可以使用，比如你可以给列名起别名。我们在进行检索的时候，可以给英雄名、最大生命、最大法力、最大物攻和最大物防等取别名：</p><pre><code>SQL：SELECT name AS n, hp_max AS hm, mp_max AS mm, attack_max AS am, defense_max AS dm FROM heros
+</code></pre><p>运行结果和上面多列检索的运行结果是一样的，只是将列名改成了n、hm、mm、am和dm。当然这里的列别名只是举例，一般来说起别名的作用是对原有名称进行简化，从而让SQL语句看起来更精简。同样我们也可以对表名称起别名，这个在多表连接查询的时候会用到。</p><h3>查询常数</h3><p>SELECT查询还可以对常数进行查询。对的，就是在SELECT查询结果中增加一列固定的常数列。这列的取值是我们指定的，而不是从数据表中动态取出的。你可能会问为什么我们还要对常数进行查询呢？SQL中的SELECT语法的确提供了这个功能，一般来说我们只从一个表中查询数据，通常不需要增加一个固定的常数列，但如果我们想整合不同的数据源，用常数列作为这个表的标记，就需要查询常数。</p><p>比如说，我们想对heros数据表中的英雄名进行查询，同时增加一列字段<code>platform</code>，这个字段固定值为“王者荣耀”，可以这样写：</p><pre><code>SQL：SELECT '王者荣耀' as platform, name FROM heros
+</code></pre><p>运行结果：（69条记录）</p><p><img src="https://static001.geekbang.org/resource/image/19/3d/1975e19d4e21914a7ebee73daf240f3d.png" alt=""><br>
+在这个SQL语句中，我们虚构了一个<code>platform</code>字段，并且把它设置为固定值“王者荣耀”。</p><p>需要说明的是，如果常数是个字符串，那么使用单引号（‘’）就非常重要了，比如‘王者荣耀’。单引号说明引号中的字符串是个常数，否则SQL会把王者荣耀当成列名进行查询，但实际上数据表里没有这个列名，就会引起错误。如果常数是英文字母，比如<code>'WZRY'</code>也需要加引号。如果常数是个数字，就可以直接写数字，不需要单引号，比如：</p><pre><code>SQL：SELECT 123 as platform, name FROM heros
+</code></pre><p>运行结果：（69条记录）</p><p><img src="https://static001.geekbang.org/resource/image/41/99/41ed73cef49e445d64b8cb748a82c299.png" alt=""></p><h3>去除重复行</h3><p>关于单个表的SELECT查询，还有一个非常实用的操作，就是从结果中去掉重复的行。使用的关键字是DISTINCT。比如我们想要看下heros表中关于攻击范围的取值都有哪些：</p><pre><code>SQL：SELECT DISTINCT attack_range FROM heros
+</code></pre><p>这是运行结果（2条记录），这样我们就能直观地看到攻击范围其实只有两个值，那就是近战和远程。</p><p><img src="https://static001.geekbang.org/resource/image/e6/15/e67c0d2f7b977cb0ff87891eb9adf615.png" alt=""><br>
+如果我们带上英雄名称，会是怎样呢：</p><pre><code>SQL：SELECT DISTINCT attack_range, name FROM heros
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/01/2a/0105eb3f0b74d0ed5e6c2fafca38292a.png" alt=""><br>
+这里有两点需要注意：</p><ol>
+<li>DISTINCT需要放到所有列名的前面，如果写成<code>SELECT name, DISTINCT attack_range FROM heros</code>会报错。</li>
+<li>DISTINCT其实是对后面所有列名的组合进行去重，你能看到最后的结果是69条，因为这69个英雄名称不同，都有攻击范围（attack_range）这个属性值。如果你想要看都有哪些不同的攻击范围（attack_range），只需要写<code>DISTINCT attack_range</code>即可，后面不需要再加其他的列名了。</li>
+</ol><h2>如何排序检索数据</h2><p>当我们检索数据的时候，有时候需要按照某种顺序进行结果的返回，比如我们想要查询所有的英雄，按照最大生命从高到底的顺序进行排列，就需要使用ORDER BY子句。使用ORDER BY子句有以下几个点需要掌握：</p><ol>
+<li>排序的列名：ORDER BY后面可以有一个或多个列名，如果是多个列名进行排序，会按照后面第一个列先进行排序，当第一列的值相同的时候，再按照第二列进行排序，以此类推。</li>
+<li>排序的顺序：ORDER BY后面可以注明排序规则，ASC代表递增排序，DESC代表递减排序。如果没有注明排序规则，默认情况下是按照ASC递增排序。我们很容易理解ORDER BY对数值类型字段的排序规则，但如果排序字段类型为文本数据，就需要参考数据库的设置方式了，这样才能判断A是在B之前，还是在B之后。比如使用MySQL在创建字段的时候设置为BINARY属性，就代表区分大小写。</li>
+<li>非选择列排序：ORDER BY可以使用非选择列进行排序，所以即使在SELECT后面没有这个列名，你同样可以放到ORDER BY后面进行排序。</li>
+<li>ORDER BY的位置：ORDER BY通常位于SELECT语句的最后一条子句，否则会报错。</li>
+</ol><p>在了解了ORDER BY的使用语法之后，我们来看下如何对heros数据表进行排序。</p><p>假设我们想要显示英雄名称及最大生命值，按照最大生命值从高到低的方式进行排序：</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY hp_max DESC 
+</code></pre><p>运行结果（69条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/67/08/67714aae8a6ac8e9b356f6975324be08.png" alt=""></p><p>如果想要显示英雄名称及最大生命值，按照第一排序最大法力从低到高，当最大法力值相等的时候则按照第二排序进行，即最大生命值从高到低的方式进行排序：</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY mp_max, hp_max DESC  
+</code></pre><p>运行结果：（69条记录）</p><p><img src="https://static001.geekbang.org/resource/image/e6/3e/e622aa87b86051b0512cb36ba7daf43e.png" alt=""></p><h2>约束返回结果的数量</h2><p>另外在查询过程中，我们可以约束返回结果的数量，使用LIMIT关键字。比如我们想返回英雄名称及最大生命值，按照最大生命值从高到低排序，返回5条记录即可。</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY hp_max DESC LIMIT 5
+</code></pre><p>运行结果（5条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/21/b3/21c4f6e69fd3429b796146675389bbb3.png" alt=""><br>
+有一点需要注意，约束返回结果的数量，在不同的DBMS中使用的关键字可能不同。在MySQL、PostgreSQL、MariaDB和SQLite中使用LIMIT关键字，而且需要放到SELECT语句的最后面。如果是SQL Server和Access，需要使用TOP关键字，比如：</p><pre><code>SQL：SELECT TOP 5 name, hp_max FROM heros ORDER BY hp_max DESC
+</code></pre><p>如果是DB2，使用<code>FETCH FIRST 5 ROWS ONLY</code>这样的关键字：</p><pre><code>SQL：SELECT name, hp_max FROM heros ORDER BY hp_max DESC FETCH FIRST 5 ROWS ONLY
+</code></pre><p>如果是Oracle，你需要基于ROWNUM来统计行数：</p><pre><code>SQL：SELECT name, hp_max FROM heros WHERE ROWNUM &lt;=5 ORDER BY hp_max DESC
+</code></pre><p>需要说明的是，这条语句是先取出来前5条数据行，然后再按照hp_max从高到低的顺序进行排序。但这样产生的结果和上述方法的并不一样。我会在后面讲到子查询，你可以使用<code>SELECT name, hp_max FROM (SELECT name, hp_max FROM heros ORDER BY hp_max) WHERE ROWNUM &lt;=5</code>得到与上述方法一致的结果。</p><p>约束返回结果的数量可以减少数据表的网络传输量，也可以提升查询效率。如果我们知道返回结果只有1条，就可以使用<code>LIMIT 1</code>，告诉SELECT语句只需要返回一条记录即可。这样的好处就是SELECT不需要扫描完整的表，只需要检索到一条符合条件的记录即可返回。</p><h2>SELECT的执行顺序</h2><p>查询是RDBMS中最频繁的操作。我们在理解SELECT语法的时候，还需要了解SELECT执行时的底层原理。只有这样，才能让我们对SQL有更深刻的认识。</p><p>其中你需要记住SELECT查询时的两个顺序：</p><p>1.关键字的顺序是不能颠倒的：</p><pre><code>SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ...
+</code></pre><p>2.SELECT语句的执行顺序（在MySQL和Oracle中，SELECT执行顺序基本相同）：</p><pre><code>FROM &gt; WHERE &gt; GROUP BY &gt; HAVING &gt; SELECT的字段 &gt; DISTINCT &gt; ORDER BY &gt; LIMIT
+</code></pre><p>比如你写了一个SQL语句，那么它的关键字顺序和执行顺序是下面这样的：</p><pre><code>SELECT DISTINCT player_id, player_name, count(*) as num #顺序5
+FROM player JOIN team ON player.team_id = team.team_id #顺序1
+WHERE height &gt; 1.80 #顺序2
+GROUP BY player.team_id #顺序3
+HAVING num &gt; 2 #顺序4
+ORDER BY num DESC #顺序6
+LIMIT 2 #顺序7
+</code></pre><p>在SELECT语句执行这些步骤的时候，每个步骤都会产生一个虚拟表，然后将这个虚拟表传入下一个步骤中作为输入。需要注意的是，这些步骤隐含在SQL的执行过程中，对于我们来说是不可见的。</p><p>我来详细解释一下SQL的执行原理。</p><p>首先，你可以注意到，SELECT是先执行FROM这一步的。在这个阶段，如果是多张表联查，还会经历下面的几个步骤：</p><ol>
+<li>首先先通过CROSS JOIN求笛卡尔积，相当于得到虚拟表 vt（virtual table）1-1；</li>
+<li>通过ON进行筛选，在虚拟表vt1-1的基础上进行筛选，得到虚拟表 vt1-2；</li>
+<li>添加外部行。如果我们使用的是左连接、右链接或者全连接，就会涉及到外部行，也就是在虚拟表vt1-2的基础上增加外部行，得到虚拟表vt1-3。</li>
+</ol><p>当然如果我们操作的是两张以上的表，还会重复上面的步骤，直到所有表都被处理完为止。这个过程得到是我们的原始数据。</p><p>当我们拿到了查询数据表的原始数据，也就是最终的虚拟表vt1，就可以在此基础上再进行WHERE阶段。在这个阶段中，会根据vt1表的结果进行筛选过滤，得到虚拟表vt2。</p><p>然后进入第三步和第四步，也就是GROUP和 HAVING阶段。在这个阶段中，实际上是在虚拟表vt2的基础上进行分组和分组过滤，得到中间的虚拟表vt3和vt4。</p><p>当我们完成了条件筛选部分之后，就可以筛选表中提取的字段，也就是进入到SELECT和DISTINCT阶段。</p><p>首先在SELECT阶段会提取想要的字段，然后在DISTINCT阶段过滤掉重复的行，分别得到中间的虚拟表vt5-1和vt5-2。</p><p>当我们提取了想要的字段数据之后，就可以按照指定的字段进行排序，也就是ORDER BY阶段，得到虚拟表vt6。</p><p>最后在vt6的基础上，取出指定行的记录，也就是LIMIT阶段，得到最终的结果，对应的是虚拟表vt7。</p><p>当然我们在写SELECT语句的时候，不一定存在所有的关键字，相应的阶段就会省略。</p><p>同时因为SQL是一门类似英语的结构化查询语言，所以我们在写SELECT语句的时候，还要注意相应的关键字顺序，所谓底层运行的原理，就是我们刚才讲到的执行顺序。</p><h2>什么情况下用SELECT*，如何提升SELECT查询效率？</h2><p>当我们初学SELECT语法的时候，经常会使用<code>SELECT *</code>，因为使用方便。实际上这样也增加了数据库的负担。所以如果我们不需要把所有列都检索出来，还是先指定出所需的列名，因为写清列名，可以减少数据表查询的网络传输量，而且考虑到在实际的工作中，我们往往不需要全部的列名，因此你需要养成良好的习惯，写出所需的列名。</p><p>如果我们只是练习，或者对数据表进行探索，那么是可以使用<code>SELECT *</code>的。它的查询效率和把所有列名都写出来再进行查询的效率相差并不大。这样可以方便你对数据表有个整体的认知。但是在生产环境下，不推荐你直接使用<code>SELECT *</code>进行查询。</p><h2>总结</h2><p>今天我对SELECT的基础语法进行了讲解，SELECT是SQL的基础。但不同阶段看SELECT都会有新的体会。当你第一次学习的时候，关注的往往是如何使用它，或者语法是否正确。再看的时候，可能就会更关注SELECT的查询效率，以及不同DBMS之间的差别。</p><p>在我们的日常工作中，很多人都可以写出SELECT语句，但是执行的效率却相差很大。产生这种情况的原因主要有两个，一个是习惯的培养，比如大部分初学者会经常使用<code>SELECT *</code>，而好的习惯则是只查询所需要的列；另一个对SQL查询的执行顺序及查询效率的关注，比如当你知道只有1条记录的时候，就可以使用<code>LIMIT 1</code>来进行约束，从而提升查询效率。</p><p><img src="https://static001.geekbang.org/resource/image/e1/f5/e114d7caa4c080991bb98f5f91deacf5.png" alt=""></p><p>最后留两道思考题吧，我今天对单表的SELECT查询进行了讲解，你之前可能也有学习使用的经验，可以说下你对SELECT使用的理解吗？另外，我今天使用heros数据表进行了举例，请你编写SQL语句，对英雄名称和最大法力进行查询，按照最大生命从高到低排序，只返回5条记录即可。你可以说明下使用的DBMS及相应的SQL语句。</p><p>欢迎你把这篇文章分享给你的朋友或者同事，与他们一起来分析一下王者荣耀的数据，互相切磋交流。</p><p><img src="https://static001.geekbang.org/resource/image/4f/58/4fd70a3267ad5aeb8c531f0996642f58.jpg" alt=""></p></div>
+                </div>
+            </div>
+            <div data-v-87ffcada="" class="article-comments pd"><h2 data-v-87ffcada=""><span data-v-87ffcada="">精选留言</span></h2>
+                <ul data-v-87ffcada="">
+
+                    <li data-v-87ffcada="" class="comment-item comment-template">
+                        <img src="${user_header}" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">${user_name}</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">${like_count}</span></a></div>
+                            </div>
+                            <div class="bd comment-content">${comment_content}
+                            </div>
+                            <span class="time">${comment_ctime}</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">${user_name}</span></div>
+                                <p class="reply-content">${content}</p>
+                                <p class="reply-time">${ctime}</p></div>
+                        </div>
+                    </li>
+                <li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/ce/60/7d17522d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">君莫惜</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">53</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT COUNT(*)  ＞ SELECT COUNT(1) ＞ SELECT COUNT(具体字段)<br><br>之前看到的，好像Mysql对count(*)做了单独的优化</div>
+                            <span class="time">2019-06-22</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">关于COUNT()的效率是一个很好的问题，欢迎探讨：<br>在MySQL InnoDB存储引擎中，COUNT(*)和COUNT(1)都是对的所有结果进行的COUNT。如果有WHERE子句，则是对所有符合筛选条件的数据行进行统计。如果没有WHERE子句，则是对数据表的数据行数进行统计。<br>因此COUNT(*)和COUNT(1)本质上没有区别，执行的复杂度都是O(N)，也就是采用全表扫描，进行循环+计数的方式进行统计。<br>如果是MySQL MyISAM存储引擎，统计数据表的行数只需要O(1)复杂度，这是因为每张MyISAM的数据表都有一个meta信息有存储了row_count值。而一致性由表级锁来保证。而InnoDB支持事务，采用行级锁和MVCC机制，所以无法像MyISAM一样，只维护一个row_count变量。因此就需要采用扫描全表，进行循环+计数的方式来完成统计。<br>需要注意的是，在实际执行中COUNT(*)和COUNT(1)执行时间可能略有差别，不过你还是可以把这两个在执行效率上看成是相等的。<br><br>另外在InnoDB引擎中，如果是采用COUNT(*)和COUNT(1)来统计数据行数，要尽量采用二级索引。<br>因为主键采用的索引是聚簇索引，聚簇索引包含的信息多，明显会大于二级索引（非聚簇索引）。<br>对于查找具体的行来说，采用主键索引效率更高。而对于COUNT(*)和COUNT(1)这种，不需要查找具体的行，只是统计行数来说，系统会自动采用占用空间更小的二级索引来进行统计。<br>如果有多个二级索引的时候，会使用key_len小的二级索引进行扫描。当没有二级索引的时候，才会采用主键索引来进行统计。<br><br>优化总结：<br>1、一般情况下：COUNT(*) = COUNT(1) &gt; COUNT(字段)<br>所以尽量使用COUNT(*)，当然如果你要统计的是就是某个字段的非空数据行数，那另当别论。毕竟执行效率比较的前提是要结果一样才行。<br>2、如果要统计COUNT(*)，尽量在数据表上建立二级索引，系统会自动采用key_len小的二级索引进行扫描，这样当我们使用SELECT COUNT(*)的时候效率就会提升，有时候提升几倍甚至更高都是有可能的。<br></p>
+                                <p class="reply-time">2019-06-23</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/59/18/f9ee3c42.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">C先生丶陈</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">6</span></a></div>
+                            </div>
+                            <div class="bd comment-content">做一个搬运工，下面是从老师GitHub上找到的建表语句：<br>SET NAMES utf8mb4;<br>SET FOREIGN_KEY_CHECKS = 0;<br><br>-- ----------------------------<br>-- Table structure for heros<br>-- ----------------------------<br>DROP TABLE IF EXISTS `heros`;<br>CREATE TABLE `heros`  (<br>  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,<br>  `hp_max` float NULL DEFAULT NULL,<br>  `hp_growth` float NULL DEFAULT NULL,<br>  `hp_start` float NULL DEFAULT NULL,<br>  `mp_max` float NULL DEFAULT NULL,<br>  `mp_growth` float NULL DEFAULT NULL,<br>  `mp_start` float NULL DEFAULT NULL,<br>  `attack_max` float NULL DEFAULT NULL,<br>  `attack_growth` float NULL DEFAULT NULL,<br>  `attack_start` float NULL DEFAULT NULL,<br>  `defense_max` float NULL DEFAULT NULL,<br>  `defense_growth` float NULL DEFAULT NULL,<br>  `defense_start` float NULL DEFAULT NULL,<br>  `hp_5s_max` float NULL DEFAULT NULL,<br>  `hp_5s_growth` float NULL DEFAULT NULL,<br>  `hp_5s_start` float NULL DEFAULT NULL,<br>  `mp_5s_max` float NULL DEFAULT NULL,<br>  `mp_5s_growth` float NULL DEFAULT NULL,<br>  `mp_5s_start` float NULL DEFAULT NULL,<br>  `attack_speed_max` float NULL DEFAULT NULL,<br>  `attack_range` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,<br>  `role_main` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,<br>  `role_assist` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,<br>  `birthdate` datetime(0) NULL DEFAULT NULL,<br>  PRIMARY KEY (`name`) USING BTREE<br>) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;<br></div>
+                            <span class="time">2019-06-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/32/b5/7f1e4280.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Shame</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">23</span></a></div>
+                            </div>
+                            <div class="bd comment-content">先交作业 select name,mp_max from heros order by hp_max desc limit 5;<br> 然后就是楼下一个同学问的问题，我也有些疑惑，就是这个<br>SELECT DISTINCT player_id, player_name, count(*) as num # 顺序 5<br>FROM player JOIN team ON player.team_id = team.team_id # 顺序 1<br>WHERE height &gt; 1.80 # 顺序 2<br>GROUP BY player.team_id # 顺序 3<br>HAVING num &gt; 2 # 顺序 4<br>ORDER BY num DESC # 顺序 6<br>LIMIT 2 # 顺序 7<br><br>对于这个语句，我还有一点疑问：既然HAVING的执行是在SELECT之前的，那么按理说在执行HAVING的时候SELECT中的count(*)应该还没有被计算出来才对啊，为什么在HAVING中就直接使用了num&gt;2这个条件呢？<br>希望老师百忙之中能抽空帮忙解释一下，谢谢老师</div>
+                            <span class="time">2019-06-27</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">很好的问题，实际上在Step4和Step5之间，还有个聚集函数的计算。<br>如果加上这个计算过程，完整的顺序是：<br>1、FROM子句组装数据<br>2、WHERE子句进行条件筛选<br>3、GROUP BY分组 <br>4、使用聚集函数进行计算； <br>5、HAVING筛选分组； <br>6、计算所有的表达式； <br>7、SELECT 的字段；<br>8、ORDER BY排序<br>9、LIMIT筛选<br>所以中间有两个过程是需要计算的：聚集函数 和 表达式。其余是关键字的执行顺序，如文章所示。</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fc/90/c9df0459.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ack</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">13</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师好，请问能把建表的sql给出来吗？</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/18/00/23/17868694.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Samson</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">8</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，可以说下SELECT语句执行原理那个视例中HAVING关键字的作用嘛？</div>
+                            <span class="time">2019-06-24</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">HAVING一般配合GROUP BY使用，作为筛选分组的条件。作用实际上和WHERE一样，都适用于限定条件。只是WHERE子句用于对查询结果的分组前，通过WHERE来过滤。而HAVING子句用于筛选满足条件的组，用于在分组之后进行过滤。这个我在后面也会讲到。</p>
+                                <p class="reply-time">2019-06-24</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/2d/3a/ffa02c6d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">hogen</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">7</span></a></div>
+                            </div>
+                            <div class="bd comment-content">-- 注释版本<br>CREATE TABLE `heros` (<br>  `id` SMALLINT NOT NULL PRIMARY KEY AUTO_INCREMENT COMMENT '主键',<br>  `name` VARCHAR(255) DEFAULT NULL COMMENT '英雄名称',<br>  `hp_max` FLOAT NULL DEFAULT NULL COMMENT '最大生命',<br>  `hp_growth` FLOAT NULL DEFAULT NULL COMMENT '生命成长',<br>  `hp_start` FLOAT NULL DEFAULT NULL COMMENT '初始生命',<br>  `mp_max` FLOAT NULL DEFAULT NULL COMMENT '最大法力',<br>  `mp_growth` FLOAT NULL DEFAULT NULL COMMENT '法力成长',<br>  `mp_start` FLOAT NULL DEFAULT NULL COMMENT '初始法力',<br>  `attack_max` FLOAT NULL DEFAULT NULL COMMENT '最高物攻',<br>  `attack_growth` FLOAT NULL DEFAULT NULL COMMENT '物攻成长',<br>  `attack_start` FLOAT NULL DEFAULT NULL COMMENT '初始物攻',<br>  `defense_max` FLOAT NULL DEFAULT NULL COMMENT '最大物防',<br>  `defense_growth` FLOAT NULL DEFAULT NULL COMMENT '物防成长',<br>  `defense_start` FLOAT NULL DEFAULT NULL COMMENT '初始物防',<br>  `hp_5s_max` FLOAT NULL DEFAULT NULL COMMENT '最大每5秒回血',<br>  `hp_5s_growth` FLOAT NULL DEFAULT NULL COMMENT '每5秒回血成长',<br>  `hp_5s_start` FLOAT NULL DEFAULT NULL COMMENT '初始每5秒回血',<br>  `mp_5s_max` FLOAT NULL DEFAULT NULL COMMENT '最大每5秒回蓝',<br>  `mp_5s_growth` FLOAT NULL DEFAULT NULL COMMENT '每5秒回蓝成长',<br>  `mp_5s_start` FLOAT NULL DEFAULT NULL COMMENT '初始每5秒回蓝',<br>  `attack_speed_max` FLOAT NULL DEFAULT NULL COMMENT '最大攻速',<br>  `attack_range` VARCHAR(255) COMMENT '攻击范围',<br>  `role_main` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '主要定位',<br>  `role_assist` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '次要定位',<br>  `birthdate` DATETIME(0) NULL DEFAULT NULL COMMENT '上线时间'<br>) ENGINE = INNODB DEFAULT CHARSET=UTF8 COMMENT='王者荣耀数据表';</div>
+                            <span class="time">2019-06-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/44/a7/0fde4810.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">啦啦啦</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">7</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select  id  from  table  where  id=5<br>执行这条语句时，mysql会判断是否有缓存，有的话直接返回，如果没有则调用引擎接口查询数据，引擎比如说innodb会判断这条数据是否在内存中存在，如果存在直接返回给mysql的server层，如果不存在则会到磁盘里把id=5的这条数据所在的整个数据页都读取到内存中，这个内存就是innodb buffer  pool，是一块固定大小的地方，可以由参数innodb_buffer_pool_size设置大小，既然是一块固定大小的地方，那么就要有淘汰机制，mysql是在lru算法的基础上做了优化，简单的来说就是最久未被使用的数据会被淘汰掉</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/30/8a/b5ca7286.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">业余草</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">4</span></a></div>
+                            </div>
+                            <div class="bd comment-content">create table 还没学吧，我是小白，教一下 create table 或者 create table like。就单拿 select 说，这章内容也不全啊，group，having 等都漏掉了</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/18/00/23/17868694.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Samson</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT DISTINCT player_id, player_name, count(*) as num # 顺序 5<br>FROM player JOIN team ON player.team_id = team.team_id # 顺序 1<br>WHERE height &gt; 1.80 # 顺序 2<br>GROUP BY player.team_id # 顺序 3<br>HAVING num &gt; 2 # 顺序 4<br>ORDER BY num DESC # 顺序 6<br>LIMIT 2 # 顺序 7<br><br>对于这个语句，我还有一点疑问：既然HAVING的执行是在SELECT之前的，那么按理说在执行HAVING的时候SELECT中的count(*)应该还没有被计算出来才对啊，为什么在HAVING中就直接使用了num&gt;2这个条件呢？</div>
+                            <span class="time">2019-06-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/0c/0f/93d1c8eb.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">mickey</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.SELECT就是告诉数据库要选什么字段<br>2.<br>  1)MySQL、PostgreSQL、MariaDB和SQLite:<br>	SELECT name, mp_max FROM heros ORDER BY hp_max DESC limit 5;<br>  2)SQL Server和Access:<br>	SELECT TOP 5 name, mp_max FROM heros ORDER BY hp_max DESC<br>  3)DB2:<br>	SELECT name, mp_max FROM heros ORDER BY hp_max DESC FETCH FIRST 5 ROWS ONLY;<br>  4)Oracle:<br>	SELECT name, mp_max FROM (SELECT name, mp_max FROM heros ORDER BY hp_max) as t WHERE ROWNUM &lt;=5</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/4a/2c/f8451d77.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">石维康</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业: SELECT name, mp_max FROM heros ORDER BY hp_max DESC  LIMIT 5;<br>MySQL数据库</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">lincan</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师讲得很棒，但有一处困惑：limit是最后执行的话，执行limit时全表扫描和所有的虚拟表都已生成了，那使用limit为什么还能提高效率呢？</div>
+                            <span class="time">2019-09-01</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">你可以通过 SHOW PROFILE 来查看 SQL 的具体执行成本，如果我们使用LIMIT进行限制，至少可以减少数据传输量，这样在Sending data这项上可以减少大量传输时间，而这一项又在整个SQL执行成本中占比比较高。<br></p>
+                                <p class="reply-time">2019-10-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/7f/0c/392ce255.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">极客时间</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师 我有一个疑问  场景是这样的，我有三张表，一张表存储文章posts，一张表存储文章标签tags，<br><br>一篇文章可以有多个标签，一个标签可以被多个文章拥有，文章和标签是多对多的关系，<br><br>此时我又增加了一个关系表post_tag,这个表只有两个字段，post_id和tag_id.<br><br>我现在有一个需求 查询出所有文章，查询出的文章数据中每篇文章都有一个tags属性，这个属性包含所有这篇文章的标签信息，这个查询应该怎么做呢？ 或者说sql只能做一部分，然后在通过其他脚本语言再处理呢？<br><br>我将问题发在了 segmentfaul 链接地址 https://segmentfault.com/q/1010000019472412</div>
+                            <span class="time">2019-06-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/0f/71/9273e8a4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">时间是最真的答案</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">MySQL<br>SELECT `name`,mp_max FROM heros ORDER BY hp_max DESC LIMIT 5 </div>
+                            <span class="time">2019-06-24</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确，同时也考虑到了给查询字段使用反引号</p>
+                                <p class="reply-time">2019-06-25</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e7/cd/08088f14.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">马哲富</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">讲得非常好，就这一篇文章就值专栏的价格了！另外老师能讲解一下where语句的过滤顺序吗，能理解where语句的执行顺序对sql的优化应该也会有很大的帮助，谢谢老师的解答！</div>
+                            <span class="time">2019-06-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">hlz-123</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">数据库，MySQL8.0<br>SELECT name as '姓名',mp_max as '最大法力' FROM heros ORDER BY hp_max LIMIT 5;</div>
+                            <span class="time">2019-06-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/71/05/db554eba.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">👽</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">再有一个建议，能不能在课中嵌套一些常见的面试题，例如：<br>索引的作用与弊端是什么？</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/ac/ef/494f56c3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">crazypokerk</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT是所有查询关键字最后一个执行的关键字。</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/78/f2/d8933ff9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">月牙天冲</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.作业：SELECT name,mp_max FROM heros ORDER BY hp_max DECS  LIMIT 5；<br>2.老师能提供下创建表的sql语句么，谢谢。</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/10/61/7ba48062.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">菜鸡小王子</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">希望老师在讲select的基础语法时  能稍微带一点底层原理啦 比如select的执行顺序  这样理解是不是可以更加透彻一点</div>
+                            <span class="time">2019-06-21</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">编辑回复</span></div>
+                                <p class="reply-content">相关内容已经更新到了文章里，感谢您的反馈。</p>
+                                <p class="reply-time">2019-06-21</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e1/1a/20977779.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">峻铭</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">从文中顺序6和顺序7描述的order by和limit的关系 与 “最后在 vt6 的基础上，取出指定行的记录，也就是 LIMIT 阶段，得到最终的结果” 的描述，说明limit是在排序完成后才执行的，那么理论上对数据排序后用的时间和加上limit 1的时间应该是几乎相等的。于是做了个小实验验证下：<br>增加数据量让时间差异更明显，对5个表做了笛卡尔积<br>select * from player join team join player_score join team_score join height_grades order by player.height; #用时0.123秒<br>select * from player join team join player_score join team_score join height_grades order by player.height limit 1; #用时0.027秒<br>说明limit不是在order by完成后执行的，应该是参与了边排序的过程中边判断是否达到了limit条件，具体过程我也不清楚 ：）</div>
+                            <span class="time">2019-08-31</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/d5/86/5b1ff7d9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Fan</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">写 SQL 语句，对英雄名称和最大法力进行查询，按照最大生命从高到低排序，只返回 5 条记录即可.<br><br>SELECT name, max_mp FROM heros ORDER BY max_hp LIMIT 5;</div>
+                            <span class="time">2019-08-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果是从高到低排序需要写上 DESC，否则默认会是ASC，也就是从低到高排序，所以SQL应该是：<br>SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;</p>
+                                <p class="reply-time">2019-08-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/e6/68/1871d6ba.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">海洋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业：<br>SELECT name,mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;</div>
+                            <span class="time">2019-08-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">对的</p>
+                                <p class="reply-time">2019-08-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/b5/0b/df89c357.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">全有</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">关于虚拟表的生命周期是怎样的？举例当中的原始数据加载到虚拟表，是一个怎样的过程</div>
+                            <span class="time">2019-07-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/48/f3/f1034ffd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">cricket1981</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">mysql&gt; SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;<br>+-----------+--------+<br>| name      | mp_max |<br>+-----------+--------+<br>| 廉颇      |   1708 |<br>| 白起      |   1666 |<br>| 程咬金    |      0 |<br>| 刘禅      |   1694 |<br>| 牛魔      |   1926 |<br>+-----------+--------+<br>5 rows in set (0.00 sec)<br></div>
+                            <span class="time">2019-06-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/17/41/af/e5629318.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">꯭J꯭I꯭N꯭🙃</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name, mp_max FROM heros ORDER BY hp_max ASC LIMIT 5;</div>
+                            <span class="time">2019-06-25</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">应该是按照最大生命值从高到低进行排序，使用DESC</p>
+                                <p class="reply-time">2019-06-25</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/a3/c2/abb7bfe3.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">©™</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，现在有a,b,c三张表，我先用a inner join b ，接着再用a left join  c，这样做可以达到获取a,b关联数据的目的吗？</div>
+                            <span class="time">2019-06-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTI8mFt5wSkia3yumk409E65JIlGoreva1Q25icTks0XB0EDC7WJ5V0z6zuvgGkI2Zrh5cBXGS5Hea8A/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_669849</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对于SELECT *，除了效率问题，维护也不太好维护啊</div>
+                            <span class="time">2019-06-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/e9/0b/1171ac71.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">WL</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问一下老师我理解的select应该是根据主键索引定位然后回表去查询所需要的记录, 不知道有创建虚拟表vt1-vt6的过程, 请问虚拟表跟索引是怎么配合的?</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/87/f8/eb29ac28.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">New Youth</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">同求建表语句 emmmm</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/0c/0f/93d1c8eb.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">mickey</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">建表语句没有给出。</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Wd9icWRraTXVSy40Th1rl7HZmiaSQVsqdTnR7ia4bO6lFdNlmYNYEZW1K3bWxryFJkGJ3ypjosOib2Ov4iczFLBRO2A/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_010040</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select name, mp_max from hero order by hp_max limit 5;<br>1、只查询需要的列<br>2、可以使用查询常数构建虚构列作为表的标记，构建常数列注意常数值在前，column_name在后，常数值最好加单引号 ''<br>3、distinct去重，放在所有column的最前面，且对关键字后的所有列去重<br>4、order by排序，可对一或多列排序，asc&amp;desc，某些属性不区分大小写，可对没有select的列进行排序，orderby通常位于select语句最后一条字句（有limit除外）<br>5、limit/top/rownum，SqlServer中 select top n column_1, column_2 from table_name; Oracle中select column_1, column_2 from table_name where rownum &lt; 5 ;</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/61/66/ea3f7035.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">dusthui</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">### 子查询<br>select  hero_name,max uo <br>from(<br>	select  hero_name,max uo <br>​			from heros<br>​			order by max_life desc<br>	)<br>limit 5;</div>
+                            <span class="time">2019-10-15</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/cc/ce/39c470ee.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">jxs1211</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name, hp_max FROM heroes ORDER BY mp_max DESC LIMIT 5</div>
+                            <span class="time">2019-10-05</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/4c/4e/91267714.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Cola_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select name,mp_max from heros order by hp_max desc limit 5;<br>mysql</div>
+                            <span class="time">2019-09-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/ea/46/9c9808a9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Serendipity</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5<br></div>
+                            <span class="time">2019-08-27</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/34/df/64e3d533.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">leslie</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">   关于排序似乎讲解中漏了默认排序：<br>  1.默认排序的排序规则<br>  2.其实如果我们是使用默认排序规则的话，排序语句是不用写的<br>  近期多门课在学：趁着休息日"补课"，不过倒是补充了之前自己忽视的select 的多表查询步骤</div>
+                            <span class="time">2019-08-25</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/24/5d/65e61dcb.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">听雨</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">每一步产生一个虚拟表，ORDER BY 是在SELECT之后的，这样来看，不在SELECT的列已经过滤掉了，那为什么ORDER BY可以使用不在SELECT中的列排序，不明白</div>
+                            <span class="time">2019-08-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/7e/a6/44b208f5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">骑行的掌柜J</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">陈老师 在Oracle 的约束数量结果要跟前面几种一样结果的那个语句是不是写掉了一个DESC 递减语法？谢谢<br>“SELECT name, hp_max FROM (SELECT name, hp_max FROM heros ORDER BY hp_max) WHERE ROWNUM &lt;=5”<br>应该是这样吧： “SELECT name, hp_max FROM (SELECT name, hp_max FROM heros ORDER BY hp_max DESC) WHERE ROWNUM &lt;=5" </div>
+                            <span class="time">2019-08-20</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/ea/46/9c9808a9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Serendipity</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5<br></div>
+                            <span class="time">2019-08-19</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-10-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/ff/c1/ac7d7866.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Heidi</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT `name`,mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;</div>
+                            <span class="time">2019-08-08</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/4e/1b/f4b786b9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">飞翔</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">为什么这样写 this.preparedStatement.executeQuery() 不会爆内存呀，<br>protected void openCursor(Connection con) {<br>        try {<br>            if (this.isUseSharedExtendedConnection()) {<br>                this.preparedStatement = con.prepareStatement(this.sql, 1003, 1007, 1);<br>            } else {<br>                this.preparedStatement = con.prepareStatement(this.sql, 1003, 1007);<br>            }<br><br>            this.applyStatementSettings(this.preparedStatement);<br>            if (this.preparedStatementSetter != null) {<br>                this.preparedStatementSetter.setValues(this.preparedStatement);<br>            }<br><br>            this.rs = this.preparedStatement.executeQuery();<br>            this.handleWarnings(this.preparedStatement);<br>        } catch (SQLException var3) {<br>            this.close();<br>            throw this.getExceptionTranslator().translate("Executing query", this.getSql(), var3);<br>        }<br>    }</div>
+                            <span class="time">2019-07-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/17/f9/eb/90f911ee.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">嗨呀、</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问sql文件导入之后，中文乱码问题怎么解决，查了网上的办法，设置为utf-8还是显示乱码</div>
+                            <span class="time">2019-07-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/b5/98/ffaf2aca.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Ronnyz</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业：SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;<br>按照老师github文件中建表，在命令行中插入数据会提示：<br>Incorrect string value: '\xD6\xD3\xCE\xDE\xD1\xDE' for column 'name'<br>但是在navicat命令行中可以直接输入不报错，这是为什么呢</div>
+                            <span class="time">2019-07-20</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/7a/d5/dbcaadf0.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">蓝影闪电</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name,mp_max FROM heros<br>ORDER BY hp_max DESC<br>limit 5;</div>
+                            <span class="time">2019-07-17</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/64/79/f1e1ca76.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">努力奋斗的Pisces</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">同时使用order by 与limit 翻页的时候似乎会有点问题</div>
+                            <span class="time">2019-07-15</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/cd/aa/33d48789.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">卫江</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，如果在mysql中，LIMIT 关键词是最后执行的，如果可以确定只有一条，那么就起不到查询优化的效果了吧，因为LIMIT是对最后的结果集过滤，如果结果集本来就只有一条，那就没有什么用了</div>
+                            <span class="time">2019-07-12</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果你可以确定结果集只有一条，加上了LIMIT 1，当找到了一条的时候就不会继续扫描了，因此会加快查询速度。这里指的查询优化是针对会导致全表扫描的SQL语句，如果数据表已经对字段建立了唯一索引，可以通过索引进行查询，而不会全表扫描的话，就不需要加上LIMIT 1了。</p>
+                                <p class="reply-time">2019-07-13</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIk46cor5XVFTPZbPOnb7pViabgy450pobo46hRHFQz5nR5ocYRKIzC8vShic36vwa553H4Vj50x5wA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">冲</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select name ,mp_max from  heros order by hp_max desc limit 5;</div>
+                            <span class="time">2019-07-11</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/f1/15/70af5d9e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">William</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">前端开发第一次接触数据库。<br>1. 请问老师Mac上安装MySQL，安装8.0版本还是5.7版本更好？<br>2. 是否需要安装Navicat，PostgreSQL？<br></div>
+                            <span class="time">2019-07-11</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">建议安装最新的8.0版本，可以使用Navicat来管理MySQL。PostgreSQL是另一个RDBMS，先使用一种数据库即可，刚接触数据库，可以先从MySQL入手，当然SQL Server也是不错的选择。</p>
+                                <p class="reply-time">2019-07-11</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/OkFdlgbIcS2JCwWPu5WmINS9gS1zzxLYFLVySOmETyvZs5bWTibZSm7NRib4Djjs1qjG9nZ0q9WT02NqrslmL9iag/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">GISer_wfp</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">初学数据库，对select的理解是，它像一把神奇的大勺子，可以按照主人的想法从数据库里捞出主人想要的数据；<br>今天的作业：<br>mysql&gt; select name, mp_max from heros order by hp_max desc limit 5;<br>+-----------+--------+<br>| name      | mp_max |<br>+-----------+--------+<br>| 廉颇      |   1708 |<br>| 白起      |   1666 |<br>| 程咬金    |      0 |<br>| 刘禅      |   1694 |<br>| 牛魔      |   1926 |<br>+-----------+--------+<br>5 rows in set (0.00 sec)</div>
+                            <span class="time">2019-07-08</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/72/9b/8052071e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">飞翔</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">运行结果和上面多列检索的运行结果是一样的，只是将列名改成了 n、hm、mm、am 和 dm。当然这里的列别名只是举例，一般来说起别名的作用是对原有名称进行简化，从而让 SQL 语句看起来更精简。同样我们也可以对表名称起别名，这个在多表连接查询的时候会用到。<br><br>老师这里的别名可以写中文吗？</div>
+                            <span class="time">2019-07-05</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/54/a0/696e3c49.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">忆水湾</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">6.计算所有的表达式，这个表达式是指什么？</div>
+                            <span class="time">2019-07-05</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/0d/45/b88a1794.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">一叶知秋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业打卡：<br>MySQL: select name, mp_max from heros order by hp_max desc limit 5;<br><br>执行结果:<br>| name      | mp_max |<br>+-----------+--------+<br>| 廉颇      |   1708 |<br>| 白起      |   1666 |<br>| 程咬金    |      0 |<br>| 刘禅      |   1694 |<br>| 牛魔      |   1926 |<br>+-----------+--------+<br>5 rows in set (0.00 sec)</div>
+                            <span class="time">2019-07-05</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/66/8a/18b78acb.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">NO.9</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">语句执行顺序是精华</div>
+                            <span class="time">2019-07-04</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">哈哈 是的 关键字顺序 和 SQL执行的顺序。里面还有一些计算的过程顺序也需要注意</p>
+                                <p class="reply-time">2019-07-05</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_d9f0c8</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师能不能建一个群我们讨论，也方便老师指点。写了很多sql语句，个人感觉效率都很低，都是很low的语句，只求实现功能，希望能得到老师和各位大佬的指点</div>
+                            <span class="time">2019-07-03</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">咱们有专栏微信群，可以和运营联系下，拉你入群</p>
+                                <p class="reply-time">2019-07-04</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/d5/eb/7dce7c33.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">不是是不是</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select name,mp_max from heros order by hp_max desc limit 5;<br></div>
+                            <span class="time">2019-07-03</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-07-04</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/5b/72/4f8a4297.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">阿May的海绵宝宝</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我看有说法limit  1   在用了索引的SQL语句中没有用，这个应该怎么理解？</div>
+                            <span class="time">2019-07-01</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/5b/72/4f8a4297.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">阿May的海绵宝宝</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，limit 1 能够优化是因为，在where筛选虚拟表的时候，只要找到第一条满足条件的数据后就不再继续往下扫描了吧？</div>
+                            <span class="time">2019-07-01</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/1e/02/2864e0f2.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">华夏</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;<br>+-----------+--------+<br>| name      | mp_max |<br>+-----------+--------+<br>| 廉颇      |   1708 |<br>| 白起      |   1666 |<br>| 程咬金    |      0 |<br>| 刘禅      |   1694 |<br>| 牛魔      |   1926 |<br>+-----------+--------+<br>5 rows in set (0.00 sec)</div>
+                            <span class="time">2019-06-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/ce/bf/cfe1bff4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">尼古拉斯TSL</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">您文中讲到“SELECT 阶段”在“ORDER BY阶段”前面，对此我有点疑惑：<br>SqlServer数据库中，这样一句sql“SELECT nickName,gameid FROM accountsInfo<br>ORDER BY userid”是可以正常执行的，如果按照“SELECT”在“ORDER BY”之前，这里SELECT出来的字段都没有“userid”，怎么进行排序了？</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/fe/9e/8165b0a0.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">路伴友行</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有木有整个王者荣耀的数据库？😏😏😏</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_7777</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">max和limit1冲突么？</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e5/33/ff5c52ad.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Amanda</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1）使用 SELECT有的一个疑惑就是接触到后台，但查询数据量还不是特别大（2千多条），在工具中执行 SELECT 查询语句和在后台调用执行（如JPA）的时间相差巨大，感觉走的不是一个执行计划，这个时候不知从何下手。<br><br>2）在MySQL中，语句：SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;<br>在Oracle中，语句：SELECT * FROM (SELECT name, mp_max FROM heros ORDER BY hp_max DESC) WHERE ROWNUM&lt;=5;</div>
+                            <span class="time">2019-06-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/33/07/8f351609.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ttttt</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">对英雄名称和最大法力进行查询，按照最大生命从高到低排序，只返5条记录。<br>SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;<br>name mp_max<br>廉颇	1708<br>白起	1666<br>程咬金	0<br>刘禅	1694<br>牛魔	1926</div>
+                            <span class="time">2019-06-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/d6/c9/08a62ac7.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">胡小榕</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">希望老师讲解一下WHERE条件值加引号还是双引号的区别？以及字段类型不匹配为什么会引起索引失效？</div>
+                            <span class="time">2019-06-26</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/79/69/5960a2af.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">王智</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我的疑惑是查询字段会使用到别名这些, 底层又是如何识别的呢? 查询的字段会使用到a.name, b.id等等,这些事如何对应到每张表的呢?</div>
+                            <span class="time">2019-06-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/97/19/b724ca0a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">L-jiehui</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">请问老师：<br>1、测试环境如何搭建呢？是在同一台机子上安装Oracle、MySQL和Access等所有数据库，然后用Navicat连接吗？对我而言，工作中只用到MySQL，是否只安装MySQL就好？<br>2、老师能否引导下我们该如何阅读SQL源码呢？<br>谢谢老师！</div>
+                            <span class="time">2019-06-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/97/19/b724ca0a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">L-jiehui</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">谢谢老师。想问下老师：<br>1、为什么聚簇索引需要比二级索引（非聚簇索引）空间大呢？<br>2、左连接、右链接和全连接怎么可以更好的理解和记忆呢？</div>
+                            <span class="time">2019-06-24</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/18/ee/a1ed60d1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ABC</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name,mp_max FROM heros order by hp_max desc limit 5;<br><br>作业答案，使用MySQL 5.7 .</div>
+                            <span class="time">2019-06-23</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-06-24</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Pk7HVX99cBlSOicLoa8KN8yCKx1pWIyYuy7zxL2ibXicYRFq2ic7LMYiaXMajuQNRZzL4QyuJX6ToRoficsBPlT3Meog/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Yt</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">一开始我直接导sql文件，疯狂报错，后面看了下是insert 语句，用navicat建了表，不过有一个问题就是没有了解到每一个字段的具体属性，数字的全设置为float 5位数，0－2位小数</div>
+                            <span class="time">2019-06-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/4a/c7/ec18673b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">大斌</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select name,mp_max from heros order by hp_max limit 5;</div>
+                            <span class="time">2019-06-23</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">如果是按照最大生命值"从高到低"进行排序应该是：<br>SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;<br></p>
+                                <p class="reply-time">2019-06-23</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/4a/c7/ec18673b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">大斌</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">给的sql文件弄了半天也没导入到Navicat，浪费了1个小时.......没法跟着文章操作，对我这样的小白，希望可以给出导入教程。</div>
+                            <span class="time">2019-06-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/4a/c7/ec18673b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">大斌</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">怎么把sql文件导入到我的Navicat中去啊......</div>
+                            <span class="time">2019-06-23</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Pk7HVX99cBlSOicLoa8KN8yCKx1pWIyYuy7zxL2ibXicYRFq2ic7LMYiaXMajuQNRZzL4QyuJX6ToRoficsBPlT3Meog/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Yt</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">MySQL<br>SELECT name,mp_max<br>FROM heros<br>ORDER BY mp_max<br>LIMIT 5;</div>
+                            <span class="time">2019-06-23</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">应该是按照最大生命值从高到低，也就是 hp_max字段，而不是mp_max。同时ORDER BY默认是按照升序排序，也就是ASC，这里我们需要使用 DESC 排序，也就是从高到低</p>
+                                <p class="reply-time">2019-06-23</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/18/13/80/2c9da1b1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">L🚲🐱</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select name,  mp_max as '最大法力' from heros order by hp_max limit 5;<br>mysql </div>
+                            <span class="time">2019-06-22</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">注意下排序的顺序从高到低，其他都OK</p>
+                                <p class="reply-time">2019-06-23</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/2b/84/07f0c0d6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">supermouse</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题答案：select name, mp_max from heros order by hp_max desc limit 5<br>我用的 DBMS 是 MySQL，版本是 5.7</div>
+                            <span class="time">2019-06-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/95/db/7eaaebc8.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">hjw</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师为什么创建表失败</div>
+                            <span class="time">2019-06-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/40/d1/fb6f402a.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">melon</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">关于那个查询一条记录 用limit 1  ，在where 列 字段是有唯一索引的情况下 可以不用加了这个limit 1 了吧？如果是普通索引是不是得加上？</div>
+                            <span class="time">2019-06-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/ec/05/82bb9bf1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">天子笑</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">写*也会影响SQL的执行计划，可能会降低SQL的执行效率，严重的情况下会造成服务器负载升高</div>
+                            <span class="time">2019-06-22</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/40/d8/69722032.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">野马</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.SELECT理解： 找什么<br><br>2.作业：SELECT name,mq_max FROM heros  ORDER BY hq_max DESC LIMIT  5 </div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/f1/21/52e8267b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Hoo-Ah</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">很基础，棒</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/90/b8/1605a0cc.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">第七章</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业：SELECT Top 5 name, hp_max FROM heros ORDER BY hp_max DESC  ;  SQL Server</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/62/a5/43aa0c27.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Destroy、</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name, mp_max FROM heros ORDER BY hp_max DESC LIMIT 5;   mysql</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/17/05/2e/5a6b6b6e.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Fortune</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">已经学习完了哈，基础知识过了一遍，生产环境不用select  *  查询，希望一次多更新几章哈</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/1d/76/62c8df21.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">link</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">分析数据为引，切磋交流就是你的意思吧，来，战队就差你了</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/60/82/9a43504b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">[耶]友超</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT NAME,mp_max,hp_max FROM heros ORDER BY mp_max DESC LIMIT 5</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/5b/8f/4b0ab5db.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">hedeqiang</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT name,mp_max WHERE heros  ORDER BY hp_max DESC LIMIT5<br><br>另外只查询两个两个列名应该是不可以的吧？最大生命值也得包括，order by 必须指定查询的列名吧？</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/18/15/2a/837b0597.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">磨</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">最后的思维导图很好！</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/01/28/134da154.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">冯玉鹏</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select *  和select 索引列 这两种情况，除开io多余的开销，<br>当查询结果只需要索引列数据的时候还存在一个是否 需要回表查询的性能问题。</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/02/4d/713da7b9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Wendy</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">用plsql developer工具，现在的项目中写过好多查询套子查询的，一直担心执行效率的问题(๑-﹏-๑)</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/38/63/195e5af5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">乱虚无</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">ORDER  BY  递增时，什么情况下 B在A前面?</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fc/90/c9df0459.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ack</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考：<br>1.select是DQL(Data Query Language)，在日常中是使用最多的，查询时在mysql5.7之前会查缓存，如果有直接返回，而在使用select上可以利用索引来提高查询效率<br>2.select name,mp_max from heros order by hp_max ASC limit 5</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/4a/2c/f8451d77.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">石维康</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">建heros表的sql文件能否提供？</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/1a/66/2d9db9ed.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">苦行僧</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">要时刻关注数据量的大小 如果是系统表 带不带limit 差异不大</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/f5/9f/1509d389.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">栾~龟虽寿！</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">select top 5 name,hp_max from heros order by mp_max desc</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/a0/3f/06b690ba.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zain Lau</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">北邮倒计时186天</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/27/58/5b8cf725.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">cash</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，我们有一个sql语句的条件是用字符串进行比较范围大小，以前是在oracle库，没有问题，但迁移到postgresql后，这个比较就有问题了，感觉postgresql不是ascii码比较的，谢谢</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/44/a7/0fde4810.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">啦啦啦</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">打卡打卡</div>
+                            <span class="time">2019-06-21</span>
+                            
+                        </div>
+                    </li></ul>
+            </div>
+        </div> <!----> <!----></div>
+</div>
+<link rel="dns-prefetch" href="//cdn.mathjax.org">
+<script type="text/x-mathjax-config">MathJax.Hub.Config({
+        showProcessingMessages: false,
+        messageStyle: "none",
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a']
+        }
+      });
+      MathJax.Hub.Register.MessageHook("End Process", function (message) {
+        var eve = new Event('mathjaxfini')
+        window.dispatchEvent(eve)
+      })
+
+
+
+
+</script>
+
+</body>

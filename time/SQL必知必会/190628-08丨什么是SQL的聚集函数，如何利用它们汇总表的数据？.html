@@ -1,0 +1,1977 @@
+<head>
+    <meta charset="utf-8">
+    <meta name="Keywords" content="极客时间,极客邦,极客邦科技,极客邦控股,极客时间App,专栏订阅,极客新闻,二叉树,极客Live,QCon,左耳听风,AI技术内参,大航海时代,陈皓,徐飞,洪亮劼,霍泰稳,池建强,Selina,Gary,InfoQ,极客搜索">
+    <meta name="description" content="极客时间是极客邦科技出品的一款 IT 内容知识服务 App，内容包含专栏订阅、极客新闻、热点专题、直播、视频和音频等多形式的知识内容，并设有陈皓专栏、徐飞专栏、洪亮劼专栏等专栏供订阅。">
+    <link rel="apple-touch-icon" sizes="180x180" href="//static001.geekbang.org/static/icon/time/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="//static001.geekbang.org/static/icon/time/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="//static001.geekbang.org/static/icon/time/favicon-16x16.png">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="format-detection" content="telephone=no">
+    <title>08丨什么是SQL的聚集函数，如何利用它们汇总表的数据？</title>
+
+    <link href="https://static001.geekbang.org/static/time/css/app.3e04e644962ca8c2f97ec7731bb7710c.css" rel="stylesheet">
+    <style type="text/css">.hljs-ln {
+        border-collapse: collapse
+    }
+
+    .hljs-ln td {
+        padding: 0
+    }
+
+    .hljs-ln-n:before {
+        content: attr(data-line-number)
+    }</style>
+    <style type="text/css">#iv-container {
+        position: fixed;
+        background: #0d0d0d;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        display: none;
+        z-index: 1000
+    }
+
+    .iv-container {
+        overflow: hidden
+    }
+
+    .iv-close {
+        width: 26px;
+        height: 26px;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        cursor: pointer;
+        text-align: center;
+        overflow: hidden;
+        text-shadow: 0 0 3px #6d6d6d;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all ease .2s;
+        -o-transition: all ease .2s;
+        transition: all .2s ease
+    }
+
+    .iv-close:after, .iv-close:before {
+        content: "";
+        height: 2px;
+        width: 26px;
+        background: #fff;
+        position: absolute;
+        left: 0;
+        top: 50%;
+        margin-top: -2px;
+        border-radius: 2px
+    }
+
+    .iv-close:before {
+        -webkit-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        transform: rotate(45deg)
+    }
+
+    .iv-close:after {
+        -webkit-transform: rotate(-45deg);
+        -moz-transform: rotate(-45deg);
+        -ms-transform: rotate(-45deg);
+        -o-transform: rotate(-45deg);
+        transform: rotate(-45deg)
+    }
+
+    .iv-close:hover {
+        -webkit-transform: rotate(90deg);
+        -moz-transform: rotate(90deg);
+        -ms-transform: rotate(90deg);
+        -o-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .iv-image-view {
+        position: absolute;
+        height: 100%;
+        width: 100%
+    }
+
+    .iv-image-wrap {
+        display: inline-block
+    }
+
+    .iv-image-wrap:active {
+        cursor: move
+    }
+
+    .iv-large-image {
+        cursor: move;
+        max-width: 100%;
+        max-height: 100%;
+        background-color: #ececec;
+        -moz-transform: translateZ(0);
+        -o-transform: translateZ(0)
+    }
+
+    .iv-large-image, .iv-loader {
+        position: absolute;
+        -webkit-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        transform: translateZ(0)
+    }
+
+    .iv-loader {
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        z-index: 100;
+        margin-top: -16px;
+        margin-left: -16px;
+        font-size: 5px;
+        text-indent: -9999em;
+        border-top: 1em solid hsla(0, 0%, 100%, .2);
+        border-right: 1em solid hsla(0, 0%, 100%, .2);
+        border-bottom: 1em solid hsla(0, 0%, 100%, .2);
+        border-left: 1em solid #fff;
+        -webkit-animation: load8 1.1s infinite linear;
+        animation: load8 1.1s infinite linear
+    }
+
+    .iv-loader:after {
+        width: 10em;
+        height: 10em;
+        border-radius: 50%
+    }
+
+    @-webkit-keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }
+
+    @keyframes load8 {
+        0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg)
+        }
+        to {
+            -webkit-transform: rotate(1turn);
+            transform: rotate(1turn)
+        }
+    }</style>
+    <style type="text/css">.vue-pull-to-wrapper[data-v-12abd9fb] {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -webkit-flex-direction: column;
+        flex-direction: column;
+        height: 100%
+    }
+
+    .scroll-container[data-v-12abd9fb] {
+        -webkit-box-flex: 1;
+        -webkit-flex: 1;
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch
+    }
+
+    .vue-pull-to-wrapper .action-block[data-v-12abd9fb] {
+        position: relative;
+        width: 100%
+    }
+
+    .default-text[data-v-12abd9fb] {
+        height: 100%;
+        line-height: 50px;
+        text-align: center
+    }</style>
+    <style type="text/css">.button-cancel[data-v-87ffcada] {
+        color: #888;
+        border: 1px solid #888;
+        border-radius: 3px;
+        margin-right: 12px
+    }
+
+    .button-cancel[data-v-87ffcada], .button-primary[data-v-87ffcada] {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        height: 35px;
+        display: inline-block;
+        font-size: 15px;
+        text-align: center;
+        line-height: 36px
+    }
+
+    .button-primary[data-v-87ffcada] {
+        color: #fff;
+        background-color: #ff5a05;
+        border-radius: 3px
+    }
+
+    .pd[data-v-87ffcada] {
+        padding-left: 1.375rem;
+        padding-right: 1.375rem
+    }
+
+    .article[data-v-87ffcada] {
+        max-width: 46.25rem;
+        margin: 0 auto
+    }
+
+    .article .article-unavailable[data-v-87ffcada] {
+        color: #fa8919;
+        font-size: 15px;
+        font-weight: 600;
+        line-height: 24px;
+        border-radius: 5px;
+        padding: 12px;
+        background-color: #f6f7fb;
+        margin-top: 20px
+    }
+
+    .article .article-unavailable .iconfont[data-v-87ffcada] {
+        font-size: 12px
+    }
+
+    .article .main[data-v-87ffcada] {
+        padding: 1.25rem 0;
+        margin-bottom: 52px
+    }
+
+    .article-title[data-v-87ffcada] {
+        color: #353535;
+        font-weight: 400;
+        line-height: 1.65rem;
+        font-size: 1.34375rem
+    }
+
+    .article-info[data-v-87ffcada] {
+        color: #888;
+        font-size: .9375rem;
+        margin-top: 1.0625rem
+    }
+
+    .article-content[data-v-87ffcada] {
+        margin-top: 1.0625rem
+    }
+
+    .article-content.android video[data-v-87ffcada]::-webkit-media-controls-fullscreen-button {
+        display: none
+    }
+
+    .copyright[data-v-87ffcada] {
+        color: #b2b2b2;
+        padding-bottom: 20px;
+        margin-top: 20px;
+        font-size: 13px
+    }
+
+    .audio-player[data-v-87ffcada] {
+        width: 100%;
+        margin: 20px 0
+    }
+
+    .to-comment[data-v-87ffcada] {
+        overflow: hidden;
+        padding-top: 10px;
+        margin-bottom: -30px
+    }
+
+    .to-comment a.button-primary[data-v-87ffcada] {
+        float: right;
+        height: 20px;
+        font-size: 12px;
+        line-height: 20px;
+        padding: 4px 8px;
+        cursor: pointer
+    }
+
+    .article-comments[data-v-87ffcada] {
+        margin-top: 2rem
+    }
+
+    .article-comments h2[data-v-87ffcada] {
+        text-align: center;
+        color: #888;
+        position: relative;
+        z-index: 1;
+        margin-bottom: 1rem
+    }
+
+    .article-comments h2[data-v-87ffcada]:before {
+        border-top: 1px dotted #888;
+        content: "";
+        position: absolute;
+        top: 56%;
+        left: 0;
+        width: 100%;
+        z-index: -1
+    }
+
+    .article-comments h2 span[data-v-87ffcada] {
+        font-size: 15.25px;
+        font-weight: 400;
+        padding: 0 1rem;
+        background: #fff;
+        display: inline-block
+    }
+
+    .article-sub-bottom[data-v-87ffcada] {
+        z-index: 10;
+        cursor: pointer
+    }
+
+    .switch-btns[data-v-87ffcada] {
+        height: 76px;
+        cursor: pointer;
+        padding-top: 24px;
+        padding-bottom: 24px;
+        border-bottom: 10px solid #f6f7fb;
+        position: relative
+    }
+
+    .switch-btns[data-v-87ffcada]:before {
+        content: " ";
+        height: 1px;
+        background: #e8e8e8;
+        position: absolute;
+        top: 0;
+        left: 0;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        left: 1.375rem;
+        right: 1.375rem
+    }
+
+    .switch-btns .btn[data-v-87ffcada] {
+        height: 38px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .switch-btns .btn .tag[data-v-87ffcada] {
+        -webkit-box-flex: 0;
+        -ms-flex: 0 0 62px;
+        flex: 0 0 62px;
+        text-align: center;
+        color: #888;
+        font-size: 14px;
+        border-radius: 10px;
+        height: 22px;
+        line-height: 22px;
+        background: #f6f7fb;
+        font-weight: 400
+    }
+
+    .switch-btns .btn .txt[data-v-87ffcada] {
+        margin-left: 10px;
+        -webkit-box-flex: 1;
+        -ms-flex: 1 1 auto;
+        flex: 1 1 auto;
+        color: #888;
+        font-size: 15px;
+        height: 22px;
+        line-height: 22px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 400
+    }
+
+    @media (max-width: 769px) {
+        .article .breadcrumb[data-v-87ffcada] {
+            padding-top: 10px;
+            padding-bottom: 10px
+        }
+    }</style>
+    <style type="text/css">.empty {
+        height: 51px
+    }
+
+    .mobile-tips {
+        width: 100%;
+        height: 51px;
+        background: rgba(0, 0, 0, .8);
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 0 12px;
+        -webkit-transition: opacity .35s;
+        transition: opacity .35s;
+        opacity: 0;
+        pointer-events: none
+    }
+
+    .mobile-tips.istop {
+        opacity: 1;
+        pointer-events: auto
+    }
+
+    .mobile-tips .mobile-tips-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: start;
+        -ms-flex-pack: start;
+        justify-content: flex-start
+    }
+
+    .mobile-tips .mobile-tips-info i {
+        width: 36px;
+        height: 36px;
+        background-image: url(data:image/png;base64,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);
+        background-position: 0 0;
+        background-repeat: no-repeat;
+        background-size: contain;
+        border-radius: 7px
+    }
+
+    .mobile-tips .mobile-tips-info h2 {
+        font-size: 15px;
+        color: #fff;
+        font-weight: 400;
+        margin-left: 6px
+    }
+
+    .mobile-tips .mobile-tips-info h2 span {
+        font-size: 11px
+    }
+
+    .mobile-tips a {
+        width: 72px;
+        height: 31px;
+        text-align: center;
+        border: 1px solid #fa8919;
+        border-radius: 3px;
+        font-size: 13px;
+        color: #fa8919;
+        line-height: 31px
+    }</style>
+    <style type="text/css">.share-poster-wrapper {
+        position: fixed;
+        background-color: #fff;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        overflow: hidden;
+        width: 100%;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -moz-user-select: -moz-none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .share-poster-wrapper .poster-bottom, .share-poster-wrapper .poster-middle, .share-poster-wrapper .poster-top {
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle {
+        padding: 16px 32px;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding-bottom: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-userinfo .poster-avatar {
+        min-width: 45px;
+        min-height: 45px;
+        width: 7vw;
+        height: 7vw;
+        border-radius: 50%;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .poster-middle .nickname {
+        font-size: 5vw;
+        font-weight: 400;
+        margin-left: 18px
+    }
+
+    .share-poster-wrapper .poster-middle .time {
+        font-size: 3.2vw
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content {
+        font-size: 4vw;
+        font-weight: 400;
+        white-space: normal;
+        word-wrap: break-word;
+        word-break: break-word;
+        letter-spacing: 1px
+    }
+
+    .share-poster-wrapper .poster-middle .poster-middle-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content {
+        font-size: 3.7vw;
+        padding: 32px 0
+    }
+
+    .share-poster-wrapper .poster-middle .quote-content p {
+        margin-bottom: 22px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info {
+        border-left: 1px solid #000;
+        padding-left: 10px;
+        margin-top: 38px
+    }
+
+    .share-poster-wrapper .poster-middle .quote-info p {
+        font-size: 3.2vw;
+        line-height: 1.5
+    }
+
+    .share-poster-wrapper.theme0 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/top.png") no-repeat 15px 1px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle {
+        width: 100%;
+        padding-left: 56px;
+        padding-right: 56px;
+        background-image: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/middle.png");
+        background-repeat: repeat-y;
+        background-position: 15px 0
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .time {
+        margin-bottom: 45px
+    }
+
+    .share-poster-wrapper.theme0 .poster-middle .quote-content {
+        border-top: 1px solid #e3e1dc;
+        margin-top: 30px
+    }
+
+    .share-poster-wrapper.theme0 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme1/bottom.png") no-repeat 15px -10px
+    }
+
+    .share-poster-wrapper.theme1 .poster-top {
+        width: 100%;
+        height: 25px;
+        margin-top: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/top.png") no-repeat 38px 1px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle {
+        width: 100%;
+        padding: 0 42px 10px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/middle.png") repeat-y 38px 0
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo {
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-userinfo .poster-avatar {
+        margin-left: 38px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-wrapper {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        min-height: 260px;
+        border-bottom: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time {
+        max-width: 65px;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        text-align: center;
+        vertical-align: middle;
+        border-right: 1px solid #b5a899
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .time span {
+        white-space: nowrap;
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg)
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .poster-middle-content {
+        padding: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-content {
+        font-size: 3.7vw;
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .quote-info {
+        margin-left: 36px;
+        margin-right: 36px
+    }
+
+    .share-poster-wrapper.theme1 .poster-middle .footer {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-right: 30px
+    }
+
+    .share-poster-wrapper.theme1 .poster-bottom {
+        width: 100%;
+        height: 25px;
+        margin-bottom: 27px;
+        background: url("https://static001.geekbang.org/static/time/page/img/sharePoster/theme0/bottom.png") no-repeat 38px -10px
+    }
+
+    .share-poster-wrapper .share-poster {
+        background: #fefdf8;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        color: #9b8d73;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        overflow: auto;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        -webkit-overflow-scrolling: touch;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .share-poster-wrapper .share-poster.color0 {
+        background-color: #fefdf8
+    }
+
+    .share-poster-wrapper .share-poster.color1 {
+        background-color: #4d4d4d
+    }
+
+    .share-poster-wrapper .share-poster .footer {
+        margin-top: 2rem;
+        position: relative;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: end;
+        -ms-flex-pack: end;
+        justify-content: flex-end;
+        -webkit-box-align: end;
+        -ms-flex-align: end;
+        align-items: flex-end
+    }
+
+    .share-poster-wrapper .share-poster .footer p {
+        margin: 0;
+        line-height: 1.4;
+        margin-left: 20px;
+        text-align: right;
+        padding-right: 20px
+    }
+
+    .share-poster-wrapper .controls {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        width: 100%;
+        padding-top: 5px;
+        -webkit-box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        box-shadow: 0 -4px 10px 0 rgba(0, 0, 0, .1);
+        z-index: 1;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .controls > div {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: center;
+        -ms-flex-pack: center;
+        justify-content: center;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        padding: 10px 0
+    }
+
+    .share-poster-wrapper .controls > div span {
+        font-size: .85rem
+    }
+
+    .share-poster-wrapper .controls > div button {
+        width: 100px;
+        height: 24px;
+        background: #eee;
+        margin: 0 10px;
+        border-radius: 5px;
+        border: 2px solid #b2b2b2;
+        outline: none
+    }
+
+    .share-poster-wrapper .controls > div button.on {
+        border: 2px solid #ff5a05
+    }
+
+    .share-poster-wrapper .controls .controls-themes button {
+        color: #b2b2b2;
+        font-size: 12px;
+        background: #fff;
+        text-align: center
+    }
+
+    .share-poster-wrapper .controls .controls-themes button.on {
+        color: #ff5a05
+    }
+
+    .share-poster-wrapper .buttons {
+        background: #fff;
+        border-top: 1px solid #f5f5f5;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .share-poster-wrapper .buttons a {
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        text-align: center;
+        color: #000;
+        font-weight: 400;
+        height: 3rem;
+        line-height: 3rem
+    }
+
+    .share-poster-wrapper .buttons a .icon-share-money {
+        width: 1rem;
+        height: 1rem;
+        margin: 3px 0 0 5px
+    }
+
+    .share-poster-wrapper .buttons a:last-child {
+        border-left: 1px solid #f5f5f5
+    }
+
+    .share-poster-wrapper img {
+        max-width: 100%
+    }
+
+    .share-poster-wrapper.android .poster-middle .nickname {
+        font-size: 10vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .time {
+        font-size: 6.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .poster-middle-content {
+        font-size: 8vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-content {
+        font-size: 7.4vw
+    }
+
+    .share-poster-wrapper.android .poster-middle .quote-info p {
+        font-size: 6.4vw
+    }</style>
+    <style type="text/css">.mini-audio-player {
+        width: 100%;
+        height: 5.25rem;
+        border: 1px solid #d9d9d9;
+        background: #fafafa;
+        -webkit-box-sizing: border-box;
+        box-sizing: border-box;
+        padding: 1rem;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        margin: 1rem 0
+    }
+
+    .mini-audio-player > a {
+        border: none;
+        -ms-flex-negative: 0;
+        flex-shrink: 0
+    }
+
+    .mini-audio-player .btn-play {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .btn-pause, .mini-audio-player .btn-play {
+        width: 2.6875rem;
+        height: 2.6875rem;
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none
+    }
+
+    .mini-audio-player .btn-pause {
+        background-image: url(data:image/png;base64,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)
+    }
+
+    .mini-audio-player .audio-info {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: column;
+        flex-direction: column;
+        margin-left: .6875rem;
+        min-width: 0
+    }
+
+    .mini-audio-player .audio-info h3 {
+        color: #353535;
+        font-size: 15.25px;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+    .mini-audio-player .audio-info p {
+        margin: 0;
+        margin-top: .125rem;
+        font-size: 11px;
+        line-height: 1rem
+    }
+
+    .mini-audio-player .audio-info p span {
+        color: #888
+    }
+
+    .mini-audio-player .btn-download {
+        width: 1.25rem;
+        height: 1.25rem;
+        position: relative;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAA+CAYAAACbQR1vAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAA4hJREFUaIHtm8lOFFEUhr9qCWGHGxcaY1joK2h0YRzAtYmsWbAGGidEXOACbAYRxfgAPoEPoInGxJgg86gsJTHMw86EhS7O7TDk3uqq6qo6HahvQ7pOce7//1U0feve9vr6+lAiD3QC/4AC8FZDRJXGoMB14PWB1yPANPA1bSG5tAc0XLEcu5y6CvQCOGU5pnI3agVQMWQBaAvQJgtAW4A2WQDaArTJAtAWoE0WgLYAbbIAtAVokwWgLUCbLABtAdpkAfjU6oC7wKV0pCTCRcRDnesEVwDNwC/gg/nZHbeyFOgGltj30Gw7yRZALfAOqDavPeA50BO7xOToQTR75nU14qn26Im2AM4DNZbjz4DeePQlSi+i9Sg1iLdD2AJYApYdzbuo7BBeIBptLCPeDmELYA9oBHYdjbqQpaxKowA8ddR2gXuIt0O43gRHgTu4Q+ikskIoIJps7AINwA9b0e/fYJAQ1FZWD9CP2/wOUI/DPJT+IDRqGrhCeGIEaNEPdDhqO8iVH/NrEOST4BgSwo6j3gEMBOgTNwP4m6+nhHkI/lG4VAiPgcGAveJg0IxpYxvROh6kUZi5wLhpvO2oPyKdEF6asWyEMg/hJ0PjyN+VXwhDIXuGYQh46KhtIeYnwjSMMhss3glbjvoDkglhyPS2Eck8RJ8OTyB3gl8IryL2tjGM2/wmYn4ySuNyngdMmIE3HfX7iHDPUQ+CZ3q0O+qbyIWIZB7KfyAyaQS4QmhH7oQoIZQyv0EZV75IHE+EJvG/E9oJfyd4yC6yvKO+gQQ/FaKnlbgeiU0hIWw46nnEUJAQiubbHPV1M1bZ5iHeZ4KlQmgD3uAfgofsGfQz34DsKYyFuLemTSMhfATOWOqtiMk/llrRfIuj9zpwG5gtX+Y+SezNK4bwCXsILdgDaAXOOnomYh6Seyw+gwhed9TPWY75mb9FAuYh2XWBWUS4K4QgrAE3gblYFFlIemFkDjEQJYQ1JMD5WBUdIY2VoXkkhLUQv7NqfidR85De0liYEFaRK7+QqCJDmmuDC0gIqz7nrJhzUjEP6S+O+oWwglz5xTQFaawOLwI3gO8Hjo2ZY6maB72vzPwErgEXkO8MuVaiEkcrgCK/lcfPNkhkAWgL0KYKmZiMIG9Ktn0Bx5G/wDcgXwW8R6avJ41G4HQOufInlas5ZO5+UpnJAU3AFyy7J44xe8BnoOk/JruwYo92bigAAAAASUVORK5CYII=);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain;
+        text-decoration: none;
+        padding-right: .25rem
+    }
+
+    .mini-audio-player .btn-download .icon-download-done {
+        width: .45rem;
+        height: .45rem;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        display: inline-block;
+        background-image: url(data:image/png;base64,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);
+        background-repeat: no-repeat;
+        background-position: 0 0;
+        background-size: contain
+    }</style>
+    <style type="text/css">.MathJax_Display {
+        overflow: auto
+    }
+
+    .poster {
+        position: fixed;
+        left: -10000px;
+        top: -10000px;
+        overflow: hidden;
+        padding: 1rem;
+        background: #ececec
+    }
+
+    .richcontent-pre-copy {
+        font-size: 13px;
+        color: #888;
+        position: absolute;
+        right: 1em;
+        top: .2em;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none
+    }
+
+    .richcontent-pre-copy .iconfont {
+        font-size: 12px;
+        margin-right: .2em
+    }</style>
+    <style type="text/css">.breadcrumb {
+        padding: 30px 0;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        -ms-flex-wrap: wrap;
+        flex-wrap: wrap;
+        background: #fff
+    }
+
+    .breadcrumb a.title {
+        color: #e57c39;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb span.title {
+        color: #888;
+        font-size: 15px;
+        font-weight: 400
+    }
+
+    .breadcrumb .split {
+        color: #ccc;
+        font-size: 10px;
+        margin-right: 5px
+    }</style>
+    <style type="text/css">.comment-item {
+        list-style-position: inside;
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        margin-bottom: 1rem
+    }
+
+    .comment-item a {
+        border-bottom: none
+    }
+
+    .comment-item .avatar {
+        width: 2.625rem;
+        height: 2.625rem;
+        -ms-flex-negative: 0;
+        flex-shrink: 0;
+        border-radius: 50%
+    }
+
+    .comment-item .info {
+        margin-left: .5rem;
+        -webkit-box-flex: 1;
+        -ms-flex-positive: 1;
+        flex-grow: 1
+    }
+
+    .comment-item .info .hd {
+        width: 100%;
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-pack: justify;
+        -ms-flex-pack: justify;
+        justify-content: space-between;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .username {
+        color: #888;
+        font-size: 15.25px;
+        font-weight: 400;
+        line-height: 1.2
+    }
+
+    .comment-item .info .hd .control {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center
+    }
+
+    .comment-item .info .hd .control .btn-share {
+        color: #888;
+        font-size: .75rem;
+        margin-right: 1rem
+    }
+
+    .comment-item .info .hd .control .btn-praise {
+        display: -webkit-box;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+        flex-direction: row;
+        -webkit-box-align: center;
+        -ms-flex-align: center;
+        align-items: center;
+        font-size: 15.25px;
+        text-decoration: none
+    }
+
+    .comment-item .info .hd .control .btn-praise i {
+        color: #888;
+        display: inline-block;
+        font-size: .75rem;
+        margin-right: .3rem;
+        margin-top: -.01rem
+    }
+
+    .comment-item .info .hd .control .btn-praise i.on, .comment-item .info .hd .control .btn-praise span {
+        color: #fa8919
+    }
+
+    .comment-item .info .bd {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all;
+        line-height: 1.6
+    }
+
+    .comment-item .info .time {
+        color: #888;
+        font-size: 9px;
+        line-height: 1
+    }
+
+    .comment-item .info .reply .reply-hd {
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-hd span {
+        margin-left: -12px;
+        color: #888;
+        font-weight: 400
+    }
+
+    .comment-item .info .reply .reply-hd i {
+        color: #fa8919;
+        font-size: 15.25px
+    }
+
+    .comment-item .info .reply .reply-content {
+        color: #353535;
+        font-size: 15.25px;
+        font-weight: 400;
+        white-space: normal;
+        word-break: break-all
+    }
+
+    .comment-item .info .reply .reply-time {
+        color: #888;
+        font-size: 9px
+    }
+
+    .comment-template {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <div data-v-87ffcada="" class="article"><!---->
+        <div data-v-87ffcada="" class="main main-app">
+            <h1 data-v-87ffcada="" class="article-title pd">
+                08丨什么是SQL的聚集函数，如何利用它们汇总表的数据？
+            </h1>
+            <div data-v-87ffcada="" class="article-info pd"><span data-v-87ffcada="">2019-06-28</span> <span data-v-87ffcada="">陈旸</span></div>
+            <div data-v-87ffcada="" style="display:${article_display}" class="article-content typo common-content pd">
+                <img data-v-87ffcada="" src="https://static001.geekbang.org/resource/image/ff/51/ffe1430755c8bc24fc22465f87fc6a51.jpg">
+                <!---->
+                <div data-v-87ffcada="" class="mini-audio-player">
+                    <div class="audio-info">
+                        <p><span>朗读人：陈旸&nbsp;&nbsp;&nbsp;</span>
+                        </p></div> <!---->
+                    <audio title="" src="https://static001.geekbang.org/resource/audio/35/09/3537c5286d494ac21a3ba0a1cc12a509.mp3" controls="controls"></audio>
+                </div>
+                <div data-v-87ffcada="" id="article-content" class="">
+                    <div class="text"><p>我们上节课讲到了SQL函数，包括算术函数、字符串函数、日期函数和转换函数。实际上SQL函数还有一种，叫做聚集函数，它是对一组数据进行汇总的函数，输入的是一组数据的集合，输出的是单个值。通常我们可以利用聚集函数汇总表的数据，如果稍微复杂一些，我们还需要先对数据做筛选，然后再进行聚集，比如先按照某个条件进行分组，对分组条件进行筛选，然后得到筛选后的分组的汇总信息。</p><p>有关今天的内容，你重点需要掌握以下几个方面：</p><ol>
+<li>聚集函数都有哪些，能否在一条SELECT语句中使用多个聚集函数；</li>
+<li>如何对数据进行分组，并进行聚集统计；</li>
+<li>如何使用HAVING过滤分组，HAVING和WHERE的区别是什么。</li>
+</ol><h2>聚集函数都有哪些</h2><p>SQL中的聚集函数一共包括5个，可以帮我们求某列的最大值、最小值和平均值等，它们分别是：</p><p><img src="https://static001.geekbang.org/resource/image/d1/15/d101026459ffa96504ba3ebb85054415.png" alt=""></p><p>这些函数你可能已经接触过，我们再来简单复习一遍。我们继续使用heros数据表，对王者荣耀的英雄数据进行聚合。</p><p>如果我们想要查询最大生命值大于6000的英雄数量。</p><pre><code>SQL：SELECT COUNT(*) FROM heros WHERE hp_max &gt; 6000
+</code></pre><p>运行结果为41。</p><p>如果想要查询最大生命值大于6000，且有次要定位的英雄数量，需要使用COUNT函数。</p><pre><code>SQL：SELECT COUNT(role_assist) FROM heros WHERE hp_max &gt; 6000
+</code></pre><p>运行结果是 23。</p><!-- [[[read_end]]] --><p>需要说明的是，有些英雄没有次要定位，即role_assist为NULL，这时<code>COUNT(role_assist)</code>会忽略值为NULL的数据行，而COUNT(*)只是统计数据行数，不管某个字段是否为NULL。</p><p>如果我们想要查询射手（主要定位或者次要定位是射手）的最大生命值的最大值是多少，需要使用MAX函数。</p><pre><code>SQL：SELECT MAX(hp_max) FROM heros WHERE role_main = '射手' or role_assist = '射手'
+</code></pre><p>运行结果为6014。</p><p>你能看到，上面的例子里，都是在一条SELECT语句中使用了一次聚集函数，实际上我们也可以在一条SELECT语句中进行多项聚集函数的查询，比如我们想知道射手（主要定位或者次要定位是射手）的英雄数、平均最大生命值、法力最大值的最大值、攻击最大值的最小值，以及这些英雄总的防御最大值等汇总数据。</p><p>如果想要知道英雄的数量，我们使用的是COUNT(*)函数，求平均值、最大值、最小值，以及总的防御最大值，我们分别使用的是AVG、MAX、MIN和SUM函数。另外我们还需要对英雄的主要定位和次要定位进行筛选，使用的是<code>WHERE role_main = '射手' or role_assist = '射手'</code>。</p><pre><code>SQL: SELECT COUNT(*), AVG(hp_max), MAX(mp_max), MIN(attack_max), SUM(defense_max) FROM heros WHERE role_main = '射手' or role_assist = '射手'
+</code></pre><p>运行结果：</p><p><img src="https://static001.geekbang.org/resource/image/b9/9d/b9cbaa2af34e0b1eb74e76b60e7eaf9d.png" alt=""><br>
+需要说明的是AVG、MAX、MIN等聚集函数会自动忽略值为NULL的数据行，MAX和MIN函数也可以用于字符串类型数据的统计，如果是英文字母，则按照A—Z的顺序排列，越往后，数值越大。如果是汉字则按照全拼拼音进行排列。比如：</p><pre><code>SQL：SELECT MIN(CONVERT(name USING gbk)), MAX(CONVERT(name USING gbk)) FROM heros
+</code></pre><p>运行结果：</p><p><img src="https://static001.geekbang.org/resource/image/e1/71/e1fa345ebcb78e686d3dd16cb075e871.png" alt=""><br>
+需要说明的是，我们需要先把name字段统一转化为gbk类型，使用<code>CONVERT(name USING gbk)</code>，然后再使用MIN和MAX取最小值和最大值。</p><p>我们也可以对数据行中不同的取值进行聚集，先用DISTINCT函数取不同的数据，然后再使用聚集函数。比如我们想要查询不同的生命最大值的英雄数量是多少。</p><pre><code>SQL: SELECT COUNT(DISTINCT hp_max) FROM heros
+</code></pre><p>运行结果为61。</p><p>实际上在heros这个数据表中，一共有69个英雄数量，生命最大值不一样的英雄数量是61个。</p><p>假如我们想要统计不同生命最大值英雄的平均生命最大值，保留小数点后两位。首先需要取不同生命最大值，即<code>DISTINCT hp_max</code>，然后针对它们取平均值，即<code>AVG(DISTINCT hp_max)</code>，最后再针对这个值保留小数点两位，也就是<code>ROUND(AVG(DISTINCT hp_max), 2)</code>。</p><pre><code>SQL: SELECT ROUND(AVG(DISTINCT hp_max), 2) FROM heros
+</code></pre><p>运行结果为6653.84。</p><p>你能看到，如果我们不使用DISTINCT函数，就是对全部数据进行聚集统计。如果使用了DISTINCT函数，就可以对数值不同的数据进行聚集。一般我们使用MAX和MIN函数统计数据行的时候，不需要再额外使用DISTINCT，因为使用DISTINCT和全部数据行进行最大值、最小值的统计结果是相等的。</p><h2>如何对数据进行分组，并进行聚集统计</h2><p>我们在做统计的时候，可能需要先对数据按照不同的数值进行分组，然后对这些分好的组进行聚集统计。对数据进行分组，需要使用GROUP BY子句。</p><p>比如我们想按照英雄的主要定位进行分组，并统计每组的英雄数量。</p><pre><code>SQL: SELECT COUNT(*), role_main FROM heros GROUP BY role_main
+</code></pre><p>运行结果（6条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/6b/9c/6ba58294f85edbb37499d3f28f60719c.png" alt=""></p><p>如果我们想要对英雄按照次要定位进行分组，并统计每组英雄的数量。</p><pre><code>SELECT COUNT(*), role_assist FROM heros GROUP BY role_assist
+</code></pre><p>运行结果：（6条记录）</p><p><img src="https://static001.geekbang.org/resource/image/08/c0/0802ba993844e2875bd6cbbc3d4fa5c0.png" alt=""></p><p>你能看出如果字段为NULL，也会被列为一个分组。在这个查询统计中，次要定位为NULL，即只有一个主要定位的英雄是40个。</p><p>我们也可以使用多个字段进行分组，这就相当于把这些字段可能出现的所有的取值情况都进行分组。比如，我们想要按照英雄的主要定位、次要定位进行分组，查看这些英雄的数量，并按照这些分组的英雄数量从高到低进行排序。</p><pre><code>SELECT COUNT(*) as num, role_main, role_assist FROM heros GROUP BY role_main, role_assist ORDER BY num DESC
+</code></pre><p>运行结果：（19条记录）</p><p><img src="https://static001.geekbang.org/resource/image/35/8f/3504fa2cf288a50eb39028d1768d5c8f.png" alt=""></p><h2>如何使用HAVING过滤分组，它与WHERE的区别是什么？</h2><p>当我们创建出很多分组的时候，有时候就需要对分组进行过滤。你可能首先会想到WHERE子句，实际上过滤分组我们使用的是HAVING。HAVING的作用和WHERE一样，都是起到过滤的作用，只不过WHERE是用于数据行，而HAVING则作用于分组。</p><p>比如我们想要按照英雄的主要定位、次要定位进行分组，并且筛选分组中英雄数量大于5的组，最后按照分组中的英雄数量从高到低进行排序。</p><p>首先我们需要获取的是英雄的数量、主要定位和次要定位，即<code>SELECT COUNT(*) as num, role_main, role_assist</code>。然后按照英雄的主要定位和次要定位进行分组，即<code>GROUP BY role_main, role_assist</code>，同时我们要对分组中的英雄数量进行筛选，选择大于5的分组，即<code>HAVING num &gt; 5</code>，然后按照英雄数量从高到低进行排序，即<code>ORDER BY num DESC</code>。</p><pre><code>SQL: SELECT COUNT(*) as num, role_main, role_assist FROM heros GROUP BY role_main, role_assist HAVING num &gt; 5 ORDER BY num DESC
+</code></pre><p>运行结果：（4条记录）</p><p><img src="https://static001.geekbang.org/resource/image/ca/61/ca9747ad58e8cf637fe352fb0cfd5761.png" alt=""><br>
+你能看到还是上面这个分组，只不过我们按照数量进行了过滤，筛选了数量大于5的分组进行输出。如果把HAVING替换成了WHERE，SQL则会报错。对于分组的筛选，我们一定要用HAVING，而不是WHERE。另外你需要知道的是，HAVING支持所有WHERE的操作，因此所有需要WHERE子句实现的功能，你都可以使用HAVING对分组进行筛选。</p><p>我们再来看个例子，通过这个例子查看一下WHERE和HAVING进行条件过滤的区别。筛选最大生命值大于6000的英雄，按照主要定位、次要定位进行分组，并且显示分组中英雄数量大于5的分组，按照数量从高到低进行排序。</p><pre><code>SQL: SELECT COUNT(*) as num, role_main, role_assist FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main, role_assist HAVING num &gt; 5 ORDER BY num DESC
+</code></pre><p>运行结果：（2条记录）</p><p><img src="https://static001.geekbang.org/resource/image/7b/3a/7b62b2a12ec9e66675b3da8b5b54093a.png" alt=""></p><p>你能看到，还是针对上一个例子的查询，只是我们先增加了一个过滤条件，即筛选最大生命值大于6000的英雄。这里我们就需要先使用WHERE子句对最大生命值大于6000的英雄进行条件过滤，然后再使用GROUP BY进行分组，使用HAVING进行分组的条件判断，然后使用ORDER BY进行排序。</p><h2>总结</h2><p>今天我对SQL的聚集函数进行了讲解。通常我们还会对数据先进行分组，然后再使用聚集函数统计不同组的数据概况，比如数据行数、平均值、最大值、最小值以及求和等。我们也可以使用HAVING对分组进行过滤，然后通过ORDER BY按照某个字段的顺序进行排序输出。有时候你能看到在一条SELECT语句中，可能会包括多个子句，用WHERE进行数据量的过滤，用GROUP BY进行分组，用HAVING进行分组过滤，用ORDER BY进行排序……</p><p><strong>你要记住，在SELECT查询中，关键字的顺序是不能颠倒的，它们的顺序是：</strong></p><pre><code>SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ...
+</code></pre><p>另外需要注意的是，使用GROUP BY进行分组，如果想让输出的结果有序，可以在GROUP BY后使用ORDER BY。因为GROUP BY只起到了分组的作用，排序还是需要通过ORDER BY来完成。</p><p><img src="https://static001.geekbang.org/resource/image/3a/de/3aa2b0626f5cfc64b4a7175de938d1de.png" alt=""><br>
+我今天对SQL的聚集函数以及SQL查询中的关键字顺序进行了讲解，但你还是需要通过训练加深理解，基于heros数据表，请你写出下面2个SQL查询语句：</p><ol>
+<li>筛选最大生命值大于6000的英雄，按照主要定位进行分组，选择分组英雄数量大于5的分组，按照分组英雄数从高到低进行排序，并显示每个分组的英雄数量、主要定位和平均最大生命值。</li>
+<li>筛选最大生命值与最大法力值之和大于7000的英雄，按照攻击范围来进行分组，显示分组的英雄数量，以及分组英雄的最大生命值与法力值之和的平均值、最大值和最小值，并按照分组英雄数从高到低进行排序，其中聚集函数的结果包括小数点后两位。</li>
+</ol><p>欢迎你在评论区与我分享你的答案，如果你觉得这篇文章有帮助，欢迎把它分享给你的朋友或者同事，一起切磋交流一下。</p><p><img src="https://static001.geekbang.org/resource/image/4f/58/4fd70a3267ad5aeb8c531f0996642f58.jpg" alt=""></p></div>
+                </div> <!---->
+                <div data-v-87ffcada="" class="copyright">
+                    ©版权归极客邦科技所有，未经许可不得转载
+                </div>
+            </div>
+            <div style="display: none">
+                <script src="https://cdn.jsdelivr.net/npm/hls.js"></script>
+                <video id="video" controls="" width="100%">
+                </video>
+                <script>
+                    var video=document.getElementById("video");
+                    if(Hls.isSupported()){
+                        var hls=new Hls();hls.loadSource("${video_url}");
+                        hls.attachMedia(video);
+                        hls.on(Hls.Events.MANIFEST_PARSED,function(){})
+                    }else{
+                        if(video.canPlayType("application/vnd.apple.mpegurl")){
+                            video.src="${video_url}";video.addEventListener("loadedmetadata",function(){})
+                        }
+                    };
+                </script>
+                <div data-v-87ffcada="" id="article-content" class="">
+                        <div class="text"><p>我们上节课讲到了SQL函数，包括算术函数、字符串函数、日期函数和转换函数。实际上SQL函数还有一种，叫做聚集函数，它是对一组数据进行汇总的函数，输入的是一组数据的集合，输出的是单个值。通常我们可以利用聚集函数汇总表的数据，如果稍微复杂一些，我们还需要先对数据做筛选，然后再进行聚集，比如先按照某个条件进行分组，对分组条件进行筛选，然后得到筛选后的分组的汇总信息。</p><p>有关今天的内容，你重点需要掌握以下几个方面：</p><ol>
+<li>聚集函数都有哪些，能否在一条SELECT语句中使用多个聚集函数；</li>
+<li>如何对数据进行分组，并进行聚集统计；</li>
+<li>如何使用HAVING过滤分组，HAVING和WHERE的区别是什么。</li>
+</ol><h2>聚集函数都有哪些</h2><p>SQL中的聚集函数一共包括5个，可以帮我们求某列的最大值、最小值和平均值等，它们分别是：</p><p><img src="https://static001.geekbang.org/resource/image/d1/15/d101026459ffa96504ba3ebb85054415.png" alt=""></p><p>这些函数你可能已经接触过，我们再来简单复习一遍。我们继续使用heros数据表，对王者荣耀的英雄数据进行聚合。</p><p>如果我们想要查询最大生命值大于6000的英雄数量。</p><pre><code>SQL：SELECT COUNT(*) FROM heros WHERE hp_max &gt; 6000
+</code></pre><p>运行结果为41。</p><p>如果想要查询最大生命值大于6000，且有次要定位的英雄数量，需要使用COUNT函数。</p><pre><code>SQL：SELECT COUNT(role_assist) FROM heros WHERE hp_max &gt; 6000
+</code></pre><p>运行结果是 23。</p><!-- [[[read_end]]] --><p>需要说明的是，有些英雄没有次要定位，即role_assist为NULL，这时<code>COUNT(role_assist)</code>会忽略值为NULL的数据行，而COUNT(*)只是统计数据行数，不管某个字段是否为NULL。</p><p>如果我们想要查询射手（主要定位或者次要定位是射手）的最大生命值的最大值是多少，需要使用MAX函数。</p><pre><code>SQL：SELECT MAX(hp_max) FROM heros WHERE role_main = '射手' or role_assist = '射手'
+</code></pre><p>运行结果为6014。</p><p>你能看到，上面的例子里，都是在一条SELECT语句中使用了一次聚集函数，实际上我们也可以在一条SELECT语句中进行多项聚集函数的查询，比如我们想知道射手（主要定位或者次要定位是射手）的英雄数、平均最大生命值、法力最大值的最大值、攻击最大值的最小值，以及这些英雄总的防御最大值等汇总数据。</p><p>如果想要知道英雄的数量，我们使用的是COUNT(*)函数，求平均值、最大值、最小值，以及总的防御最大值，我们分别使用的是AVG、MAX、MIN和SUM函数。另外我们还需要对英雄的主要定位和次要定位进行筛选，使用的是<code>WHERE role_main = '射手' or role_assist = '射手'</code>。</p><pre><code>SQL: SELECT COUNT(*), AVG(hp_max), MAX(mp_max), MIN(attack_max), SUM(defense_max) FROM heros WHERE role_main = '射手' or role_assist = '射手'
+</code></pre><p>运行结果：</p><p><img src="https://static001.geekbang.org/resource/image/b9/9d/b9cbaa2af34e0b1eb74e76b60e7eaf9d.png" alt=""><br>
+需要说明的是AVG、MAX、MIN等聚集函数会自动忽略值为NULL的数据行，MAX和MIN函数也可以用于字符串类型数据的统计，如果是英文字母，则按照A—Z的顺序排列，越往后，数值越大。如果是汉字则按照全拼拼音进行排列。比如：</p><pre><code>SQL：SELECT MIN(CONVERT(name USING gbk)), MAX(CONVERT(name USING gbk)) FROM heros
+</code></pre><p>运行结果：</p><p><img src="https://static001.geekbang.org/resource/image/e1/71/e1fa345ebcb78e686d3dd16cb075e871.png" alt=""><br>
+需要说明的是，我们需要先把name字段统一转化为gbk类型，使用<code>CONVERT(name USING gbk)</code>，然后再使用MIN和MAX取最小值和最大值。</p><p>我们也可以对数据行中不同的取值进行聚集，先用DISTINCT函数取不同的数据，然后再使用聚集函数。比如我们想要查询不同的生命最大值的英雄数量是多少。</p><pre><code>SQL: SELECT COUNT(DISTINCT hp_max) FROM heros
+</code></pre><p>运行结果为61。</p><p>实际上在heros这个数据表中，一共有69个英雄数量，生命最大值不一样的英雄数量是61个。</p><p>假如我们想要统计不同生命最大值英雄的平均生命最大值，保留小数点后两位。首先需要取不同生命最大值，即<code>DISTINCT hp_max</code>，然后针对它们取平均值，即<code>AVG(DISTINCT hp_max)</code>，最后再针对这个值保留小数点两位，也就是<code>ROUND(AVG(DISTINCT hp_max), 2)</code>。</p><pre><code>SQL: SELECT ROUND(AVG(DISTINCT hp_max), 2) FROM heros
+</code></pre><p>运行结果为6653.84。</p><p>你能看到，如果我们不使用DISTINCT函数，就是对全部数据进行聚集统计。如果使用了DISTINCT函数，就可以对数值不同的数据进行聚集。一般我们使用MAX和MIN函数统计数据行的时候，不需要再额外使用DISTINCT，因为使用DISTINCT和全部数据行进行最大值、最小值的统计结果是相等的。</p><h2>如何对数据进行分组，并进行聚集统计</h2><p>我们在做统计的时候，可能需要先对数据按照不同的数值进行分组，然后对这些分好的组进行聚集统计。对数据进行分组，需要使用GROUP BY子句。</p><p>比如我们想按照英雄的主要定位进行分组，并统计每组的英雄数量。</p><pre><code>SQL: SELECT COUNT(*), role_main FROM heros GROUP BY role_main
+</code></pre><p>运行结果（6条记录）：</p><p><img src="https://static001.geekbang.org/resource/image/6b/9c/6ba58294f85edbb37499d3f28f60719c.png" alt=""></p><p>如果我们想要对英雄按照次要定位进行分组，并统计每组英雄的数量。</p><pre><code>SELECT COUNT(*), role_assist FROM heros GROUP BY role_assist
+</code></pre><p>运行结果：（6条记录）</p><p><img src="https://static001.geekbang.org/resource/image/08/c0/0802ba993844e2875bd6cbbc3d4fa5c0.png" alt=""></p><p>你能看出如果字段为NULL，也会被列为一个分组。在这个查询统计中，次要定位为NULL，即只有一个主要定位的英雄是40个。</p><p>我们也可以使用多个字段进行分组，这就相当于把这些字段可能出现的所有的取值情况都进行分组。比如，我们想要按照英雄的主要定位、次要定位进行分组，查看这些英雄的数量，并按照这些分组的英雄数量从高到低进行排序。</p><pre><code>SELECT COUNT(*) as num, role_main, role_assist FROM heros GROUP BY role_main, role_assist ORDER BY num DESC
+</code></pre><p>运行结果：（19条记录）</p><p><img src="https://static001.geekbang.org/resource/image/35/8f/3504fa2cf288a50eb39028d1768d5c8f.png" alt=""></p><h2>如何使用HAVING过滤分组，它与WHERE的区别是什么？</h2><p>当我们创建出很多分组的时候，有时候就需要对分组进行过滤。你可能首先会想到WHERE子句，实际上过滤分组我们使用的是HAVING。HAVING的作用和WHERE一样，都是起到过滤的作用，只不过WHERE是用于数据行，而HAVING则作用于分组。</p><p>比如我们想要按照英雄的主要定位、次要定位进行分组，并且筛选分组中英雄数量大于5的组，最后按照分组中的英雄数量从高到低进行排序。</p><p>首先我们需要获取的是英雄的数量、主要定位和次要定位，即<code>SELECT COUNT(*) as num, role_main, role_assist</code>。然后按照英雄的主要定位和次要定位进行分组，即<code>GROUP BY role_main, role_assist</code>，同时我们要对分组中的英雄数量进行筛选，选择大于5的分组，即<code>HAVING num &gt; 5</code>，然后按照英雄数量从高到低进行排序，即<code>ORDER BY num DESC</code>。</p><pre><code>SQL: SELECT COUNT(*) as num, role_main, role_assist FROM heros GROUP BY role_main, role_assist HAVING num &gt; 5 ORDER BY num DESC
+</code></pre><p>运行结果：（4条记录）</p><p><img src="https://static001.geekbang.org/resource/image/ca/61/ca9747ad58e8cf637fe352fb0cfd5761.png" alt=""><br>
+你能看到还是上面这个分组，只不过我们按照数量进行了过滤，筛选了数量大于5的分组进行输出。如果把HAVING替换成了WHERE，SQL则会报错。对于分组的筛选，我们一定要用HAVING，而不是WHERE。另外你需要知道的是，HAVING支持所有WHERE的操作，因此所有需要WHERE子句实现的功能，你都可以使用HAVING对分组进行筛选。</p><p>我们再来看个例子，通过这个例子查看一下WHERE和HAVING进行条件过滤的区别。筛选最大生命值大于6000的英雄，按照主要定位、次要定位进行分组，并且显示分组中英雄数量大于5的分组，按照数量从高到低进行排序。</p><pre><code>SQL: SELECT COUNT(*) as num, role_main, role_assist FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main, role_assist HAVING num &gt; 5 ORDER BY num DESC
+</code></pre><p>运行结果：（2条记录）</p><p><img src="https://static001.geekbang.org/resource/image/7b/3a/7b62b2a12ec9e66675b3da8b5b54093a.png" alt=""></p><p>你能看到，还是针对上一个例子的查询，只是我们先增加了一个过滤条件，即筛选最大生命值大于6000的英雄。这里我们就需要先使用WHERE子句对最大生命值大于6000的英雄进行条件过滤，然后再使用GROUP BY进行分组，使用HAVING进行分组的条件判断，然后使用ORDER BY进行排序。</p><h2>总结</h2><p>今天我对SQL的聚集函数进行了讲解。通常我们还会对数据先进行分组，然后再使用聚集函数统计不同组的数据概况，比如数据行数、平均值、最大值、最小值以及求和等。我们也可以使用HAVING对分组进行过滤，然后通过ORDER BY按照某个字段的顺序进行排序输出。有时候你能看到在一条SELECT语句中，可能会包括多个子句，用WHERE进行数据量的过滤，用GROUP BY进行分组，用HAVING进行分组过滤，用ORDER BY进行排序……</p><p><strong>你要记住，在SELECT查询中，关键字的顺序是不能颠倒的，它们的顺序是：</strong></p><pre><code>SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ...
+</code></pre><p>另外需要注意的是，使用GROUP BY进行分组，如果想让输出的结果有序，可以在GROUP BY后使用ORDER BY。因为GROUP BY只起到了分组的作用，排序还是需要通过ORDER BY来完成。</p><p><img src="https://static001.geekbang.org/resource/image/3a/de/3aa2b0626f5cfc64b4a7175de938d1de.png" alt=""><br>
+我今天对SQL的聚集函数以及SQL查询中的关键字顺序进行了讲解，但你还是需要通过训练加深理解，基于heros数据表，请你写出下面2个SQL查询语句：</p><ol>
+<li>筛选最大生命值大于6000的英雄，按照主要定位进行分组，选择分组英雄数量大于5的分组，按照分组英雄数从高到低进行排序，并显示每个分组的英雄数量、主要定位和平均最大生命值。</li>
+<li>筛选最大生命值与最大法力值之和大于7000的英雄，按照攻击范围来进行分组，显示分组的英雄数量，以及分组英雄的最大生命值与法力值之和的平均值、最大值和最小值，并按照分组英雄数从高到低进行排序，其中聚集函数的结果包括小数点后两位。</li>
+</ol><p>欢迎你在评论区与我分享你的答案，如果你觉得这篇文章有帮助，欢迎把它分享给你的朋友或者同事，一起切磋交流一下。</p><p><img src="https://static001.geekbang.org/resource/image/4f/58/4fd70a3267ad5aeb8c531f0996642f58.jpg" alt=""></p></div>
+                </div>
+            </div>
+            <div data-v-87ffcada="" class="article-comments pd"><h2 data-v-87ffcada=""><span data-v-87ffcada="">精选留言</span></h2>
+                <ul data-v-87ffcada="">
+
+                    <li data-v-87ffcada="" class="comment-item comment-template">
+                        <img src="${user_header}" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">${user_name}</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">${like_count}</span></a></div>
+                            </div>
+                            <div class="bd comment-content">${comment_content}
+                            </div>
+                            <span class="time">${comment_ctime}</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">${user_name}</span></div>
+                                <p class="reply-content">${content}</p>
+                                <p class="reply-time">${ctime}</p></div>
+                        </div>
+                    </li>
+                <li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/fc/90/c9df0459.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ack</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">15</span></a></div>
+                            </div>
+                            <div class="bd comment-content">练习题<br>1.SELECT COUNT(*) AS num,role_main,AVG(hp_max) FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING num&gt;5 ORDER BY num DESC; <br>2.SELECT COUNT(*) AS num,ROUND(MAX(hp_max+mp_max),2),ROUND(AVG(hp_max+mp_max),2),ROUND(MIN(hp_max+mp_max),2) FROM heros WHERE hp_max+mp_max &gt; 7000 GROUP BY attack_range ORDER BY num DESC;</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/5a/5e/a897cb0d.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">grey927</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">13</span></a></div>
+                            </div>
+                            <div class="bd comment-content">ORDER BY 是对分的组排序还是对分组中的记录排序呢？</div>
+                            <span class="time">2019-07-04</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">这是个好问题，ORDER BY就是对记录进行排序。如果你在前面用到了GROUP BY，实际上是一种分组的聚合方式，已经把一组的数据聚合成为了一条记录，所以再进行排序的时候，也相当于是对分的组进行排序。</p>
+                                <p class="reply-time">2019-07-04</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/e5/33/ff5c52ad.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Amanda</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">8</span></a></div>
+                            </div>
+                            <div class="bd comment-content">一个发现：虽然 SELECT 的执行顺序在 GROUP BY 和 HAVING 后面，但对于SELECT中列的别名都可以使用。<br>MySQL中<br>1. &gt; SELECT COUNT(*) as num, role_main, AVG(hp_max) FROM heros<br>    -&gt; WHERE hp_max&gt;6000<br>    -&gt; GROUP BY role_main<br>    -&gt; HAVING COUNT(*)&gt;5<br>    -&gt; ORDER BY COUNT(*) DESC;<br>+-----+-----------+-------------+<br>| num | role_main | AVG(hp_max) |<br>+-----+-----------+-------------+<br>|  17 | 战士      |        7028 |<br>|  10 | 坦克      |      8312.4 |<br>|   6 | 法师      |        6417 |<br>+-----+-----------+-------------+<br>2. &gt; SELECT COUNT(*) num, ROUND(AVG(hp_max+mp_max), 2) avg, ROUND(MAX(hp_max+mp_max), 2) max, ROUND(MIN(hp_max+mp_max), 2) min FROM heros<br>    -&gt; WHERE (hp_max+mp_max)&gt;7000<br>    -&gt; GROUP BY attack_range<br>    -&gt; ORDER BY num DESC;<br>+-----+---------+----------+---------+<br>| num | avg     | max      | min     |<br>+-----+---------+----------+---------+<br>|  36 | 8654.42 | 11036.00 | 7117.00 |<br>|  26 | 7743.77 |  8737.00 | 7025.00 |<br>+-----+---------+----------+---------+<br></div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">在执行顺序上，SELECT字段在GROUP BY和HAVING之后，不过在SELECT字段之前，已经计算了聚集函数，也就是COUNT(*) as num。聚集函数的计算在GROUP BY之后，HAVING之前</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/41/bb/21ce60d2.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">安静的boy</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">3</span></a></div>
+                            </div>
+                            <div class="bd comment-content">where先对数据进行排序，group by再进行分组。让我对数据筛选和分组恍然大悟！</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">理解了HAVING和WHERE的区别，就了解了分组过滤和条件过滤。还有SELECT语句种的关键字的顺序：SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ...</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/ca/bd/a51ae4b2.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">吃饭饭</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">讲的很详细了，入门必备</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">谢谢！</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/0c/0f/93d1c8eb.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">mickey</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">/*<br>1.筛选最大生命值大于6000的英雄，按照主要定位进行分组，选择分组英雄数量大于5的分组，<br>按照分组英雄数从高到低进行排序，并显示每个分组的英雄数量、主要定位和平均最大生命值。<br>*/<br>SELECT count(*) as num, role_main, AVG(hp_max)<br>FROM heros <br>WHERE hp_max &gt; 6000 <br>GROUP BY role_main <br>HAVING num &gt; 5 <br>ORDER BY num DESC <br><br>num role_main AVG(hp_max)<br>------------------------------------<br>17	战士	7028<br>10	坦克	8312.4<br>6	法师	6417<br><br>/*<br>2.筛选最大生命值与最大法力值之和大于7000的英雄，按照攻击范围来进行分组，<br>显示分组的英雄数量，以及分组英雄的最大生命值与法力值之和的平均值、最大值和最小值，<br>并按照分组英雄数从高到低进行排序，其中聚集函数的结果包括小数点后两位。<br>*/<br>SELECT count(*) as num, ROUND(AVG(hp_max + mp_max), 2), MAX(hp_max + mp_max), MIN(hp_max + mp_max)<br>FROM heros <br>WHERE hp_max + mp_max &gt; 7000 <br>GROUP BY attack_range<br>HAVING num &gt; 5 <br>ORDER BY num DESC <br><br>num, ROUND(AVG(hp_max + mp_max), 2), MAX(hp_max + mp_max), MIN(hp_max + mp_max)<br>------------------------------------------------------------------------<br>62	8272.53	11036	7025</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">SQL正确，最后结果贴的不太完整</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Taozi</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">练习2中反复出现的hp_max+mp_max可以绑定到一个变量吗？</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/18/32/82/273a44cd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">圆子蛋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.SELECT COUNT(*) as num,role_main,AVG(hp_max) FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING num&gt;5 ORDER BY num DESC; <br>2.SELECT COUNT(*) as num,ROUND(MAX(hp_max+mp_max),2),ROUND(AVG(hp_max+mp_max),2),ROUND(MIN(hp_max+mp_max),2) FROM heros WHERE (hp_max+mp_max) &gt; 7000 GROUP BY attack_range ORDER BY num DESC;<br>老师在“如何对数据进行分组，并进行聚集统计”的第三个例子里，COUNT(*) 后面没有加 as num，但是 ORDER BY 里直接出现了 num？</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">COUNT(*)后面应该有 as num</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/0c/0f/93d1c8eb.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">mickey</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">2</span></a></div>
+                            </div>
+                            <div class="bd comment-content">有个错误：<br>文中“比如，我们想要按照英雄的主要定位、次要定位进行分组，查看这些英雄的数量，并按照这些分组的英雄数量从高到低进行排序。”的SQL语句：SQL: SELECT COUNT(*), role_main, role_assist FROM heros GROUP BY role_main, role_assist ORDER BY num DESC<br><br>在MySQL里会报错：[Err] 1054 - Unknown column 'num' in 'order clause'<br><br>要改为：SELECT COUNT(*) as num, role_main, role_assist FROM heros GROUP BY role_main, role_assist ORDER BY num DESC;</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">编辑回复</span></div>
+                                <p class="reply-content">您好，文章已进行更正，谢谢您的反馈。</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/e1/1a/20977779.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">峻铭</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">前面老师在评论中回复过，在group by分组和having筛选分组之间还有一步使用聚集函数进行计算，在目前看到的having都是对cout聚集函数结果的筛选，想试试对其他聚集函数的筛选，然后对训练1做了点小改动：<br>select count(*) as c,role_main,avg(hp_max) as v  from heros where hp_max &gt; 6000 GROUP BY role_main HAVING c &gt; 5 and v &gt; 7000 order by c DESC;</div>
+                            <span class="time">2019-09-01</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/d3/24/58c0a3dd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">bear</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">Having 部分精彩，赞👍</div>
+                            <span class="time">2019-08-17</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">感谢</p>
+                                <p class="reply-time">2019-08-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/2b/84/07f0c0d6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">supermouse</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">思考题 1：<br>SELECT <br>    COUNT(*) AS num, role_main, AVG(hp_max)<br>FROM<br>    heros<br>WHERE<br>    hp_max &gt; 6000<br>GROUP BY role_main<br>HAVING num &gt; 5<br>ORDER BY num DESC;<br>思考题 2：<br>SELECT <br>    COUNT(*) AS num,<br>    attack_range,<br>    ROUND(AVG(hp_max + mp_max), 2),<br>    ROUND(MAX(hp_max + mp_max), 2),<br>    ROUND(MIN(hp_max + mp_max), 2)<br>FROM<br>    heros<br>WHERE<br>    hp_max + mp_max &gt; 7000<br>GROUP BY attack_range<br>ORDER BY num DESC;</div>
+                            <span class="time">2019-06-29</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-06-29</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/aa/a3/98f98082.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">太乙鲲</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">1</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT COUNT(*) AS num, role_main, AVG(hp_max)  AS avg_max FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING num &gt; 5 ORDER BY num DESC;<br>SELECT ROUND((COUNT(*)),2) AS num, ROUND((AVG(hp_max+mp_max)),2) AS heros_avg, ROUND((MAX(hp_max+mp_max)),2) AS max_avg, ROUND((MIN(hp_max+mp_max)),2) AS min_avg FROM heros WHERE (hp_max+mp_max) &gt; 7000 GROUP BY attack_range ORDER BY num desc;<br></div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确 不过COUNT(*)就不需要用ROUND了</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/19/f7/46/209ca424.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Coool</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1、<br>SELECT <br>    COUNT(*) AS num, role_main, AVG(hp_max)<br>FROM<br>    heros<br>WHERE hp_max&gt;6000<br>GROUP BY role_main <br>HAVING num &gt; 5<br>ORDER BY num DESC<br>2、<br>SELECT <br>    COUNT(*) AS num, ROUND( AVG(hp_max+mp_max),2), ROUND( MAX(hp_max+mp_max),2), ROUND( MIN(hp_max+mp_max),2)<br>FROM<br>    heros<br>WHERE (hp_max+mp_max)&gt;7000<br>GROUP BY attack_range <br>ORDER BY num DESC</div>
+                            <span class="time">2019-10-18</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/92/ba/9d968a90.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">whaleFall_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1）<br>SELECT COUNT(*) nums,role_main,AVG(hp_max) avg_hp<br>from heros<br>WHERE hp_max &gt; 6000<br>GROUP BY role_main<br>HAVING nums &gt; 5<br>ORDER BY nums DESC<br><br>2）SELECT COUNT(*) as nums,attack_range,ROUND(AVG(hp_max + mp_max),2) as avg_hp_mp,<br>			 MAX(hp_max + mp_max) as max_hp_mp,<br>			 MIN(hp_max + mp_max) as min_hp_mp<br>FROM heros<br>WHERE (hp_max + mp_max) &gt; 7000<br>GROUP BY attack_range<br>ORDER BY nums DESC</div>
+                            <span class="time">2019-10-17</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/4c/4e/91267714.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Cola_</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">练习题<br>1.select count(*) as num,role_main,avg(hp_max) from heros where hp_max&gt;6000 group by role_main having num&gt;5 order by num desc;<br>2.select count(*) as num,round(avg(hp_max+mp_max),2),round(max(hp_max+mp_max),2),round(min(hp_max+mp_max),2) from heros where (hp_max+mp_max&gt;7000) group by attack_range order by num desc;</div>
+                            <span class="time">2019-09-29</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/19/00/bb/25a29311.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">森鱼</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">课后题确实要写一下才会发现自己的错误在哪里，我竟然会忘了写FROM heros……</div>
+                            <span class="time">2019-09-08</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">慢慢来 多做就好了</p>
+                                <p class="reply-time">2019-10-07</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/ea/46/9c9808a9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Serendipity</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content"><br>SELECT COUNT(*) as num, role_main, AVG(hp_max) FROM heros WHERE hp_max&gt;6000 GROUP BY role_main HAVING num&gt;5 ORDER BY num DESC<br>SELECT COUNT(*) as num, attack_range, ROUND(AVG(hp_max+mp_max), 2), ROUND(MAX(hp_max+mp_max),2), ROUND(MIN(hp_max+mp_max),2) FROM heros WHERE (hp_max+mp_max)&gt;7000 GROUP BY attack_range ORDER BY num DESC<br></div>
+                            <span class="time">2019-08-31</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/14/e6/68/1871d6ba.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">海洋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业：<br>mysql&gt; SELECT COUNT(*) as num, role_main, AVG(hp_max) FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING COUNT(*) &gt; 5 ORDER  BY num DESC;<br>+-----+-----------+-------------+<br>| num | role_main | AVG(hp_max) |<br>+-----+-----------+-------------+<br>|  17 | 战士      |        7028 |<br>|  10 | 坦克      |      8312.4 |<br>|   6 | 法师      |        6417 |<br>+-----+-----------+-------------+<br>3 rows in set (0.06 sec)<br><br>mysql&gt; SELECT ROUND(COUNT(*),2) as num, ROUND(AVG(hp_max+mp_max),2), ROUND(MAX(hp_max+mp_max),2), ROUND(MIN(hp_max+mp_max),2) FROM heros  WHERE (hp_max+mp_max) &gt; 7000 GROUP BY attack_range ORDER BY num DESC;<br>+-----+-----------------------------+-----------------------------+-----------------------------+<br>| num | ROUND(AVG(hp_max+mp_max),2) | ROUND(MAX(hp_max+mp_max),2) | ROUND(MIN(hp_max+mp_max),2) |<br>+-----+-----------------------------+-----------------------------+-----------------------------+<br>|  36 |                     8654.42 |                    11036.00 |                     7117.00 |<br>|  26 |                     7743.77 |                     8737.00 |                     7025.00 |<br>+-----+-----------------------------+-----------------------------+-----------------------------+<br>2 rows in set (0.06 sec)</div>
+                            <span class="time">2019-08-12</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTIk46cor5XVFTPZbPOnb7pViabgy450pobo46hRHFQz5nR5ocYRKIzC8vShic36vwa553H4Vj50x5wA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">冲</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.SELECT COUNT(*) AS num,AVG(hp_max),role_main from heros WHERE hp_max&gt;6000 GROUP BY role_main HAVING num&gt;5 ORDER BY num desc<br>2.SELECT COUNT(*) AS num,ROUND(AVG(hp_max+mp_max),2),ROUND(MAX(hp_max+mp_max),2),ROUND(MIN(hp_max+mp_max),2) <br>FROM heros<br>WHERE hp_max+mp_max &gt; 7000 GROUP BY attack_range ORDER BY num DESC  </div>
+                            <span class="time">2019-08-07</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/75/8d/c6a2a048.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Reiser</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SQL：<br>SELECT COUNT(*) AS num ,role_main,AVG(hp_max) FROM heros WHERE hp_max&gt;6000 GROUP BY role_main HAVING num &gt;5 ORDER BY num DESC;<br><br>SELECT COUNT(*) AS num, ROUND(AVG(mp_max+hp_max),2),ROUND(MAX(mp_max+hp_max),2),ROUND(MIN(mp_max+hp_max),2) FROM heros WHERE (mp_max+hp_max)&gt;7000 GROUP BY attack_range ORDER BY num DESC ;</div>
+                            <span class="time">2019-08-05</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/b5/98/ffaf2aca.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Ronnyz</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业：<br>1 &gt; SELECT COUNT(*) AS num, role_main, role_assist FROM heros<br>    -&gt; WHERE hp_max &gt; 6000<br>    -&gt; GROUP BY role_main<br>    -&gt; HAVING num &gt; 5<br>    -&gt; ORDER BY num DESC;<br>2 &gt; SELECT COUNT(*) AS num, ROUND(AVG(hp_max+mp_max),2) AS hm_avg, MAX(hp_max+mp_max) AS hm_max, MIN(hp_max+mp_max) AS hm_min FROM heros<br>    -&gt; WHERE (hp_max+mp_max) &gt; 7000<br>    -&gt; GROUP BY attack_range<br>    -&gt; ORDER BY num DESC;</div>
+                            <span class="time">2019-07-21</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/89/3e/1976b66f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Fargo</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1. SELECT COUNT(*) as num , role_main, AVG(hp_max) FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING num &gt; 5 ORDER BY num DESC;<br>+-----+-----------+-------------+<br>| num | role_main | AVG(hp_max) |<br>+-----+-----------+-------------+<br>|  17 | 战士      |        7028 |<br>|  10 | 坦克      |      8312.4 |<br>|   6 | 法师      |        6417 |<br>+-----+-----------+-------------+<br><br>2. SELECT COUNT(*) as num, ROUND(AVG(hp_max+mp_max), 2), MAX(hp_max+mp_max), MIN(hp_max+mp_max) FROM heros WHERE (hp_max+mp_max)&gt;7000 GROUP BY role_main ORDER BY num DESC;<br>+-----+------------------------------+--------------------+--------------------+<br>| num | ROUND(AVG(hp_max+mp_max), 2) | MAX(hp_max+mp_max) | MIN(hp_max+mp_max) |<br>+-----+------------------------------+--------------------+--------------------+<br>|  17 |                      7798.29 |               8898 |               7025 |<br>|  16 |                      8289.06 |               9290 |               7117 |<br>|  10 |                      9752.40 |              11036 |               8441 |<br>|   9 |                      7590.78 |               7770 |               7395 |<br>|   6 |                      8523.83 |               9843 |               7325 |<br>|   4 |                      7679.25 |               8054 |               7291 |<br>+-----+------------------------------+--------------------+--------------------+</div>
+                            <span class="time">2019-07-18</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/7a/d5/dbcaadf0.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">蓝影闪电</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT role_main 主要定位,count(1) 数量,AVG(hp_max) 平均最大生命值 FROM heros<br>WHERE hp_max&gt;6000<br>GROUP BY role_main<br>HAVING count(1)&gt;5<br>ORDER BY COUNT(1) DESC;<br><br>SELECT ROUND(MIN(hp_max+mp_max),2) HPMP之和最小值,ROUND(MAX(hp_max+mp_max),2) HPMP之和最大值,ROUND(AVG(hp_max+mp_max),2) HPMP之和平均值, count(1) 英雄数量<br>FROM heros<br>WHERE (hp_max+mp_max)&gt;7000<br>GROUP BY attack_range<br>ORDER BY count(1) DESC;</div>
+                            <span class="time">2019-07-17</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/17/41/af/e5629318.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">꯭J꯭I꯭N꯭🙃</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">#1筛选最大生命值大于6000的英雄，按照主要定位进行分组，选择分组英雄数量大于5的分组，按照分组英雄数从高到低进行排序，并显示每个分组的英雄数量、主要定位和平均最大生命值。<br>-- SELECT COUNT(*) as num, role_main, AVG(hp_max) <br>-- FROM heros <br>-- WHERE hp_max &gt; 6000<br>-- GROUP BY role_main<br>-- HAVING num &gt; 5<br>-- ORDER BY num DESC;<br><br>#2.筛选最大生命值与最大法力值之和大于7000的英雄，按照攻击范围来进行分组，显示分组的英雄数量，以及分组英雄的最大生命值与法力值之和的平均值、最大值和最小值，<br>#并按照分组英雄数从高到低进行排序，其中聚集函数的结果包括小数点后两位。<br>SELECT COUNT(*) as num, ROUND(AVG(DISTINCT (hp_max+mp_max)),2) ,ROUND(MAX(hp_max+mp_max), 2), ROUND(MIN(hp_max+mp_max), 2)<br>FROM heros<br>WHERE (hp_max+mp_max) &gt; 7000<br>GROUP BY attack_range<br>ORDER BY num desc;</div>
+                            <span class="time">2019-07-15</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/17/94/0e/0be827a5.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">　Hail hydra</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">having 是在原查询结果再次过滤 类似于 嵌套查询的意思吗</div>
+                            <span class="time">2019-07-14</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">和嵌套查询不同，HAVING是用于GROUP BY之后的条件过滤</p>
+                                <p class="reply-time">2019-08-27</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKdzXiawss5gGmlPicx9IiblxOTf4oSW16MWd696fue60zDA9NJTrGWenuLxS0COZZSzekV8QZGicyJOQ/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_70747e</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业：<br>1） SELECT<br>	COUNT(*) AS num,<br>	role_main,<br>	AVG(hp_max)<br>FROM<br>	heros<br>WHERE<br>	hp_max &gt; 6000<br>GROUP BY<br>	role_main<br>HAVING<br>	num &gt; 5<br>ORDER BY<br>	num DESC;<br><br>2） SELECT<br>	count(*) AS num,<br>	round(avg(hp_max + mp_max), 2),<br>	round(max(hp_max + mp_max)),<br>	round(min(hp_max + mp_max))<br>FROM<br>	heros<br>WHERE<br>	(hp_max + mp_max) &gt; 7000<br>GROUP BY<br>	attack_range<br>ORDER BY<br>	num DESC;</div>
+                            <span class="time">2019-07-11</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/02/57/9b235866.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">2525</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业: mysql <br>1.SELECT<br>	role_main,<br>	COUNT(role_main) AS sum,<br>	avg(hp_max) AS 平均最大生命值<br>FROM<br>	heros<br>WHERE<br>	hp_max &gt; 6000<br>GROUP BY<br>	role_main<br>HAVING<br>	sum &gt; 5<br>ORDER BY<br>	sum DESC<br>2.SELECT<br>	count(attack_range) AS sum,<br>	round(avg(hp_max + mp_max), 2),<br>	round(max(hp_max + mp_max), 2),<br>	round(min(hp_max + mp_max), 2)<br>FROM<br>	heros<br>WHERE<br>	(hp_max + mp_max) &gt; 7000<br>GROUP BY<br>	attack_range<br>ORDER BY<br>	sum DESC;</div>
+                            <span class="time">2019-07-09</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/72/65/68bd8177.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">雪飞鸿</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">MSSQL中HAVING子句不能使用SELECT中的聚合结果的别名</div>
+                            <span class="time">2019-07-06</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/0d/45/b88a1794.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">一叶知秋</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">交作业<br>1）MySQL SELECT COUNT(*) AS num, role_main, AVG(hp_max) FROM heros WHERE hp_max&gt;6000 GROUP BY role_main HAVING num&gt;5 ORDER BY num;<br>执行结果：<br>+-----+-----------+-------------+<br>| num | role_main | AVG(hp_max) |<br>+-----+-----------+-------------+<br>|   6 | 法师      |        6417 |<br>|  10 | 坦克      |      8312.4 |<br>|  17 | 战士      |        7028 |<br>+-----+-----------+-------------+<br>3 rows in set (0.00 sec)<br><br>2）MySQL  :<br>SELECT COUNT(*) AS num,<br>		 ROUND(AVG(hp_max+mp_max), 2) AS `average(hp+mp)`,<br>		 ROUND(MAX(hp_max+mp_max), 2) AS `maximum(hp+mp)`, <br>		 ROUND(MIN(hp_max+mp_max), 2) AS `minimum(hp+mp)`<br>FROM heros <br>WHERE (hp_max+mp_max)&gt;7000 <br>GROUP BY attack_range <br>ORDER BY num DESC;<br><br>执行结果：<br>| num | average(hp+mp) | maximum(hp+mp) | minimum(hp+mp) |<br>+-----+----------------+----------------+----------------+<br>|  36 |        8654.42 |       11036.00 |        7117.00 |<br>|  26 |        7743.77 |        8737.00 |        7025.00 |<br>+-----+----------------+----------------+----------------+<br>2 rows in set (0.00 sec)</div>
+                            <span class="time">2019-07-05</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/20/27/b4da1c0f.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">虢国技匠</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，“HAVING用于分组过滤”<br>这句是不是把HAVING说的有点小了，HAVING应该是用于中间表或者说临时表的筛选吧</div>
+                            <span class="time">2019-07-04</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/17/ff/b6/f84cf419.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">小美猴77</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">提问一下，老师，练习二里，能否将最大生命与最大法力之和 当做一个变量呢，类似下面这样<br>select  count(*) as num<br>(hp_max+mp_max) as sum_max<br>Round(AVG(sum_max))<br>Round(MAX(sum_max))<br>Round(MIN(sum_max))</div>
+                            <span class="time">2019-07-02</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/6b/5f/cec1e980.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">xcoder</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1. SELECT COUNT(*) AS num, AVG(hp_max),role_main FROM heros WHERE hp_max&gt;6000 <br>GROUP BY role_main HAVING num&gt;5 ORDER BY num DESC;<br>--    +-----+-------------+-----------+<br>| num | AVG(hp_max) | role_main |<br>+-----+-------------+-----------+<br>|  17    |        7028       | 战士      |<br>|  10    |      8312.4       | 坦克      |<br>|   6    |        6417        | 法师      |<br>+-----+-------------+-----------+<br><br>2.  SELECT COUNT(*) AS num,ROUND(AVG(hp_max+mp_max),2),MAX(hp_max+mp_max),MIN(hp_max+mp_max),<br>attack_range FROM heros WHERE hp_max+mp_max&gt;7000 GROUP BY attack_range ORDER BY num DESC;<br>--   +-----+-----------------------------+--------------------+--------------------+--------------+<br>| num | ROUND(AVG(hp_max+mp_max),2) | MAX(hp_max+mp_max) | MIN(hp_max+mp_max) | attack_range |<br>+-----+-----------------------------+--------------------+--------------------+--------------+<br>|  36 |                     8654.42 |              11036 |               7117 | 近战         |<br>|  26 |                     7743.77 |               8737 |               7025 | 远程         |<br>+-----+-----------------------------+--------------------+--------------------+--------------+<br>我想我的应该没有什么问题。。。</div>
+                            <span class="time">2019-07-02</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/e2/bd/b65420ae.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">leol</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">虽然晚一节，作业还是要交的<br>select count(*) as num,role_main ,avg(hp_max)  from heros where hp_max&gt;6000 <br>group by role_main having num&gt;5 order by num desc ;<br><br>select count(*) as num ,round(avg(hp_max+mp_max),2),round(max(hp_max+mp_max),2),round(min(hp_max+mp_max),2)  from heros where hp_max+mp_max&gt;7000<br>group by attack_range  order by num desc;</div>
+                            <span class="time">2019-07-01</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/16/1e/02/2864e0f2.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">华夏</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT COUNT(*) as num, role_main, AVG(hp_max) FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING num &gt; 5 ORDER BY num DESC;<br>+-----+-----------+-------------+<br>| num | role_main | AVG(hp_max) |<br>+-----+-----------+-------------+<br>|  17 | 战士      |        7028 |<br>|  10 | 坦克      |      8312.4 |<br>|   6 | 法师      |        6417 |<br>+-----+-----------+-------------+<br>3 rows in set (0.00 sec)<br><br><br>SELECT COUNT(*) as num, attack_range, ROUND(AVG(hp_max+mp_max),2) as avg_, ROUND(MAX(hp_max+mp_max),2) as max_, ROUND(MIN(hp_max+mp_max),2) as min_ FROM heros WHERE hp_max + mp_max &gt; 7000 GROUP BY attack_range ORDER BY num DESC;<br>+-----+--------------+---------+----------+---------+<br>| num | attack_range | avg_    | max_     | min_    |<br>+-----+--------------+---------+----------+---------+<br>|  36 | 近战         | 8654.42 | 11036.00 | 7117.00 |<br>|  26 | 远程         | 7743.77 |  8737.00 | 7025.00 |<br>+-----+--------------+---------+----------+---------+<br>2 rows in set (0.00 sec)<br></div>
+                            <span class="time">2019-06-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/dd/c1/e73d9bf1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">莫莫</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1、<br>SELECT COUNT(*) AS `sum`,role_main AS '主要定位',AVG(hp_max) AS '最大生命值' FROM heros<br>WHERE hp_max&gt;6000 GROUP BY role_main HAVING `sum`&gt;5 ORDER BY `sum` DESC<br><br>2、<br>SELECT COUNT(*) AS '英雄数量',ROUND(AVG(hp_max+mp_max),2) AS `avg`,ROUND(MAX(hp_max+mp_max),2) AS `max`,ROUND(MIN(hp_max+mp_max),2) AS `min`<br>FROM heros<br>WHERE (hp_max+mp_max)&gt;7000 GROUP BY attack_range</div>
+                            <span class="time">2019-06-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/d6/fa/1f5bf642.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">未来的胡先森</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">交作业了<br>SELECT COUNT(*),role_main ,AVG(hp_max)<br>FROM heros<br>WHERE hp_max&gt;6000<br>GROUP BY role_main<br>HAVING COUNT(*)&gt;5<br>ORDER BY COUNT(*) DESC;<br><br>SELECT COUNT(*),ROUND( AVG(hp_max+mp_max),2),ROUND(MAX(hp_max+mp_max),2),ROUND(MIN(hp_max+mp_max),2)<br>FROM heros<br>WHERE hp_max+mp_max&gt;7000<br>GROUP BY attack_range<br>ORDER BY  COUNT(*) DESC;</div>
+                            <span class="time">2019-06-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/54/6d/c947ef55.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Neo</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1. SELECT COUNT(*) AS hero_num, role_main, AVG(hp_max) FROM heros where hp_max &gt; 6000 GROUP BY role_main HAVING hero_num &gt; 5;<br>2. SELECT COUNT(*) AS hero_num, ROUND(AVG(hp_max+mp_max), 2), MAX(hp_max+mp_max), MIN(hp_max+mp_max) FROM heros WHERE (hp_max+mp_max)&gt;7000 GROUP BY attack_max ORDER BY  hero_num ASC;</div>
+                            <span class="time">2019-06-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/13/f1/21/52e8267b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Hoo-Ah</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT ... FROM ... WHERE ... GROUP BY ... HAVING ... ORDER BY ...</div>
+                            <span class="time">2019-06-30</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/c7/67/0077314b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">田佳伟</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，看了前几节课，讲述的都是sql的基本用法，没有涉及到性能问题，其实很多方式是不能用在大流量的生产环境的，以后的章节会涉及到高效查询的内容吗？</div>
+                            <span class="time">2019-06-29</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/25/02/93864330.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">psnail</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">如果将 select ... from ... where ...group by ... having..改为select ... (select. from. where. group by. )...where...是不是一样？不知道那种效率高？优化器处理逻辑是否一样？</div>
+                            <span class="time">2019-06-29</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/11/fa/2c/9a0c45e6.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">微凉</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.SELECT<br>	COUNT(*) AS num,<br>	role_main,<br>	AVG(hp_max)<br>FROM<br>	heros<br>WHERE<br>	hp_max &gt; 6000<br>GROUP BY<br>	role_main<br>HAVING<br>	num &gt; 5<br>ORDER BY<br>	num DESC<br><br>2.SELECT<br>	COUNT(*) AS num,<br>	ROUND(MAX(hp_max + mp_max), 2),<br>	ROUND(AVG(hp_max + mp_max), 2),<br>	ROUND(MIN(hp_max + mp_max), 2)<br>FROM<br>	heros<br>WHERE<br>	hp_max + mp_max &gt; 7000<br>GROUP BY<br>	attack_range<br>ORDER BY<br>	num DESC</div>
+                            <span class="time">2019-06-29</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/5d/78/f011d586.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">遇见阳光</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">老师，您好，我有个问题问下: 按照sql执行顺序 having在select之前，按照理论来讲having应该不能使用select中的别名  但是实际是可以的。请问这是什么原因</div>
+                            <span class="time">2019-06-29</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTI8mFt5wSkia3yumk409E65JIlGoreva1Q25icTks0XB0EDC7WJ5V0z6zuvgGkI2Zrh5cBXGS5Hea8A/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Geek_669849</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT<br>	COUNT(*) num,<br>	role_main,<br>	AVG( hp_max ) hp_avg <br>FROM<br>	heros <br>WHERE<br>	hp_max &gt; 6000 <br>GROUP BY<br>	role_main <br>HAVING<br>	COUNT(*) &gt; 5 <br>ORDER BY<br>	COUNT(num) DESC ;<br><br>SELECT<br>	COUNT(*) num,<br>	ROUND(AVG(hp_max + mp_max), 2),<br>	ROUND(MAX(hp_max + mp_max), 2),<br>	ROUND(MIN(hp_max + mp_max), 2)<br>FROM<br>	heros<br>WHERE<br>	(hp_max + mp_max) &gt; 7000<br>GROUP BY<br>	attack_range<br>ORDER BY<br>	COUNT(*) desc</div>
+                            <span class="time">2019-06-29</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-06-29</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/4a/c7/ec18673b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">大斌</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1.select count(*) as num,avg(hp_max),role_main from heros where hp_max&gt;6000  group by role_main having num&gt;5 order by num desc;<br><br>2.select count(*) as num,round(max(hp_max+mp_max),2)  as max,round(avg(hp_max+mp_max),2) as avg,round(min(hp_max+mp_max),2) as min from heros where (hp_max+mp_max)&gt;7000 group by attack_range order by num desc;<br><br></div>
+                            <span class="time">2019-06-29</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-06-29</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/17/0c/33/5b6cdb06.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">张昌</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">总结<br>聚集函数 主要针对数据分组<br>主要有分组，最大，最小，平均，计数<br>区分.having和where<br>前者对每一行数据筛选<br>后者对分组筛选</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">聚集函数主要针对数据汇总，是从多个行数据中计算出一个结果，当然也可以用于分组数据的汇总统计</p>
+                                <p class="reply-time">2019-06-29</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/42/7c/c321c8cf.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">抠脚大叔😜读极客</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">我有几个问题想请教一下老师:<br>1. SELECT attack_range,hp_max+mp_max AS hp_mp, <br>COUNT(*) AS num, ROUND(AVG(hp_max+mp_max),2) AS avg_hp_mp, <br>MAX(hp_max+mp_max) AS hm_max,MIN(hp_max+mp_max) AS hm_min<br>FROM heros<br>GROUP BY `attack_range` <br>HAVING hp_max+mp_max&gt;7000<br>ORDER BY num DESC<br>执行这条语句的时候, 会报错Unknown column 'hp_max' in 'having clause', 这样的话, HAVING就没办法进行WHERE操作了, 但是老师在文中说, HAVING支持所有的WHERE操作, 这个是否有冲突? <br>2. 今天刚好遇到一个问题, 用到SQL自定义函数, 学到了SQL中的变量, 于是就在第二题中尝试使用:<br>SELECT attack_range, @hp_mp:=hp_max+mp_max, COUNT(*) AS num, <br>ROUND(AVG(@hp_mp),2) AS avg_hp_mp, <br>MAX(@hp_mp) AS hm_max,MIN(@hp_mp) AS hm_min<br>FROM heros<br>WHERE @hp_mp&gt;7000<br>GROUP BY `attack_range` <br>ORDER BY num DESC<br>结果发现, num这列, 加起来的和, 刚好是heros表中的记录总数, 好像WHERE的筛选没有起到应有的作用, 请老师指点下</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Fred</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT COUNT(*) AS num, role_main, AVG(hp_max) FROM heros WHERE hp_max&gt;6000 GROUP BY role_main HAVING num&gt;5 ORDER BY num DESC;<br>SELECT COUNT(*) AS num, ROUND(AVG(hp_max+mp_max),2),ROUND(MAX(hp_max+mp_max),2),ROUND(MIN(hp_max+mp_max),2) FROM heros WHERE hp_max+mp_max&gt;7000 GROUP BY attack_range ORDER BY num DESC;</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/18/ee/a1ed60d1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ABC</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">在用dbeaver的时候，即使选的是大写的SELECT也会被转换成小写的select不知道是不是默认设置了。。。😅 </div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/18/ee/a1ed60d1.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">ABC</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">作业:<br><br>1. <br><br>select count(*) as num,role_main,AVG(hp_max) from heros where hp_max&gt;6000 group by role_main having num&gt;5 order by num desc;<br><br>num|role_main|AVG(hp_max)|<br>---|---------|-----------|<br> 17|战士       |       7028|<br> 10|坦克       |     8312.4|<br>  6|法师       |       6417|<br><br>2. <br><br>select count(*) as num,round(avg(hp_max+mp_max),2) as avgnum,round(max(hp_max+mp_max),2) as maxnum,round(min(hp_max+mp_max),2) as minnum from heros where (hp_max+mp_max)&gt;7000 group by attack_range  order by num desc;<br><br>num|avgnum |maxnum|minnum|<br>---|-------|------|------|<br> 36|8654.42| 11036|  7117|<br> 26|7743.77|  8737|  7025|</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="http://thirdwx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTKuLsA1AAjUSO7oPHIqbA8f8slVIUw7nhdiaOI4nBYH6RxlyxXyFNe2Bc0g7yMoMHxnlh2mf43aVXw/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">zjajxzg</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1、SELECT count(*), role_main, avg(hp_max)<br>  FROM heros<br> WHERE hp_max &gt; 6000<br> GROUP BY role_main<br> HAVING COUNT(*) &gt; 5<br> ORDER BY COUNT(*) DESC<br><br> 2、SELECT COUNT(*), ROUND(AVG(hp_max + mp_max), 2), ROUND((hp_max + mp_max), 2), ROUND(MIN(hp_max + mp_max), 2)<br>   FROM heros<br>  WHERE (hp_max + mp_max) &gt; 7000<br>	GROUP BY attack_range<br>	ORDER BY COUNT(*) DESC</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Zh</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1:<br>SELECT COUNT(*) AS num,hp_max,AVG(hp_max) AS hp_max_avg FROM learn.heros WHERE hp_max&gt; 6000 GROUP BY role_main HAVING num&gt; 5 ORDER BY num DESC;<br>2:<br>SELECT COUNT(*) AS num,ROUND(AVG(hp_max+mp_max),2),ROUND(MAX(hp_max+mp_max),2),ROUND(MIN(hp_max+mp_max),2) FROM learn.heros WHERE hp_max+mp_max&gt; 7000 GROUP BY attack_range ORDER BY num DESC;</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/0f/71/9273e8a4.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">时间是最真的答案</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SELECT COUNT(*) AS num,role_main,AVG(hp_max) FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING num &gt; 5 ORDER BY num DESC ;<br><br>SELECT COUNT(*) AS num,ROUND(AVG(hp_max+mp_max),2),MAX(hp_max+mp_max),MIN(hp_max+mp_max) FROM heros WHERE (hp_max+mp_max) &gt; 7000 GROUP BY attack_range ORDER BY num DESC ;<br></div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/10/78/f2/d8933ff9.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">月牙天冲</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">1. SELECT COUNT(*) num ,role_main,AVG(hp_max) FROM heros WHERE hp_max&gt;6000 GROUP BY role_main  HAVING num&gt;5 ORDER BY num DESC;<br><br>2. SELECT COUNT(*) num,ROUND(AVG(hp_max+mp_max),2),ROUND(MAX(hp_max+mp_max),2),ROUND(MIN(hp_max+mp_max),2) <br>FROM heros WHERE hp_max+mp_max&gt;7000 GROUP BY attack_range ORDER BY num DESC;</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">正确</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/15/60/82/9a43504b.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">[耶]友超</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">叫作业：<br>1.SELECT COUNT(*) AS num,role_main,role_assist,AVG(hp_max) AS 平均最大生命 FROM heros WHERE hp_max&gt;6000 GROUP BY role_main HAVING num&gt;5 ORDER BY num DESC;<br><br>2.SELECT COUNT(*) AS num,ROUND(AVG(hp_max+mp_max),2) AS 平均值,ROUND(MAX(hp_max+mp_max),2) AS 最大值,ROUND(MIN(hp_max+mp_max),2) AS 最小值 FROM heros WHERE (hp_max+mp_max)&gt;7000 GROUP BY attack_range ORDER BY num DESC;<br><br></div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/0f/48/f3/f1034ffd.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">cricket1981</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">mysql&gt; SELECT COUNT(*) AS num, role_main, AVG(hp_max) AS avg_hp_max FROM heros WHERE hp_max &gt; 6000 GROUP BY role_main HAVING num &gt; 5 ORDER BY num DESC;<br>+-----+-----------+------------+<br>| num | role_main | avg_hp_max |<br>+-----+-----------+------------+<br>|  17 | 战士      |       7028 |<br>|  10 | 坦克      |     8312.4 |<br>|   6 | 法师      |       6417 |<br>+-----+-----------+------------+<br>3 rows in set (0.00 sec)<br><br>mysql&gt; SELECT COUNT(*) AS num, attack_range, ROUND(AVG(hp_max + mp_max), 2) AS avg_hp_mp, MAX(hp_max + mp_max) AS max_hp_mp, MIN(hp_max + mp_max) AS min_hp_mp FROM heros WHERE (hp_max + mp_max) &gt; 7000 GROUP BY attack_range ORDER BY num DESC;<br>+-----+--------------+-----------+-----------+-----------+<br>| num | attack_range | avg_hp_mp | max_hp_mp | min_hp_mp |<br>+-----+--------------+-----------+-----------+-----------+<br>|  36 | 近战         |   8654.42 |     11036 |      7117 |<br>|  26 | 远程         |   7743.77 |      8737 |      7025 |<br>+-----+--------------+-----------+-----------+-----------+<br>2 rows in set (0.00 sec)<br></div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/18/00/23/17868694.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">Samson</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">SQL: SELECT COUNT(*), role_main, role_assist FROM heros GROUP BY role_main, role_assist ORDER BY num DESC<br><br>这个语句中，num是从何而来的呢？是不是忘记在COUNT(*)后面忘记加AS num了？还是本就不比加，如果不必加的话，又是为什么呢？</div>
+                            <span class="time">2019-06-28</span>
+                            <div class="reply">
+                                <div class="reply-hd"><i class="iconfont"></i> <span class="reply-username">作者回复</span></div>
+                                <p class="reply-content">已更正</p>
+                                <p class="reply-time">2019-06-28</p></div>
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://static001.geekbang.org/account/avatar/00/12/79/48/36a07912.jpg" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">15900513463</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">回复楼上，其实计算最大，最小值不需要使用ROUND()函数的，这样只会额外增加内存开销。</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li><li data-v-87ffcada="" class="comment-item">
+                        <img src="https://thirdwx.qlogo.cn/mmopen/vi_32/DYAIOgq83erYNBIwAj3KdIXaXbeMBUjTMz31zAToHIJSdo7oQk8bfsibwViaLobVQ8miatwBlC5spLS9kVCzHMjUA/132" class="avatar">
+                        <div class="info">
+                            <div class="hd"><span class="username">苏籍</span>
+                                <div class="control"><!----> <a href="javascript:;" class="btn-praise"><i class="iconfont"></i> <span class="like-count">0</span></a></div>
+                            </div>
+                            <div class="bd comment-content">HAVING 后面用了NUM这个统计字段，是因为前面SELECT count（*）AS NUM吗，这个是在哪个阶段进行的呢，我记得SELECT阶段在GROUP BY之后呀</div>
+                            <span class="time">2019-06-28</span>
+                            
+                        </div>
+                    </li></ul>
+            </div>
+        </div> <!----> <!----></div>
+</div>
+<link rel="dns-prefetch" href="//cdn.mathjax.org">
+<script type="text/x-mathjax-config">MathJax.Hub.Config({
+        showProcessingMessages: false,
+        messageStyle: "none",
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']],
+          displayMath: [ ["$$","$$"] ],
+          skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code', 'a']
+        }
+      });
+      MathJax.Hub.Register.MessageHook("End Process", function (message) {
+        var eve = new Event('mathjaxfini')
+        window.dispatchEvent(eve)
+      })
+
+
+
+
+</script>
+
+</body>
