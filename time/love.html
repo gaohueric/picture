@@ -2,10 +2,37 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>玲玲，生日快乐，情人节快乐，斯人若彩虹，遇上方知有，感恩遇见，给你的情书💌</title>
+    <title>玲玲，生日快乐，情人节快乐，感恩遇见，给你的情书💌</title>
 </head>
 <body>
+<script>
+    var bodyBgs = [];
+    bodyBgs[0] = "http://music.163.com/song/media/outer/url?id=2012791498.mp3";
+    bodyBgs[1] = "http://music.163.com/song/media/outer/url?id=536570450.mp3";
+    bodyBgs[2] = "http://music.163.com/song/media/outer/url?id=64317.mp3";
+    bodyBgs[3] = "http://music.163.com/song/media/outer/url?id=28287634.mp3";
+    bodyBgs[4] = "http://music.163.com/song/media/outer/url?id=29932451.mp3";
+    bodyBgs[5] = "http://music.163.com/song/media/outer/url?id=254494.mp3";
+    bodyBgs[6] = "http://music.163.com/song/media/outer/url?id=5244822.mp3";
+    var randomBgIndex = Math.round( Math.random() * 6 );
+    document.write('<audio id = \'vd\' + src=\''+bodyBgs[randomBgIndex]+ '\'autoplay=\'autoplay\'></audio>');
 
+</script>
+<script type="text/javascript">
+    window.onload = function(){
+        setInterval("toggleSound()",100);
+    }
+
+    function toggleSound() {
+        var music = document.getElementById("vd");//获取ID
+
+        if (music.paused) { //判读是否播放
+            music.paused=false;
+            music.play(); //没有就播放
+        }
+    }
+</script>
+    
 <script language="javascript">
     today=new Date();
     jran=today.getTime();
