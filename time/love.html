@@ -5,34 +5,7 @@
     <title>玲玲，生日快乐，情人节快乐，感恩遇见，给你的情书💌</title>
 </head>
 <body>
-<script>
-    var bodyBgs = [];
-    bodyBgs[0] = "http://music.163.com/song/media/outer/url?id=2012791498.mp3";
-    bodyBgs[1] = "http://music.163.com/song/media/outer/url?id=536570450.mp3";
-    bodyBgs[2] = "http://music.163.com/song/media/outer/url?id=64317.mp3";
-    bodyBgs[3] = "http://music.163.com/song/media/outer/url?id=28287634.mp3";
-    bodyBgs[4] = "http://music.163.com/song/media/outer/url?id=29932451.mp3";
-    bodyBgs[5] = "http://music.163.com/song/media/outer/url?id=254494.mp3";
-    bodyBgs[6] = "http://music.163.com/song/media/outer/url?id=5244822.mp3";
-    var randomBgIndex = Math.round( Math.random() * 6 );
-    document.write('<audio id = \'vd\' + src=\''+bodyBgs[randomBgIndex]+ '\'autoplay=\'autoplay\'></audio>');
-
-</script>
-<script type="text/javascript">
-    window.onload = function(){
-        setInterval("toggleSound()",100);
-    }
-
-    function toggleSound() {
-        var music = document.getElementById("vd");//获取ID
-
-        if (music.paused) { //判读是否播放
-            music.paused=false;
-            music.play(); //没有就播放
-        }
-    }
-</script>
-    
+  
 <script language="javascript">
     today=new Date();
     jran=today.getTime();
@@ -48,7 +21,7 @@
     };
     document.write("<center>");
     for(i=1;i<=1;i++) {
-        myNum=(rand(13)); //改成你要随机显示的图片数；
+        myNum=(rand(14)); //改成你要随机显示的图片数；
         if(myNum == 1) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63d9fe7cac6ef86016ba9ffa.jpg' border=0></a>"); //图片路径，可用http://
         if(myNum == 2) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63d9fe9eac6ef86016bad710.jpg' border=0></a>");
         if(myNum == 3) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63d9fed5ac6ef86016bb1ba0.jpg' border=0></a>");
@@ -62,6 +35,7 @@
         if(myNum == 11) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63d9ffa9ac6ef86016bc7057.jpg' border=0></a>");
         if(myNum == 12) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63d9ffb5ac6ef86016bc8fd6.jpg' border=0></a>");
         if(myNum == 13) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63da6291ac6ef8601680e68b.jpg' border=0></a>");
+        if(myNum == 14) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63dbf013ac6ef860166a7b2c.jpg' border=0></a>");
         else {
             document.write();
         }
