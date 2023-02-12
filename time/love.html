@@ -5,6 +5,22 @@
   <meta charset="UTF-8">
   <title>玲玲，生日快乐，情人节快乐，感恩遇见，给你的情书💌</title>
 </head>
+  <audio src="http://www.kumeiwp.com/sub/filestores/2022/01/31/12321664f29ec95b02bfbf62ddab082a.mp3" preload="meta" loop autoplay id="bgmusic">
+
+</audio>
+<script language="javascript">
+  var bgmusic = document.getElementById('bgmusic');
+  bgmusic.addEventListener('canplay', function(){
+    this.play();
+  }, false);
+  window.addEventListener('load', function(){
+    window.addEventListener('touchstart', once, false);
+  }, false);
+  function once(){
+    bgmusic.play();
+    window.removeEventListener('touchstart', once, false);
+  }
+</script>
 <body>
 
 <script language="javascript">
