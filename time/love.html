@@ -9,19 +9,14 @@
 
 </audio>
 <script language="javascript">
-  function audioAutoPlay(id){
-    var audio = document.getElementById(id),
-            play = function(){
-              audio.play();
-              document.removeEventListener("touchstart",play, false);
-            };
-    audio.play();
-    document.addEventListener("WeixinJSBridgeReady", function () {//微信
-      play();
-    }, false);
-    document.addEventListener("touchstart",play, false);
+  var audio = document.getElementById("music");
+  if (typeof WeixinJSBridge == "object" && typeof WeixinJSBridge.invoke == "function") {  // IOS
+    WeixinJSBridge.invoke('getNetworkType', {}, function (res) {
+
+      audio.play();
+    });
+  }else{  // Android
   }
-  audioAutoPlay(`music`);
 </script>
 <body>
 
