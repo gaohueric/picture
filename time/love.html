@@ -5,19 +5,6 @@
   <meta charset="UTF-8">
   <title>玲玲，生日快乐，情人节快乐，感恩遇见，给你的情书💌</title>
 </head>
-<audio id="music" autoplay="autoplay" loop="loop" preload="auto" class="audioMusicBtn media-audio"   src="http://www.kumeiwp.com/sub/filestores/2022/01/31/12321664f29ec95b02bfbf62ddab082a.mp3">
-
-</audio>
-<script language="javascript">
-  var audio = document.getElementById("music");
-  if (typeof WeixinJSBridge == "object" && typeof WeixinJSBridge.invoke == "function") {  // IOS
-    WeixinJSBridge.invoke('getNetworkType', {}, function (res) {
-
-      audio.play();
-    });
-  }else{  // Android
-  }
-</script>
 <body>
 
 <script language="javascript">
@@ -35,8 +22,10 @@
   };
   document.write("<center>");
   for(i=1;i<=1;i++) {
-    myNum=(rand(24)); //改成你要随机显示的图片数；
-    if(myNum == 1) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63e914024757feff33cef5e2.jpg' border=0></a>"); //图片路径，可用http://
+    myNum=(rand(1)); 
+    if(myNum == 1) 
+      document.write("<a href=''><img src='https://pic.imgdb.cn/item/63e914024757feff33cef5e2.jpg' border=0></a>");
+      document.write("<br/><iframe frameborder=\"no\" border=\"0\" marginwidth=\"0\" marginheight=\"0\" width=298 height=52 src=\"//music.163.com/outchain/player?type=2&id=498040739&auto=1&height=32\"></iframe>");
     if(myNum == 2) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63e914014757feff33cef5a5.jpg' border=0></a>");
     if(myNum == 3) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63e914014757feff33cef597.jpg' border=0></a>");
     if(myNum == 4) document.write("<a href=''><img src='https://pic.imgdb.cn/item/63e913fa4757feff33cee71c.jpg' border=0></a>");
